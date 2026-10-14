@@ -2,16 +2,16 @@ import { formatDate } from '../lib/utils'
 
 export default function AccessBlocked({ gym, onLogout }) {
   let title = 'Approval pending'
-  let text = 'Aapka account ban gaya hai. Admin approval ke baad aap app use kar paayenge.'
+  let text = 'Your account has been created. You can use the app once the admin approves it.'
   if (gym?.status === 'blocked') {
     title = 'Account blocked'
-    text = 'Aapka account band kar diya gaya hai. Kripya admin se contact karein.'
+    text = 'Your account has been blocked. Please contact the admin.'
   } else if (gym?.status === 'active') {
     title = 'Subscription expired'
-    text = `Aapka plan ${formatDate(gym.valid_until)} ko khatam ho gaya. Renew karne ke liye admin se contact karein.`
+    text = `Your plan expired on ${formatDate(gym.valid_until)}. Please contact the admin to renew.`
   } else if (!gym) {
     title = 'Account not found'
-    text = 'Is login se koi gym account linked nahi hai.'
+    text = 'No gym account is linked to this login.'
   }
   return (
     <div className="center-page">

@@ -11,7 +11,7 @@ export default function PaymentForm({ member, onSave, onClose }) {
     e.preventDefault()
     const value = Number(amount)
     if (!(value > 0)) {
-      setError('Amount 0 se zyada hona chahiye')
+      setError('Amount must be greater than 0')
       return
     }
     setSaving(true)

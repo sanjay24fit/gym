@@ -60,7 +60,7 @@ export default function Admin({ adminId }) {
       {loading ? (
         <p className="muted">Loading…</p>
       ) : gyms.length === 0 ? (
-        <div className="card empty">Abhi koi gym owner nahi hai.</div>
+        <div className="card empty">No gym owners yet.</div>
       ) : (
         <div className="table-wrap card">
           <table className="table">
@@ -111,7 +111,7 @@ export default function Admin({ adminId }) {
                         <button className="btn sm" onClick={() => update(g.id, { valid_until: plusOneYear(g.valid_until) })}>+1 year</button>
                       )}
                       {g.status !== 'blocked' && (
-                        <button className="btn sm danger" onClick={() => confirm(`${g.gym_name} ko block karna hai?`) && update(g.id, { status: 'blocked' })}>
+                        <button className="btn sm danger" onClick={() => confirm(`Block ${g.gym_name}?`) && update(g.id, { status: 'blocked' })}>
                           Block
                         </button>
                       )}
@@ -155,7 +155,7 @@ function CreateOwner({ onClose, onCreated }) {
     })
     if (error || !data.user || data.user.identities?.length === 0) {
       setSaving(false)
-      setError(error?.message || 'Is email se account pehle se hai')
+      setError(error?.message || 'An account with this email already exists')
       return
     }
     const { error: upErr } = await supabase
@@ -175,7 +175,7 @@ function CreateOwner({ onClose, onCreated }) {
     <Modal title="Create owner account" onClose={onClose}>
       {done ? (
         <div className="form">
-          <div className="alert info">Account ban gaya aur active hai. Yeh login details owner ko dein:</div>
+          <div className="alert info">Account created and active. Share these login details with the owner:</div>
           <p>Email: <b>{done.email}</b><br />Password: <b>{done.password}</b></p>
           <div className="modal-actions"><button className="btn primary" onClick={onClose}>Done</button></div>
         </div>

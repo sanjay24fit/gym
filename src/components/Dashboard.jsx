@@ -36,7 +36,7 @@ export default function Dashboard({ members, onOpen }) {
             <button className="link" onClick={() => onOpen('expiring')}>View all</button>
           </div>
           {expiring.length === 0 ? (
-            <p className="muted">Agle 7 din mein koi membership expire nahi ho rahi.</p>
+            <p className="muted">No memberships expiring in the next 7 days.</p>
           ) : (
             <ul className="list">
               {expiring.slice(0, 8).map((m) => (
@@ -61,7 +61,7 @@ export default function Dashboard({ members, onOpen }) {
             <button className="link" onClick={() => onOpen('due')}>View all</button>
           </div>
           {due.length === 0 ? (
-            <p className="muted">Sabka payment clear hai.</p>
+            <p className="muted">All payments are clear.</p>
           ) : (
             <ul className="list">
               {due.slice(0, 8).map((m) => (

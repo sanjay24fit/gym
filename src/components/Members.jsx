@@ -49,7 +49,7 @@ export default function Members({ members, filter, setFilter, reload }) {
   }
 
   async function remove(m) {
-    if (!confirm(`${m.name} ko delete karna hai?`)) return
+    if (!confirm(`Delete ${m.name}?`)) return
     const { error } = await supabase.from('members').delete().eq('id', m.id)
     if (error) alert(error.message)
     await reload()
@@ -71,7 +71,7 @@ export default function Members({ members, filter, setFilter, reload }) {
 
       {list.length === 0 ? (
         <div className="card empty">
-          {members.length === 0 ? 'Abhi koi member nahi hai. "Add member" se shuru karein.' : 'Koi member nahi mila.'}
+          {members.length === 0 ? 'No members yet. Click "Add member" to get started.' : 'No members found.'}
         </div>
       ) : (
         <div className="table-wrap card">

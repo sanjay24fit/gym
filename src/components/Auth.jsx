@@ -17,7 +17,7 @@ export default function Auth() {
     setLoading(true)
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
-      if (error) setError(error.message === 'Invalid login credentials' ? 'Email ya password galat hai' : error.message)
+      if (error) setError(error.message === 'Invalid login credentials' ? 'Incorrect email or password' : error.message)
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: form.email,
@@ -25,7 +25,7 @@ export default function Auth() {
         options: { data: { gym_name: form.gym_name, owner_name: form.owner_name, phone: form.phone } },
       })
       if (error) setError(error.message)
-      else if (!data.session) setInfo('Account ban gaya. Email confirm karein, phir admin approval ka wait karein.')
+      else if (!data.session) setInfo('Account created. Please confirm your email, then wait for admin approval.')
     }
     setLoading(false)
   }
@@ -62,7 +62,7 @@ export default function Auth() {
         <button className="btn primary full" disabled={loading}>
           {loading ? 'Please wait…' : mode === 'login' ? 'Login' : 'Register'}
         </button>
-        {mode === 'signup' && <p className="muted small">Registration ke baad admin approval ke bina app use nahi hoga.</p>}
+        {mode === 'signup' && <p className="muted small">After registering, you can use the app only after admin approval.</p>}
       </form>
     </div>
   )

@@ -60,7 +60,7 @@ export default function MemberForm({ member, renew, onSave, onClose }) {
   async function submit(e) {
     e.preventDefault()
     if (form.end_date < form.start_date) {
-      setError('End date start date se pehle nahi ho sakti')
+      setError('End date cannot be before start date')
       return
     }
     setSaving(true)
