@@ -119,6 +119,14 @@ export default function Admin({ adminId }) {
                       {g.status === 'active' && (
                         <button className="btn sm" onClick={() => update(g.id, { valid_until: plusOneYear(g.valid_until) })}>+1 year</button>
                       )}
+                      {g.status === 'active' && !expired && (
+                        <button
+                          className="btn sm danger"
+                          onClick={() => confirm(`Expire membership of ${g.gym_name || g.email} now?`) && update(g.id, { valid_until: addDays(today(), -1) })}
+                        >
+                          Expire now
+                        </button>
+                      )}
                       {g.status !== 'blocked' && (
                         <button className="btn sm danger" onClick={() => confirm(`Block ${g.gym_name}?`) && update(g.id, { status: 'blocked' })}>
                           Block
