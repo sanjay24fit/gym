@@ -10,6 +10,14 @@ export default function Auth() {
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
+  const friendly = (msg) => {
+    if (msg === 'Invalid login credentials') return 'Incorrect email or password'
+    if (/email not confirmed/i.test(msg)) return 'Your email is not confirmed yet. Please contact the admin.'
+    if (/rate limit/i.test(msg)) return 'Too many attempts. Please wait a while and try again.'
+    if (/already registered/i.test(msg)) return 'An account with this email already exists. Please login.'
+    return msg
+  }
+
   async function submit(e) {
     e.preventDefault()
     setError('')
@@ -17,14 +25,15 @@ export default function Auth() {
     setLoading(true)
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
-      if (error) setError(error.message === 'Invalid login credentials' ? 'Incorrect email or password' : error.message)
+      if (error) setError(friendly(error.message))
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: { data: { gym_name: form.gym_name, owner_name: form.owner_name, phone: form.phone } },
       })
-      if (error) setError(error.message)
+      if (error) setError(friendly(error.message))
+      else if (data.user?.identities?.length === 0) setError(friendly('already registered'))
       else if (!data.session) setInfo('Account created. Please confirm your email, then wait for admin approval.')
     }
     setLoading(false)

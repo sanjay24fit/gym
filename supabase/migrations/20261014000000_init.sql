@@ -133,3 +133,8 @@ $$;
 revoke all on public.admins from anon, authenticated;
 revoke all on public.gyms from anon;
 revoke all on public.members from anon;
+
+-- Explicit grants (newer Supabase projects may not grant these by default). RLS still applies.
+grant select, insert, update, delete on public.members to authenticated;
+grant select, update, delete on public.gyms to authenticated;
+grant execute on function public.is_admin(), public.is_active_gym(), public.admin_gym_member_counts() to authenticated;

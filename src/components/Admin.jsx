@@ -95,8 +95,17 @@ export default function Admin({ adminId }) {
                       <input
                         type="date"
                         className="date-inline"
-                        value={g.valid_until || ''}
-                        onChange={(e) => update(g.id, { valid_until: e.target.value || null })}
+                        key={g.valid_until || 'none'}
+                        defaultValue={g.valid_until || ''}
+                        onBlur={(e) => {
+                          const v = e.target.value || null
+                          if (v === (g.valid_until || null)) return
+                          if (v && !/^20\d\d-/.test(v)) {
+                            e.target.value = g.valid_until || ''
+                            return
+                          }
+                          update(g.id, { valid_until: v })
+                        }}
                       />
                       <span className="muted small block">{g.valid_until ? formatDate(g.valid_until) : 'No limit'}</span>
                     </td>
@@ -167,7 +176,7 @@ function CreateOwner({ onClose, onCreated }) {
       setError(upErr.message)
       return
     }
-    setDone({ email: form.email.trim(), password: form.password })
+    setDone({ email: form.email.trim(), password: form.password, needsConfirm: !data.session })
     onCreated()
   }
 
@@ -177,6 +186,11 @@ function CreateOwner({ onClose, onCreated }) {
         <div className="form">
           <div className="alert info">Account created and active. Share these login details with the owner:</div>
           <p>Email: <b>{done.email}</b><br />Password: <b>{done.password}</b></p>
+          {done.needsConfirm && (
+            <div className="alert error">
+              "Confirm email" is ON in Supabase, so this owner must confirm their email before logging in. Turn it off in Supabase → Authentication → Sign In / Providers → Email.
+            </div>
+          )}
           <div className="modal-actions"><button className="btn primary" onClick={onClose}>Done</button></div>
         </div>
       ) : (

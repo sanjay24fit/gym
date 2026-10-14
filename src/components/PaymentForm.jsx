@@ -14,6 +14,10 @@ export default function PaymentForm({ member, onSave, onClose }) {
       setError('Amount must be greater than 0')
       return
     }
+    if (value > dueAmount(member)) {
+      setError(`Amount cannot be more than the due amount (${formatMoney(dueAmount(member))})`)
+      return
+    }
     setSaving(true)
     const err = await onSave({ paid_amount: Number(member.paid_amount) + value })
     setSaving(false)

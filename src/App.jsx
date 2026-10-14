@@ -13,6 +13,8 @@ export default function App() {
   const [members, setMembers] = useState([])
   const [tab, setTab] = useState('dashboard')
   const [filter, setFilter] = useState('all')
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -31,6 +33,10 @@ export default function App() {
       supabase.rpc('is_admin'),
     ]).then(([gymRes, adminRes]) => {
       if (cancelled) return
+      if (gymRes.error || adminRes.error) {
+        setLoadError((gymRes.error || adminRes.error).message)
+        return
+      }
       const isAdmin = adminRes.data === true
       setAccount({ userId, gym: gymRes.data, isAdmin })
       setTab(isAdmin ? 'admin' : 'dashboard')
@@ -38,14 +44,24 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, refreshKey])
 
   const gym = account?.gym
   const canUseGym = gym?.status === 'active' && (!gym.valid_until || gym.valid_until >= today())
 
   const loadMembers = useCallback(async () => {
-    const { data, error } = await supabase.from('members').select('*').order('end_date')
-    if (!error) setMembers(data)
+    const PAGE = 1000
+    const all = []
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase.from('members').select('*').order('end_date').order('id').range(from, from + PAGE - 1)
+      if (error) {
+        alert('Could not load members: ' + error.message)
+        return
+      }
+      all.push(...data)
+      if (data.length < PAGE) break
+    }
+    setMembers(all)
   }, [])
 
   useEffect(() => {
@@ -54,14 +70,34 @@ export default function App() {
 
   const logout = () => {
     setMembers([])
+    setLoadError('')
     supabase.auth.signOut()
   }
 
+  const refresh = () => {
+    setLoadError('')
+    setAccount(null)
+    setRefreshKey((k) => k + 1)
+  }
+
+  if (session && loadError) {
+    return (
+      <div className="center-page">
+        <div className="card auth-card">
+          <h2>Connection problem</h2>
+          <p className="muted">Could not load your account. Please check your internet and try again.</p>
+          <p className="muted small">{loadError}</p>
+          <button className="btn primary full" onClick={refresh}>Try again</button>
+          <button className="btn full" onClick={logout}>Logout</button>
+        </div>
+      </div>
+    )
+  }
   if (session === undefined || (session && !account)) {
     return <div className="center-page muted">Loading…</div>
   }
   if (!session) return <Auth />
-  if (!account.isAdmin && !canUseGym) return <AccessBlocked gym={gym} onLogout={logout} />
+  if (!account.isAdmin && !canUseGym) return <AccessBlocked gym={gym} onLogout={logout} onRefresh={refresh} />
 
   const tabs = [
     ...(canUseGym ? [{ key: 'dashboard', label: 'Dashboard' }, { key: 'members', label: 'Members' }] : []),

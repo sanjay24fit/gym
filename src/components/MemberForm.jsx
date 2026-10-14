@@ -1,18 +1,20 @@
 import { useState } from 'react'
 import Modal from './Modal'
-import { PLANS, addDays, planEndDate, today } from '../lib/utils'
+import { PLANS, addDays, dueAmount, formatMoney, planEndDate, today } from '../lib/utils'
 
 function initialForm(member, renew) {
   if (member && renew) {
     const start = member.end_date >= today() ? addDays(member.end_date, 1) : today()
     const plan = PLANS.find((p) => p.label === member.plan)
+    const previousDue = dueAmount(member)
     return {
+      previousDue,
       name: member.name,
       phone: member.phone,
       plan: plan ? plan.label : 'Custom',
       start_date: start,
       end_date: plan ? planEndDate(start, plan.months) : start,
-      total_fee: member.total_fee,
+      total_fee: Number(member.total_fee) + previousDue,
       paid_amount: 0,
       notes: member.notes,
     }
@@ -60,7 +62,11 @@ export default function MemberForm({ member, renew, onSave, onClose }) {
   async function submit(e) {
     e.preventDefault()
     if (form.end_date < form.start_date) {
-      setError('End date cannot be before start date')
+      setError('Expiry date cannot be before start date')
+      return
+    }
+    if ((Number(form.paid_amount) || 0) > (Number(form.total_fee) || 0)) {
+      setError('Paid amount cannot be more than total fee')
       return
     }
     setSaving(true)
@@ -101,6 +107,9 @@ export default function MemberForm({ member, renew, onSave, onClose }) {
           <label>Total fee (₹)<input type="number" min="0" step="any" value={form.total_fee} onChange={set('total_fee')} /></label>
           <label>Paid (₹)<input type="number" min="0" step="any" value={form.paid_amount} onChange={set('paid_amount')} /></label>
         </div>
+        {form.previousDue > 0 && (
+          <p className="alert info small">Total fee includes previous due of {formatMoney(form.previousDue)}.</p>
+        )}
         <p className="muted small">
           Due: ₹{Math.max(0, (Number(form.total_fee) || 0) - (Number(form.paid_amount) || 0)).toLocaleString('en-IN')}
         </p>

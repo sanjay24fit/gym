@@ -1,6 +1,6 @@
 import { formatDate } from '../lib/utils'
 
-export default function AccessBlocked({ gym, onLogout }) {
+export default function AccessBlocked({ gym, onLogout, onRefresh }) {
   let title = 'Approval pending'
   let text = 'Your account has been created. You can use the app once the admin approves it.'
   if (gym?.status === 'blocked') {
@@ -23,6 +23,7 @@ export default function AccessBlocked({ gym, onLogout }) {
             <b>{gym.gym_name}</b> · {gym.email}
           </p>
         )}
+        <button className="btn primary full" onClick={onRefresh}>Check again</button>
         <button className="btn full" onClick={onLogout}>Logout</button>
       </div>
     </div>
