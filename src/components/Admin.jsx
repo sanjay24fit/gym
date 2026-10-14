@@ -116,7 +116,10 @@ export default function Admin({ adminId }) {
                           {g.status === 'pending' ? 'Approve' : 'Activate'}
                         </button>
                       )}
-                      {g.status === 'active' && (
+                      {g.status === 'active' && expired && (
+                        <button className="btn sm primary" onClick={() => update(g.id, { valid_until: plusOneYear() })}>Reactivate (1 year)</button>
+                      )}
+                      {g.status === 'active' && !expired && (
                         <button className="btn sm" onClick={() => update(g.id, { valid_until: plusOneYear(g.valid_until) })}>+1 year</button>
                       )}
                       {g.status === 'active' && !expired && (
