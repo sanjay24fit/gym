@@ -29,9 +29,9 @@ function matchesFilter(m, filter) {
   return true
 }
 
-export default function Members({ members, filter, setFilter, reload }) {
+export default function Members({ members, filter, setFilter, reload, initialDialog = null }) {
   const [search, setSearch] = useState('')
-  const [dialog, setDialog] = useState(null) // { type: 'add'|'edit'|'renew'|'pay'|'remove', member }
+  const [dialog, setDialog] = useState(initialDialog) // { type: 'add'|'edit'|'renew'|'pay'|'remove'|'scan', member }
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
 
@@ -72,36 +72,58 @@ export default function Members({ members, filter, setFilter, reload }) {
 
   return (
     <div>
-      <div className="toolbar">
-        <input className="search" placeholder="Search name or mobile…" value={search} onChange={(e) => setSearch(e.target.value)} />
+      {/* Page Header */}
+      <div className="section-head" style={{ marginBottom: '16px' }}>
+        <div>
+          <h2>Members Directory</h2>
+          <span className="muted small">Manage clients, memberships, and renewal status</span>
+        </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className="btn" onClick={() => setDialog({ type: 'scan' })}>
-            📷 Scan Notebook
+            📷 Scan Register
           </button>
           <button className="btn primary" onClick={() => setDialog({ type: 'add' })}>
-            + Add member
+            + Add Member
           </button>
         </div>
       </div>
-      <div className="chips">
-        {FILTERS.map((f) => (
-          <button key={f.key} className={`chip ${filter === f.key ? 'active' : ''}`} onClick={() => setFilter(f.key)}>
-            {f.label} <span>{members.filter((m) => matchesFilter(m, f.key)).length}</span>
-          </button>
-        ))}
+
+      {/* Toolbar: Search & Action */}
+      <div className="toolbar">
+        <div className="search-box">
+          <span className="search-icon">🔍</span>
+          <input
+            placeholder="Search member name or mobile…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Filter Chips */}
+        <div className="chips" style={{ margin: 0 }}>
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              className={`chip ${filter === f.key ? 'active' : ''}`}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label} <span>{members.filter((m) => matchesFilter(m, f.key)).length}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {list.length === 0 ? (
         <div className="card empty">
-          {members.length === 0 ? 'No members yet. Click "Add member" to get started.' : 'No members found.'}
+          {members.length === 0 ? 'No members registered yet. Click "+ Add member" or "Scan Register" to start.' : 'No members match the current filter/search.'}
         </div>
       ) : (
-        <div className="table-wrap card">
+        <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
                 <th>Member</th>
-                <th>Plan</th>
+                <th>Plan & Start</th>
                 <th>Expiry</th>
                 <th>Payment</th>
                 <th></th>
@@ -111,29 +133,76 @@ export default function Members({ members, filter, setFilter, reload }) {
               {list.map((m) => {
                 const [tone, label] = STATUS_BADGE[membershipStatus(m)]
                 const due = dueAmount(m)
+                const initials = m.name ? m.name.slice(0, 2).toUpperCase() : 'GM'
+
                 return (
                   <tr key={m.id}>
                     <td data-label="Member">
-                      <b>{m.name}</b>
-                      <span className="muted small block">{m.phone}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="avatar-initials" style={{ width: '34px', height: '34px', fontSize: '13px' }}>
+                          {initials}
+                        </div>
+                        <div>
+                          <b>{m.name}</b>
+                          <span className="muted small block">{m.phone || 'No phone'}</span>
+                        </div>
+                      </div>
                     </td>
-                    <td data-label="Plan">
-                      {m.plan || '-'}
-                      <span className="muted small block">from {formatDate(m.start_date)}</span>
+
+                    <td data-label="Plan & Start">
+                      <span>{m.plan || 'Standard'}</span>
+                      <span className="muted small block">Joined {formatDate(m.start_date)}</span>
                     </td>
+
                     <td data-label="Expiry">
                       <span className={`badge ${tone}`}>{label}</span>
-                      <span className="small block">{formatDate(m.end_date)} · {expiryText(m.end_date)}</span>
+                      <span className="small block" style={{ marginTop: '2px' }}>
+                        {formatDate(m.end_date)} · {expiryText(m.end_date)}
+                      </span>
                     </td>
+
                     <td data-label="Payment">
-                      {due > 0 ? <span className="badge red">{formatMoney(due)} due</span> : <span className="badge green">Paid</span>}
-                      <span className="muted small block">{formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}</span>
+                      {due > 0 ? (
+                        <span className="badge red">{formatMoney(due)} due</span>
+                      ) : (
+                        <span className="badge green">Paid</span>
+                      )}
+                      <span className="muted small block font-mono" style={{ marginTop: '2px', fontSize: '12px' }}>
+                        {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}
+                      </span>
                     </td>
+
                     <td className="actions">
-                      {due > 0 && <button className="btn sm" onClick={() => setDialog({ type: 'pay', member: m })}>Payment</button>}
-                      <button className="btn sm" onClick={() => setDialog({ type: 'renew', member: m })}>Renew</button>
-                      <button className="btn sm" onClick={() => setDialog({ type: 'edit', member: m })}>Edit</button>
-                      <button className="btn sm danger" onClick={() => promptRemove(m)}>Remove</button>
+                      {due > 0 && (
+                        <button
+                          type="button"
+                          className="btn sm accent"
+                          onClick={() => setDialog({ type: 'pay', member: m })}
+                        >
+                          Payment
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn sm"
+                        onClick={() => setDialog({ type: 'renew', member: m })}
+                      >
+                        Renew
+                      </button>
+                      <button
+                        type="button"
+                        className="btn sm"
+                        onClick={() => setDialog({ type: 'edit', member: m })}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn sm danger"
+                        onClick={() => promptRemove(m)}
+                      >
+                        Remove
+                      </button>
                     </td>
                   </tr>
                 )
@@ -143,8 +212,9 @@ export default function Members({ members, filter, setFilter, reload }) {
         </div>
       )}
 
+      {/* Remove Confirmation Modal */}
       {dialog && dialog.type === 'remove' && (
-        <Modal title="Remove member" onClose={() => !deleting && setDialog(null)}>
+        <Modal title="Remove Member" onClose={() => !deleting && setDialog(null)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.5 }}>
               Are you sure you want to remove <b>{dialog.member.name}</b> from gym records?
@@ -168,13 +238,14 @@ export default function Members({ members, filter, setFilter, reload }) {
                 disabled={deleting}
                 onClick={() => confirmRemove(dialog.member)}
               >
-                {deleting ? 'Removing…' : 'Remove client'}
+                {deleting ? 'Removing…' : 'Remove Client'}
               </button>
             </div>
           </div>
         </Modal>
       )}
 
+      {/* Notebook Scanner Modal */}
       {dialog && dialog.type === 'scan' && (
         <NotebookScanner
           existingMembers={members}
@@ -186,9 +257,12 @@ export default function Members({ members, filter, setFilter, reload }) {
         />
       )}
 
+      {/* Payment Form Modal */}
       {dialog && dialog.type === 'pay' && (
         <PaymentForm member={dialog.member} onSave={save} onClose={() => setDialog(null)} />
       )}
+
+      {/* Member Form Modal */}
       {dialog && ['add', 'edit', 'renew'].includes(dialog.type) && (
         <MemberForm
           member={dialog.member}
