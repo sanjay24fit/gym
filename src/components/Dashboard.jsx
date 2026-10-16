@@ -164,6 +164,15 @@ export default function Dashboard({ members, onOpen, onAction, gymName }) {
             <span className="quick-action-icon" style={{ color: 'var(--primary)' }}>👥</span>
             <span>All Members ({members.length})</span>
           </button>
+
+          <button
+            type="button"
+            className="quick-action-btn"
+            onClick={() => (onAction ? onAction('download') : null)}
+          >
+            <span className="quick-action-icon" style={{ color: '#0284c7' }}>📲</span>
+            <span>Download App</span>
+          </button>
         </div>
       </div>
 

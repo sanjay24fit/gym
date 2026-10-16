@@ -177,6 +177,31 @@ p { margin: 0 0 8px; }
 .btn-whatsapp svg {
   flex-shrink: 0;
 }
+.btn-download-app {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: var(--accent-light);
+  border: 1px solid #bfdbfe;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-download-app:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: var(--accent-hover);
+}
+.btn-download-app svg {
+  flex-shrink: 0;
+}
 .btn.lg {
   padding: 11px 20px;
   font-size: 15px;

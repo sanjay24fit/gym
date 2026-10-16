@@ -12,6 +12,7 @@ import PaymentForm from './components/PaymentForm'
 import WhatsAppSupport from './components/WhatsAppSupport'
 import SetupNotice from './components/SetupNotice'
 import GymLogo from './components/GymLogo'
+import DownloadAppModal from './components/DownloadAppModal'
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -23,6 +24,17 @@ export default function App() {
   const [loadError, setLoadError] = useState('')
   const [membersInitialDialog, setMembersInitialDialog] = useState(null)
   const [paymentDialogMember, setPaymentDialogMember] = useState(null)
+  const [showDownloadApp, setShowDownloadApp] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+
+  useEffect(() => {
+    const handlePrompt = (e) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handlePrompt)
+    return () => window.removeEventListener('beforeinstallprompt', handlePrompt)
+  }, [])
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -104,6 +116,8 @@ export default function App() {
       setTab('members')
     } else if (action === 'payments') {
       setTab('payments')
+    } else if (action === 'download') {
+      setShowDownloadApp(true)
     } else if (action === 'pay' && data) {
       setPaymentDialogMember(data)
     }
@@ -140,7 +154,19 @@ export default function App() {
     return <div className="center-page muted">Loading…</div>
   }
 
-  if (!session) return <Auth />
+  if (!session) {
+    return (
+      <>
+        <Auth onDownloadApp={() => setShowDownloadApp(true)} />
+        <DownloadAppModal
+          isOpen={showDownloadApp}
+          onClose={() => setShowDownloadApp(false)}
+          deferredPrompt={deferredPrompt}
+          onInstalled={() => setDeferredPrompt(null)}
+        />
+      </>
+    )
+  }
   if (!account.isAdmin && !canUseGym) return <AccessBlocked gym={gym} onLogout={logout} onRefresh={refresh} />
 
   const tabs = [
@@ -218,6 +244,28 @@ export default function App() {
           </div>
         </div>
         <div className="topbar-actions">
+          <button
+            type="button"
+            className="btn-download-app"
+            onClick={() => setShowDownloadApp(true)}
+            title="Download / Install Gym Manager app on your phone"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>Download App</span>
+          </button>
           <WhatsAppSupport className="sm" iconSize={12} label="Support" />
           <button className="btn sm secondary" onClick={logout}>Logout</button>
         </div>
@@ -277,6 +325,7 @@ export default function App() {
             gym={gym}
             userEmail={session.user.email}
             onLogout={logout}
+            onDownloadApp={() => setShowDownloadApp(true)}
           />
         )}
 
@@ -291,6 +340,14 @@ export default function App() {
           onClose={() => setPaymentDialogMember(null)}
         />
       )}
+
+      {/* Download App Modal */}
+      <DownloadAppModal
+        isOpen={showDownloadApp}
+        onClose={() => setShowDownloadApp(false)}
+        deferredPrompt={deferredPrompt}
+        onInstalled={() => setDeferredPrompt(null)}
+      />
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className="bottom-nav">
