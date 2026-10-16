@@ -218,7 +218,7 @@ export default function App() {
           </div>
         </div>
         <div className="topbar-actions">
-          <WhatsAppSupport className="sm" />
+          <WhatsAppSupport className="sm" iconSize={12} label="Support" />
           <button className="btn sm secondary" onClick={logout}>Logout</button>
         </div>
       </header>
