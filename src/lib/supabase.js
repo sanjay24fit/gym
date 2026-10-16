@@ -5,16 +5,23 @@ const rawUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const url = rawUrl.startsWith('/') ? window.location.origin + rawUrl : rawUrl
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!rawUrl || !anonKey) {
-  throw new Error('VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing. Copy .env.example to .env')
-}
+export const isSupabaseConfigured = Boolean(
+  rawUrl &&
+  anonKey &&
+  !rawUrl.includes('YOUR-PROJECT') &&
+  anonKey !== 'YOUR-ANON-KEY'
+)
 
-export const supabase = createClient(url, anonKey)
+// Use fallback dummy values if not configured yet, so module evaluation doesn't crash React
+const clientUrl = isSupabaseConfigured && url ? url : 'https://placeholder.supabase.co'
+const clientKey = isSupabaseConfigured && anonKey ? anonKey : 'placeholder-anon-key'
+
+export const supabase = createClient(clientUrl, clientKey)
 
 // Separate client that does not touch the logged-in admin session.
 // Used by the admin panel to create new owner accounts.
 export function createIsolatedClient() {
-  return createClient(url, anonKey, {
+  return createClient(clientUrl, clientKey, {
     auth: { persistSession: false, autoRefreshToken: false, storageKey: 'gm-isolated' },
   })
 }

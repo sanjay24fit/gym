@@ -32,11 +32,55 @@ h3 { font-size: 16px; }
 .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 .btn.primary:hover { background: var(--primary-dark); }
 .btn.danger { color: var(--red); }
+.btn.danger-solid { background: var(--red); border-color: var(--red); color: #fff; }
+.btn.danger-solid:hover { background: #b91c1c; }
 .btn.sm { padding: 5px 10px; font-size: 13px; }
 .btn.full { width: 100%; }
 .btn:disabled { opacity: .6; cursor: default; }
 .link { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 13px; }
 .icon-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; }
+
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #25d366;
+  border-color: #22bf5b;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+}
+.btn-whatsapp:hover {
+  background: #1eb857;
+  color: #fff;
+}
+.btn-whatsapp svg {
+  flex-shrink: 0;
+}
+
+.auth-support {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.support-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #075e54;
+  font-size: 13px;
+  text-decoration: none;
+  font-weight: 500;
+}
+.support-link:hover {
+  text-decoration: underline;
+  color: #054c44;
+}
 
 input, select, textarea {
   width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;

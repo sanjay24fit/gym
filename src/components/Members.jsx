@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import Modal from './Modal'
 import MemberForm from './MemberForm'
 import PaymentForm from './PaymentForm'
+import NotebookScanner from './NotebookScanner'
 import { supabase } from '../lib/supabase'
 import { dueAmount, expiryText, formatDate, formatMoney, membershipStatus } from '../lib/utils'
 
@@ -29,7 +31,9 @@ function matchesFilter(m, filter) {
 
 export default function Members({ members, filter, setFilter, reload }) {
   const [search, setSearch] = useState('')
-  const [dialog, setDialog] = useState(null) // { type: 'add'|'edit'|'renew'|'pay', member }
+  const [dialog, setDialog] = useState(null) // { type: 'add'|'edit'|'renew'|'pay'|'remove', member }
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const q = search.trim().toLowerCase()
   const list = members
@@ -48,10 +52,21 @@ export default function Members({ members, filter, setFilter, reload }) {
     await reload()
   }
 
-  async function remove(m) {
-    if (!confirm(`Delete ${m.name}?`)) return
+  function promptRemove(m) {
+    setDeleteError('')
+    setDialog({ type: 'remove', member: m })
+  }
+
+  async function confirmRemove(m) {
+    setDeleting(true)
+    setDeleteError('')
     const { error } = await supabase.from('members').delete().eq('id', m.id)
-    if (error) alert(error.message)
+    setDeleting(false)
+    if (error) {
+      setDeleteError(error.message)
+      return
+    }
+    setDialog(null)
     await reload()
   }
 
@@ -59,7 +74,14 @@ export default function Members({ members, filter, setFilter, reload }) {
     <div>
       <div className="toolbar">
         <input className="search" placeholder="Search name or mobile…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <button className="btn primary" onClick={() => setDialog({ type: 'add' })}>+ Add member</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="btn" onClick={() => setDialog({ type: 'scan' })}>
+            📷 Scan Notebook
+          </button>
+          <button className="btn primary" onClick={() => setDialog({ type: 'add' })}>
+            + Add member
+          </button>
+        </div>
       </div>
       <div className="chips">
         {FILTERS.map((f) => (
@@ -111,7 +133,7 @@ export default function Members({ members, filter, setFilter, reload }) {
                       {due > 0 && <button className="btn sm" onClick={() => setDialog({ type: 'pay', member: m })}>Payment</button>}
                       <button className="btn sm" onClick={() => setDialog({ type: 'renew', member: m })}>Renew</button>
                       <button className="btn sm" onClick={() => setDialog({ type: 'edit', member: m })}>Edit</button>
-                      <button className="btn sm danger" onClick={() => remove(m)}>Delete</button>
+                      <button className="btn sm danger" onClick={() => promptRemove(m)}>Remove</button>
                     </td>
                   </tr>
                 )
@@ -121,11 +143,61 @@ export default function Members({ members, filter, setFilter, reload }) {
         </div>
       )}
 
+      {dialog && dialog.type === 'remove' && (
+        <Modal title="Remove member" onClose={() => !deleting && setDialog(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.5 }}>
+              Are you sure you want to remove <b>{dialog.member.name}</b> from gym records?
+            </p>
+            {dueAmount(dialog.member) > 0 && (
+              <div className="alert error">
+                Pending balance: <b>{formatMoney(dueAmount(dialog.member))}</b> due.
+              </div>
+            )}
+            <p className="muted small" style={{ margin: 0 }}>
+              This will permanently delete this client's details and records.
+            </p>
+            {deleteError && <div className="alert error">{deleteError}</div>}
+            <div className="modal-actions">
+              <button type="button" className="btn" onClick={() => setDialog(null)} disabled={deleting}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn danger-solid"
+                disabled={deleting}
+                onClick={() => confirmRemove(dialog.member)}
+              >
+                {deleting ? 'Removing…' : 'Remove client'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {dialog && dialog.type === 'scan' && (
+        <NotebookScanner
+          existingMembers={members}
+          onImportSuccess={async () => {
+            setDialog(null)
+            await reload()
+          }}
+          onClose={() => setDialog(null)}
+        />
+      )}
+
       {dialog && dialog.type === 'pay' && (
         <PaymentForm member={dialog.member} onSave={save} onClose={() => setDialog(null)} />
       )}
-      {dialog && dialog.type !== 'pay' && (
-        <MemberForm member={dialog.member} renew={dialog.type === 'renew'} onSave={save} onClose={() => setDialog(null)} />
+      {dialog && ['add', 'edit', 'renew'].includes(dialog.type) && (
+        <MemberForm
+          member={dialog.member}
+          renew={dialog.type === 'renew'}
+          onSave={save}
+          onDelete={promptRemove}
+          onScanNotebook={() => setDialog({ type: 'scan' })}
+          onClose={() => setDialog(null)}
+        />
       )}
     </div>
   )

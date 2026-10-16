@@ -8,13 +8,15 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "test:ocr": "node scripts/test-ocr-parser.mjs",
     "test:rls": "node scripts/rls-test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",

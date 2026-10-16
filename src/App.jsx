@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from './lib/supabase'
+import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { today } from './lib/utils'
 import Auth from './components/Auth'
 import AccessBlocked from './components/AccessBlocked'
 import Dashboard from './components/Dashboard'
 import Members from './components/Members'
 import Admin from './components/Admin'
+import WhatsAppSupport from './components/WhatsAppSupport'
+import SetupNotice from './components/SetupNotice'
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -17,9 +19,10 @@ export default function App() {
   const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-    return () => data.subscription.unsubscribe()
+    return () => data?.subscription?.unsubscribe()
   }, [])
 
   const userId = session?.user?.id
@@ -80,6 +83,10 @@ export default function App() {
     setRefreshKey((k) => k + 1)
   }
 
+  if (!isSupabaseConfigured) {
+    return <SetupNotice />
+  }
+
   if (session && loadError) {
     return (
       <div className="center-page">
@@ -114,7 +121,10 @@ export default function App() {
             <span className="muted small block">{session.user.email}</span>
           </div>
         </div>
-        <button className="btn sm" onClick={logout}>Logout</button>
+        <div className="topbar-actions">
+          <WhatsAppSupport className="sm" />
+          <button className="btn sm" onClick={logout}>Logout</button>
+        </div>
       </header>
 
       <nav className="nav">

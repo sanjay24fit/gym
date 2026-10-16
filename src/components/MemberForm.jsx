@@ -44,7 +44,7 @@ function initialForm(member, renew) {
   }
 }
 
-export default function MemberForm({ member, renew, onSave, onClose }) {
+export default function MemberForm({ member, renew, onSave, onDelete, onScanNotebook, onClose }) {
   const [form, setForm] = useState(() => initialForm(member, renew))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -90,6 +90,19 @@ export default function MemberForm({ member, renew, onSave, onClose }) {
   return (
     <Modal title={title} onClose={onClose}>
       <form onSubmit={submit} className="form">
+        {!member && !renew && onScanNotebook && (
+          <div className="alert info small" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+            <span>Have a paper register / notebook?</span>
+            <button
+              type="button"
+              className="btn sm"
+              style={{ background: '#fff', color: 'var(--primary)', flexShrink: 0 }}
+              onClick={onScanNotebook}
+            >
+              📷 Scan Notebook
+            </button>
+          </div>
+        )}
         <label>Name<input required value={form.name} onChange={set('name')} disabled={renew} /></label>
         <label>Mobile number<input type="tel" value={form.phone} onChange={set('phone')} /></label>
         <label>
@@ -116,6 +129,16 @@ export default function MemberForm({ member, renew, onSave, onClose }) {
         <label>Notes<textarea rows={2} value={form.notes} onChange={set('notes')} /></label>
         {error && <div className="alert error">{error}</div>}
         <div className="modal-actions">
+          {member && !renew && onDelete && (
+            <button
+              type="button"
+              className="btn danger"
+              style={{ marginRight: 'auto' }}
+              onClick={() => onDelete(member)}
+            >
+              Remove member
+            </button>
+          )}
           <button type="button" className="btn" onClick={onClose}>Cancel</button>
           <button className="btn primary" disabled={saving}>{saving ? 'Saving…' : renew ? 'Renew' : 'Save'}</button>
         </div>

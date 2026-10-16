@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import WhatsAppSupport from './WhatsAppSupport'
 
 export default function Auth() {
   const [mode, setMode] = useState('login')
@@ -72,6 +73,10 @@ export default function Auth() {
           {loading ? 'Please wait…' : mode === 'login' ? 'Login' : 'Register'}
         </button>
         {mode === 'signup' && <p className="muted small">After registering, you can use the app only after admin approval.</p>}
+
+        <div className="auth-support">
+          <WhatsAppSupport variant="link" label="Need help? Customer Support" />
+        </div>
       </form>
     </div>
   )

@@ -1,4 +1,5 @@
 import { formatDate } from '../lib/utils'
+import WhatsAppSupport from './WhatsAppSupport'
 
 export default function AccessBlocked({ gym, onLogout, onRefresh }) {
   let title = 'Approval pending'
@@ -24,6 +25,7 @@ export default function AccessBlocked({ gym, onLogout, onRefresh }) {
           </p>
         )}
         <button className="btn primary full" onClick={onRefresh}>Check again</button>
+        <WhatsAppSupport label="WhatsApp Support" className="full" />
         <button className="btn full" onClick={onLogout}>Logout</button>
       </div>
     </div>
