@@ -11,6 +11,7 @@ import Admin from './components/Admin'
 import PaymentForm from './components/PaymentForm'
 import WhatsAppSupport from './components/WhatsAppSupport'
 import SetupNotice from './components/SetupNotice'
+import GymLogo from './components/GymLogo'
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -210,7 +211,7 @@ export default function App() {
       {/* Header Topbar */}
       <header className="topbar">
         <div className="brand">
-          <span className="logo">GM</span>
+          <GymLogo size={40} />
           <div className="brand-details">
             <b>{account.isAdmin && tab === 'admin' ? 'Gym Manager – Admin' : gym?.gym_name || 'Gym Manager'}</b>
             <span className="muted small block">{session.user.email}</span>

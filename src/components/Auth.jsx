@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import WhatsAppSupport from './WhatsAppSupport'
+import GymLogo from './GymLogo'
 
 export default function Auth() {
   const [mode, setMode] = useState('login')
@@ -25,15 +26,15 @@ export default function Auth() {
     setInfo('')
     setLoading(true)
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
-      if (error) setError(friendly(error.message))
+      const { error: loginErr } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
+      if (loginErr) setError(friendly(loginErr.message))
     } else {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error: signupErr } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: { data: { gym_name: form.gym_name, owner_name: form.owner_name, phone: form.phone } },
       })
-      if (error) setError(friendly(error.message))
+      if (signupErr) setError(friendly(signupErr.message))
       else if (data.user?.identities?.length === 0) setError(friendly('already registered'))
       else if (!data.session) setInfo('Account created. Please confirm your email, then wait for admin approval.')
     }
@@ -43,39 +44,48 @@ export default function Auth() {
   return (
     <div className="center-page">
       <form className="card auth-card" onSubmit={submit}>
-        <div className="brand">
-          <span className="logo">GM</span>
-          <div>
-            <h1>Gym Manager</h1>
-            <p className="muted">Membership &amp; payment tracking</p>
+        <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <GymLogo size={56} />
           </div>
+          <h1 style={{ fontSize: '24px', margin: '0 0 4px' }}>Gym Manager</h1>
+          <p className="muted small" style={{ margin: 0 }}>Smart member, attendance &amp; billing portal</p>
         </div>
 
-        <div className="tabs">
-          <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>Login</button>
-          <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>Register Gym</button>
+        <div className="tabs" style={{ margin: '8px 0' }}>
+          <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>
+            Owner Login
+          </button>
+          <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>
+            Register New Gym
+          </button>
         </div>
 
         {mode === 'signup' && (
           <>
-            <label>Gym name<input required value={form.gym_name} onChange={set('gym_name')} /></label>
-            <label>Owner name<input required value={form.owner_name} onChange={set('owner_name')} /></label>
-            <label>Mobile number<input required type="tel" value={form.phone} onChange={set('phone')} /></label>
+            <label>Gym Name *<input required value={form.gym_name} placeholder="e.g. Iron Fitness Club" onChange={set('gym_name')} /></label>
+            <label>Owner Name *<input required value={form.owner_name} placeholder="e.g. Rahul Sharma" onChange={set('owner_name')} /></label>
+            <label>Mobile Number *<input required type="tel" value={form.phone} placeholder="10-digit mobile number" onChange={set('phone')} /></label>
           </>
         )}
-        <label>Email<input required type="email" autoComplete="email" value={form.email} onChange={set('email')} /></label>
-        <label>Password<input required type="password" minLength={6} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={form.password} onChange={set('password')} /></label>
+        <label>Email Address *<input required type="email" autoComplete="email" placeholder="owner@gym.com" value={form.email} onChange={set('email')} /></label>
+        <label>Password *<input required type="password" minLength={6} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={form.password} onChange={set('password')} /></label>
 
         {error && <div className="alert error">{error}</div>}
         {info && <div className="alert info">{info}</div>}
 
-        <button className="btn primary full" disabled={loading}>
-          {loading ? 'Please wait…' : mode === 'login' ? 'Login' : 'Register'}
+        <button className="btn primary full" style={{ marginTop: '6px', padding: '11px' }} disabled={loading}>
+          {loading ? 'Authenticating…' : mode === 'login' ? 'Sign In to Portal' : 'Register Gym Account'}
         </button>
-        {mode === 'signup' && <p className="muted small">After registering, you can use the app only after admin approval.</p>}
 
-        <div className="auth-support">
-          <WhatsAppSupport variant="link" label="Need help? Customer Support" />
+        {mode === 'signup' && (
+          <p className="muted small" style={{ textAlign: 'center', margin: '4px 0 0' }}>
+            Account will be activated by platform admin after registration.
+          </p>
+        )}
+
+        <div className="auth-support" style={{ marginTop: '12px' }}>
+          <WhatsAppSupport variant="link" label="Need assistance? WhatsApp Support" />
         </div>
       </form>
     </div>

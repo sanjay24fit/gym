@@ -1,5 +1,6 @@
 import { formatDate } from '../lib/utils'
 import WhatsAppSupport from './WhatsAppSupport'
+import GymLogo from './GymLogo'
 
 export default function AccessBlocked({ gym, onLogout, onRefresh }) {
   let title = 'Approval pending'
@@ -16,8 +17,11 @@ export default function AccessBlocked({ gym, onLogout, onRefresh }) {
   }
   return (
     <div className="center-page">
-      <div className="card auth-card">
-        <h2>{title}</h2>
+      <div className="card auth-card" style={{ textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+          <GymLogo size={56} />
+        </div>
+        <h2 style={{ margin: '4px 0 2px' }}>{title}</h2>
         <p className="muted">{text}</p>
         {gym && (
           <p className="small">
