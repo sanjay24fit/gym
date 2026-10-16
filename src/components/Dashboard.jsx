@@ -12,7 +12,7 @@ function getGreetingAndDate() {
   return { greeting, todayFormatted }
 }
 
-export default function Dashboard({ members, onOpen, onAction, gymName }) {
+export default function Dashboard({ members, onOpen, onAction, gymName, isInstalled }) {
   const active = members.filter((m) => membershipStatus(m) !== 'expired')
   const expiring = members
     .filter((m) => membershipStatus(m) === 'expiring')
@@ -165,14 +165,16 @@ export default function Dashboard({ members, onOpen, onAction, gymName }) {
             <span>All Members ({members.length})</span>
           </button>
 
-          <button
-            type="button"
-            className="quick-action-btn"
-            onClick={() => (onAction ? onAction('download') : null)}
-          >
-            <span className="quick-action-icon" style={{ color: '#0284c7' }}>📲</span>
-            <span>Download App</span>
-          </button>
+          {!isInstalled && (
+            <button
+              type="button"
+              className="quick-action-btn"
+              onClick={() => (onAction ? onAction('download') : null)}
+            >
+              <span className="quick-action-icon" style={{ color: '#0284c7' }}>📲</span>
+              <span>Download App</span>
+            </button>
+          )}
         </div>
       </div>
 

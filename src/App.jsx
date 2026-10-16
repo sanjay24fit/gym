@@ -26,15 +26,50 @@ export default function App() {
   const [paymentDialogMember, setPaymentDialogMember] = useState(null)
   const [showDownloadApp, setShowDownloadApp] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState(null)
+  const [isInstalled, setIsInstalled] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+    const stored = localStorage.getItem('gym_app_installed') === 'true'
+    return Boolean(standalone || stored)
+  })
 
   useEffect(() => {
     const handlePrompt = (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
     }
+    const handleInstalled = () => {
+      setIsInstalled(true)
+      localStorage.setItem('gym_app_installed', 'true')
+      setDeferredPrompt(null)
+    }
     window.addEventListener('beforeinstallprompt', handlePrompt)
-    return () => window.removeEventListener('beforeinstallprompt', handlePrompt)
+    window.addEventListener('appinstalled', handleInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handlePrompt)
+      window.removeEventListener('appinstalled', handleInstalled)
+    }
   }, [])
+
+  const handleDownloadApp = async () => {
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt()
+        const { outcome } = await deferredPrompt.userChoice
+        if (outcome === 'accepted') {
+          setIsInstalled(true)
+          localStorage.setItem('gym_app_installed', 'true')
+          setDeferredPrompt(null)
+          return
+        }
+      } catch (err) {
+        console.warn('Install prompt error:', err)
+      }
+    }
+    setShowDownloadApp(true)
+  }
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -117,7 +152,7 @@ export default function App() {
     } else if (action === 'payments') {
       setTab('payments')
     } else if (action === 'download') {
-      setShowDownloadApp(true)
+      handleDownloadApp()
     } else if (action === 'pay' && data) {
       setPaymentDialogMember(data)
     }
@@ -157,12 +192,16 @@ export default function App() {
   if (!session) {
     return (
       <>
-        <Auth onDownloadApp={() => setShowDownloadApp(true)} />
+        <Auth onDownloadApp={handleDownloadApp} isInstalled={isInstalled} />
         <DownloadAppModal
           isOpen={showDownloadApp}
           onClose={() => setShowDownloadApp(false)}
           deferredPrompt={deferredPrompt}
-          onInstalled={() => setDeferredPrompt(null)}
+          onInstalled={() => {
+            setIsInstalled(true)
+            localStorage.setItem('gym_app_installed', 'true')
+            setDeferredPrompt(null)
+          }}
         />
       </>
     )
@@ -244,30 +283,32 @@ export default function App() {
           </div>
         </div>
         <div className="topbar-actions">
-          <button
-            type="button"
-            className="btn-download-app"
-            onClick={() => setShowDownloadApp(true)}
-            title="Download / Install Gym Manager app on your phone"
-          >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {!isInstalled && (
+            <button
+              type="button"
+              className="btn-download-app"
+              onClick={handleDownloadApp}
+              title="Download / Install Gym Manager app on your phone"
             >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            <span>Download App</span>
-          </button>
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              <span>Download App</span>
+            </button>
+          )}
           <WhatsAppSupport className="sm" iconSize={12} label="Support" />
-          <button className="btn sm secondary" onClick={logout}>Logout</button>
+          <button className="btn sm secondary logout-btn" onClick={logout}>Logout</button>
         </div>
       </header>
 
@@ -294,6 +335,7 @@ export default function App() {
           <Dashboard
             members={members}
             gymName={gym?.gym_name}
+            isInstalled={isInstalled}
             onOpen={(f) => {
               setFilter(f)
               setMembersInitialDialog(null)
@@ -325,7 +367,8 @@ export default function App() {
             gym={gym}
             userEmail={session.user.email}
             onLogout={logout}
-            onDownloadApp={() => setShowDownloadApp(true)}
+            isInstalled={isInstalled}
+            onDownloadApp={handleDownloadApp}
           />
         )}
 
@@ -346,7 +389,11 @@ export default function App() {
         isOpen={showDownloadApp}
         onClose={() => setShowDownloadApp(false)}
         deferredPrompt={deferredPrompt}
-        onInstalled={() => setDeferredPrompt(null)}
+        onInstalled={() => {
+          setIsInstalled(true)
+          localStorage.setItem('gym_app_installed', 'true')
+          setDeferredPrompt(null)
+        }}
       />
 
       {/* Mobile Bottom Navigation Bar */}

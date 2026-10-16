@@ -1,7 +1,7 @@
 import { formatDate, daysLeft } from '../lib/utils'
 import WhatsAppSupport from './WhatsAppSupport'
 
-export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp }) {
+export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, isInstalled }) {
   const validUntil = gym?.valid_until
   const daysRemaining = validUntil ? daysLeft(validUntil) : null
 
@@ -76,33 +76,35 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp }) 
         </div>
 
         {/* Download App Card */}
-        <div className="card">
-          <div className="section-head" style={{ marginBottom: '8px' }}>
-            <div>
-              <h4 style={{ margin: 0 }}>Download Mobile App</h4>
-              <span className="muted small">Install Gym Manager directly onto your phone</span>
+        {!isInstalled && onDownloadApp && (
+          <div className="card">
+            <div className="section-head" style={{ marginBottom: '8px' }}>
+              <div>
+                <h4 style={{ margin: 0 }}>Download Mobile App</h4>
+                <span className="muted small">Install Gym Manager directly onto your phone</span>
+              </div>
+              <span className="badge blue">● PWA Ready</span>
             </div>
-            <span className="badge blue">● PWA Ready</span>
+            <p className="small muted" style={{ marginBottom: '14px' }}>
+              Get fast 1-tap access right from your home screen without opening a browser every time. Works smoothly on Android, iPhone, and PC.
+            </p>
+            <div>
+              <button
+                type="button"
+                className="btn accent"
+                onClick={onDownloadApp}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Download App</span>
+              </button>
+            </div>
           </div>
-          <p className="small muted" style={{ marginBottom: '14px' }}>
-            Get fast 1-tap access right from your home screen without opening a browser every time. Works smoothly on Android, iPhone, and PC.
-          </p>
-          <div>
-            <button
-              type="button"
-              className="btn accent"
-              onClick={onDownloadApp}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              <span>Download App</span>
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Customer Support Card */}
         <div className="card">

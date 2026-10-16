@@ -44,12 +44,19 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
   background-color: var(--bg);
   color: var(--text);
   line-height: 1.5;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* Typography Hierarchy */
@@ -349,8 +356,11 @@ input:disabled, select:disabled, textarea:disabled {
 /* Layout Structure */
 .app {
   max-width: 1140px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 16px 80px;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Header Topbar */
@@ -361,11 +371,14 @@ input:disabled, select:disabled, textarea:disabled {
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
   margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 .brand .logo {
   width: 40px;
@@ -381,15 +394,29 @@ input:disabled, select:disabled, textarea:disabled {
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
 }
+.brand-details {
+  min-width: 0;
+}
 .brand-details b {
   font-size: 16px;
   color: var(--text);
   letter-spacing: -0.01em;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brand-details span {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .topbar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 /* Desktop Navigation */
@@ -886,8 +913,41 @@ input:disabled, select:disabled, textarea:disabled {
     display: block;
   }
   .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
     padding: 12px 0;
     margin-bottom: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .brand {
+    max-width: calc(100% - 90px);
+    gap: 10px;
+  }
+  .brand-details b {
+    font-size: 15px;
+    max-width: 180px;
+  }
+  .brand-details span {
+    font-size: 11.5px;
+    max-width: 180px;
+  }
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .topbar-actions .btn-download-app {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 12px;
   }
   .dash-welcome {
     margin-bottom: 16px;
