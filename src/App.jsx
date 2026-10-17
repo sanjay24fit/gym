@@ -13,10 +13,18 @@ import WhatsAppSupport from './components/WhatsAppSupport'
 import SetupNotice from './components/SetupNotice'
 import GymLogo from './components/GymLogo'
 import DownloadAppModal from './components/DownloadAppModal'
+import ResetPassword from './components/ResetPassword'
 
 export default function App() {
   const [session, setSession] = useState(undefined)
   const [loadedAccount, setAccount] = useState(null) // { userId, gym, isAdmin }
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (
+      window.location.hash.includes('type=recovery') ||
+      new URLSearchParams(window.location.search).get('type') === 'recovery'
+    )
+  })
   const [members, setMembers] = useState([])
   const [tab, setTab] = useState('dashboard')
   const [filter, setFilter] = useState('all')
@@ -74,7 +82,12 @@ export default function App() {
   useEffect(() => {
     if (!isSupabaseConfigured) return
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s)
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true)
+      }
+    })
     return () => data?.subscription?.unsubscribe()
   }, [])
 
@@ -169,6 +182,27 @@ export default function App() {
 
   if (!isSupabaseConfigured) {
     return <SetupNotice />
+  }
+
+  if (isPasswordRecovery) {
+    return (
+      <ResetPassword
+        onComplete={() => {
+          setIsPasswordRecovery(false)
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', window.location.pathname)
+          }
+          refresh()
+        }}
+        onCancel={() => {
+          setIsPasswordRecovery(false)
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', window.location.pathname)
+          }
+          logout()
+        }}
+      />
+    )
   }
 
   if (session && loadError) {

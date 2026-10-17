@@ -1,9 +1,51 @@
+import { useState } from 'react'
 import { formatDate, daysLeft } from '../lib/utils'
+import { supabase } from '../lib/supabase'
 import WhatsAppSupport from './WhatsAppSupport'
+import Modal from './Modal'
 
 export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, isInstalled }) {
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState('')
+
   const validUntil = gym?.valid_until
   const daysRemaining = validUntil ? daysLeft(validUntil) : null
+
+  async function handlePasswordSubmit(e) {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordSuccess('')
+
+    if (newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters.')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.')
+      return
+    }
+
+    setPasswordLoading(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setPasswordLoading(false)
+
+    if (error) {
+      setPasswordError(error.message)
+    } else {
+      setPasswordSuccess('Password successfully updated!')
+      setTimeout(() => {
+        setShowPasswordModal(false)
+        setNewPassword('')
+        setConfirmPassword('')
+        setPasswordSuccess('')
+      }, 1500)
+    }
+  }
 
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto' }}>
@@ -106,6 +148,25 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
           </div>
         )}
 
+        {/* Password & Security */}
+        <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <b>Password & Security</b>
+            <span className="small muted block">Update your login password</span>
+          </div>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              setPasswordError('')
+              setPasswordSuccess('')
+              setShowPasswordModal(true)
+            }}
+          >
+            Change Password
+          </button>
+        </div>
+
         {/* Customer Support Card */}
         <div className="card">
           <div className="section-head" style={{ marginBottom: '8px' }}>
@@ -138,6 +199,56 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
           </button>
         </div>
       </div>
+
+      {showPasswordModal && (
+        <Modal title="Change Password" onClose={() => setShowPasswordModal(false)}>
+          <form onSubmit={handlePasswordSubmit}>
+            <label>
+              New Password *
+              <input
+                required
+                type="password"
+                minLength={6}
+                placeholder="Minimum 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </label>
+            <label style={{ marginTop: '8px' }}>
+              Confirm New Password *
+              <input
+                required
+                type="password"
+                minLength={6}
+                placeholder="Re-enter new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </label>
+
+            {passwordError && <div className="alert error" style={{ marginTop: '10px' }}>{passwordError}</div>}
+            {passwordSuccess && <div className="alert success" style={{ marginTop: '10px' }}>{passwordSuccess}</div>}
+
+            <div className="dialog-actions" style={{ marginTop: '16px' }}>
+              <button
+                type="button"
+                className="btn"
+                disabled={passwordLoading}
+                onClick={() => setShowPasswordModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn primary"
+                disabled={passwordLoading || !!passwordSuccess}
+              >
+                {passwordLoading ? 'Updating…' : 'Update Password'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   )
 }

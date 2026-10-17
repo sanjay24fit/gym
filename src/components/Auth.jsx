@@ -4,8 +4,9 @@ import WhatsAppSupport from './WhatsAppSupport'
 import GymLogo from './GymLogo'
 
 export default function Auth({ onDownloadApp, isInstalled }) {
-  const [mode, setMode] = useState('login')
+  const [mode, setMode] = useState('login') // 'login' | 'signup' | 'forgot'
   const [form, setForm] = useState({ email: '', password: '', gym_name: '', owner_name: '', phone: '' })
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
@@ -13,10 +14,12 @@ export default function Auth({ onDownloadApp, isInstalled }) {
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
   const friendly = (msg) => {
+    if (!msg) return ''
     if (msg === 'Invalid login credentials') return 'Incorrect email or password'
     if (/email not confirmed/i.test(msg)) return 'Your email is not confirmed yet. Please contact the admin.'
     if (/rate limit/i.test(msg)) return 'Too many attempts. Please wait a while and try again.'
     if (/already registered/i.test(msg)) return 'An account with this email already exists. Please login.'
+    if (/user not found/i.test(msg)) return 'No account found with this email address.'
     return msg
   }
 
@@ -25,12 +28,38 @@ export default function Auth({ onDownloadApp, isInstalled }) {
     setError('')
     setInfo('')
     setLoading(true)
+
+    if (mode === 'forgot') {
+      const emailToReset = form.email.trim()
+      if (!emailToReset) {
+        setError('Please enter your registered email address.')
+        setLoading(false)
+        return
+      }
+
+      const redirectUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}${window.location.pathname}`
+        : undefined
+
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(emailToReset, {
+        redirectTo: redirectUrl,
+      })
+
+      if (resetErr) {
+        setError(friendly(resetErr.message))
+      } else {
+        setInfo('Password reset link sent! Please check your email inbox (and spam/junk folder) and click the link to set your new password.')
+      }
+      setLoading(false)
+      return
+    }
+
     if (mode === 'login') {
-      const { error: loginErr } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
+      const { error: loginErr } = await supabase.auth.signInWithPassword({ email: form.email.trim(), password: form.password })
       if (loginErr) setError(friendly(loginErr.message))
     } else {
       const { data, error: signupErr } = await supabase.auth.signUp({
-        email: form.email,
+        email: form.email.trim(),
         password: form.password,
         options: { data: { gym_name: form.gym_name, owner_name: form.owner_name, phone: form.phone } },
       })
@@ -48,11 +77,17 @@ export default function Auth({ onDownloadApp, isInstalled }) {
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
             <GymLogo size={56} />
           </div>
-          <h1 style={{ fontSize: '24px', margin: '0 0 4px' }}>Gym Manager</h1>
-          <p className="muted small" style={{ margin: 0 }}>Smart member, attendance &amp; billing portal</p>
+          <h1 style={{ fontSize: '24px', margin: '0 0 4px' }}>
+            {mode === 'forgot' ? 'Reset Password' : 'Gym Manager'}
+          </h1>
+          <p className="muted small" style={{ margin: 0 }}>
+            {mode === 'forgot'
+              ? 'Enter your email to receive a password reset link'
+              : 'Smart member, attendance & billing portal'}
+          </p>
         </div>
 
-        {!isInstalled && onDownloadApp && (
+        {!isInstalled && onDownloadApp && mode !== 'forgot' && (
           <button
             type="button"
             className="btn full accent"
@@ -80,14 +115,38 @@ export default function Auth({ onDownloadApp, isInstalled }) {
           </button>
         )}
 
-        <div className="tabs" style={{ margin: '8px 0' }}>
-          <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>
-            Owner Login
-          </button>
-          <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => setMode('signup')}>
-            Register New Gym
-          </button>
-        </div>
+        {mode !== 'forgot' ? (
+          <div className="tabs" style={{ margin: '8px 0' }}>
+            <button
+              type="button"
+              className={mode === 'login' ? 'active' : ''}
+              onClick={() => {
+                setError('')
+                setInfo('')
+                setMode('login')
+              }}
+            >
+              Owner Login
+            </button>
+            <button
+              type="button"
+              className={mode === 'signup' ? 'active' : ''}
+              onClick={() => {
+                setError('')
+                setInfo('')
+                setMode('signup')
+              }}
+            >
+              Register New Gym
+            </button>
+          </div>
+        ) : (
+          <div style={{ margin: '10px 0 4px', padding: '8px 12px', background: 'var(--accent-light, #eff6ff)', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+            <p className="small" style={{ margin: 0, color: '#1e40af' }}>
+              🔑 Enter your registered gym account email below. We will send you a secure link to reset your password.
+            </p>
+          </div>
+        )}
 
         {mode === 'signup' && (
           <>
@@ -96,15 +155,111 @@ export default function Auth({ onDownloadApp, isInstalled }) {
             <label>Mobile Number *<input required type="tel" value={form.phone} placeholder="10-digit mobile number" onChange={set('phone')} /></label>
           </>
         )}
-        <label>Email Address *<input required type="email" autoComplete="email" placeholder="owner@gym.com" value={form.email} onChange={set('email')} /></label>
-        <label>Password *<input required type="password" minLength={6} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={form.password} onChange={set('password')} /></label>
+
+        <label>
+          Email Address *
+          <input
+            required
+            type="email"
+            autoComplete="email"
+            placeholder="owner@gym.com"
+            value={form.email}
+            onChange={set('email')}
+          />
+        </label>
+
+        {mode !== 'forgot' && (
+          <label>
+            Password *
+            <div style={{ position: 'relative' }}>
+              <input
+                required
+                type={showPassword ? 'text' : 'password'}
+                minLength={6}
+                placeholder="••••••••"
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                value={form.password}
+                onChange={set('password')}
+                style={{ paddingRight: '38px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--muted)',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  fontSize: '14px',
+                }}
+              >
+                {showPassword ? '👁️' : '🔒'}
+              </button>
+            </div>
+          </label>
+        )}
+
+        {mode === 'login' && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-4px', marginBottom: '8px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setError('')
+                setInfo('')
+                setMode('forgot')
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '2px 0',
+                color: 'var(--accent, #2563eb)',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span>Forgot password? (पासवर्ड भूल गए?)</span>
+            </button>
+          </div>
+        )}
 
         {error && <div className="alert error">{error}</div>}
         {info && <div className="alert info">{info}</div>}
 
         <button className="btn primary full" style={{ marginTop: '6px', padding: '11px' }} disabled={loading}>
-          {loading ? 'Authenticating…' : mode === 'login' ? 'Sign In to Portal' : 'Register Gym Account'}
+          {loading
+            ? (mode === 'forgot' ? 'Sending Reset Link…' : 'Authenticating…')
+            : mode === 'forgot'
+            ? 'Send Password Reset Link'
+            : mode === 'login'
+            ? 'Sign In to Portal'
+            : 'Register Gym Account'}
         </button>
+
+        {mode === 'forgot' && (
+          <button
+            type="button"
+            className="btn full"
+            style={{ marginTop: '8px', padding: '10px' }}
+            disabled={loading}
+            onClick={() => {
+              setError('')
+              setInfo('')
+              setMode('login')
+            }}
+          >
+            ← Back to Login
+          </button>
+        )}
 
         {mode === 'signup' && (
           <p className="muted small" style={{ textAlign: 'center', margin: '4px 0 0' }}>
