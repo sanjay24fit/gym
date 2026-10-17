@@ -96,7 +96,7 @@ export default function MemberForm({ member, renew, onSave, onDelete, onScanNote
             <button
               type="button"
               className="btn sm"
-              style={{ background: '#fff', color: 'var(--primary)', flexShrink: 0 }}
+              style={{ background: 'var(--card)', color: '#38bdf8', border: '1px solid #38bdf8', flexShrink: 0 }}
               onClick={onScanNotebook}
             >
               📷 Scan Notebook

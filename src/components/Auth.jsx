@@ -141,8 +141,8 @@ export default function Auth({ onDownloadApp, isInstalled }) {
             </button>
           </div>
         ) : (
-          <div style={{ margin: '10px 0 4px', padding: '8px 12px', background: 'var(--accent-light, #eff6ff)', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-            <p className="small" style={{ margin: 0, color: '#1e40af' }}>
+          <div style={{ margin: '10px 0 4px', padding: '10px 14px', background: 'var(--accent-light)', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.35)' }}>
+            <p className="small" style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
               🔑 Enter your registered gym account email below. We will send you a secure link to reset your password.
             </p>
           </div>

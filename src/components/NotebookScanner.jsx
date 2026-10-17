@@ -661,7 +661,7 @@ export default function NotebookScanner({ existingMembers = [], onImportSuccess,
                         className="card"
                         style={{
                           border: duplicate ? '1px solid #f59e0b' : '1px solid var(--border)',
-                          background: r.selected ? '#fff' : '#f9fafb',
+                          background: r.selected ? 'var(--card)' : 'var(--card-subtle)',
                           opacity: r.selected ? 1 : 0.65,
                           padding: '14px',
                         }}

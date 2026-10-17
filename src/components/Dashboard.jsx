@@ -118,7 +118,7 @@ export default function Dashboard({ members, onOpen, onAction, gymName, isInstal
         {expiringToday.length > 0 && (
           <button type="button" className="alert-pill warning" onClick={() => onOpen('expiring')}>
             <div className="alert-pill-label">Expiring Today</div>
-            <div className="alert-pill-count" style={{ background: '#fef3c7', color: '#b45309' }}>
+            <div className="alert-pill-count" style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}>
               {expiringToday.length}
             </div>
           </button>
@@ -244,7 +244,7 @@ export default function Dashboard({ members, onOpen, onAction, gymName, isInstal
                 return (
                   <li key={m.id}>
                     <div className="list-item-main">
-                      <div className="avatar-initials" style={{ background: '#fef2f2', color: 'var(--danger)' }}>
+                      <div className="avatar-initials" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: 'var(--danger-border)' }}>
                         {initials}
                       </div>
                       <div className="list-item-text">

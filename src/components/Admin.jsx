@@ -358,7 +358,7 @@ function CreateOwner({ onClose, onCreated }) {
           <div className="alert success">
             Account created and activated successfully! Share these login credentials with the gym owner:
           </div>
-          <div style={{ background: '#f9fafb', padding: '14px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--card-subtle)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <p style={{ margin: 0 }}>
               Email: <b>{done.email}</b><br />
               Password: <b>{done.password}</b>

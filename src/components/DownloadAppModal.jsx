@@ -112,7 +112,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
             {/* Platform-specific instructions */}
             <div
               style={{
-                background: '#f8fafc',
+                background: 'var(--card-subtle)',
                 border: '1px solid var(--border)',
                 borderRadius: '10px',
                 padding: '14px',

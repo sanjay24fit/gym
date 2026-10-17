@@ -105,7 +105,7 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
             Your Gym Manager subscription gives you unlimited members, paper register scanning, and automated expiry tracking.
           </p>
 
-          <div className="row" style={{ background: '#f9fafb', padding: '12px', borderRadius: '8px' }}>
+          <div className="row" style={{ background: 'var(--card-subtle)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <div>
               <span className="small muted block">Plan Valid Until:</span>
               <b>{validUntil ? formatDate(validUntil) : 'Unlimited Access'}</b>
