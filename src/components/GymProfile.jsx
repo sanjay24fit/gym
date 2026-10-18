@@ -3,8 +3,10 @@ import { formatDate, daysLeft } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import WhatsAppSupport from './WhatsAppSupport'
 import Modal from './Modal'
+import { useTheme } from '../lib/theme'
 
 export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, isInstalled }) {
+  const { theme, setTheme } = useTheme()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -147,6 +149,79 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
             </div>
           </div>
         )}
+
+        {/* Theme & Appearance */}
+        <div className="card">
+          <div className="section-head" style={{ marginBottom: '10px' }}>
+            <div>
+              <h4 style={{ margin: 0 }}>Theme & Appearance</h4>
+              <span className="muted small">Choose between athletic Dark mode and daylight Light mode</span>
+            </div>
+            <span className="badge blue">
+              {theme === 'dark' ? '● Dark Mode Active' : '● Light Mode Active'}
+            </span>
+          </div>
+
+          <div className="theme-options-grid">
+            {/* Dark Theme Option */}
+            <div
+              className={`theme-option-card ${theme === 'dark' ? 'active' : ''}`}
+              onClick={() => setTheme('dark')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTheme('dark') }}
+            >
+              <div className="theme-option-preview dark-preview">
+                <div className="preview-bar" />
+                <div className="preview-body">
+                  <div className="preview-card" />
+                  <div className="preview-accent" />
+                </div>
+              </div>
+              <div className="theme-option-info">
+                <div className="theme-option-name">
+                  <span>🌙 Athletic Dark</span>
+                </div>
+                <div className="theme-option-check">
+                  {theme === 'dark' && (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Light Theme Option */}
+            <div
+              className={`theme-option-card ${theme === 'light' ? 'active' : ''}`}
+              onClick={() => setTheme('light')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTheme('light') }}
+            >
+              <div className="theme-option-preview light-preview">
+                <div className="preview-bar" />
+                <div className="preview-body">
+                  <div className="preview-card" />
+                  <div className="preview-accent" />
+                </div>
+              </div>
+              <div className="theme-option-info">
+                <div className="theme-option-name">
+                  <span>☀️ Clean Light</span>
+                </div>
+                <div className="theme-option-check">
+                  {theme === 'light' && (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Password & Security */}
         <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

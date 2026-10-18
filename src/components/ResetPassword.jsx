@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import GymLogo from './GymLogo'
+import ThemeToggle from './ThemeToggle'
 
 export default function ResetPassword({ onComplete, onCancel }) {
   const [password, setPassword] = useState('')
@@ -48,6 +49,9 @@ export default function ResetPassword({ onComplete, onCancel }) {
 
   return (
     <div className="center-page">
+      <div className="auth-theme-bar">
+        <ThemeToggle size="sm" showLabel />
+      </div>
       <form className="card auth-card" onSubmit={handleSubmit}>
         <div style={{ textAlign: 'center', marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>

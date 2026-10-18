@@ -1,6 +1,7 @@
 import { formatDate } from '../lib/utils'
 import WhatsAppSupport from './WhatsAppSupport'
 import GymLogo from './GymLogo'
+import ThemeToggle from './ThemeToggle'
 
 export default function AccessBlocked({ gym, onLogout, onRefresh }) {
   let title = 'Approval pending'
@@ -17,6 +18,9 @@ export default function AccessBlocked({ gym, onLogout, onRefresh }) {
   }
   return (
     <div className="center-page">
+      <div className="auth-theme-bar">
+        <ThemeToggle size="sm" showLabel />
+      </div>
       <div className="card auth-card" style={{ textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
           <GymLogo size={56} />

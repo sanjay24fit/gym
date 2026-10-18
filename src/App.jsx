@@ -14,6 +14,7 @@ import SetupNotice from './components/SetupNotice'
 import GymLogo from './components/GymLogo'
 import DownloadAppModal from './components/DownloadAppModal'
 import ResetPassword from './components/ResetPassword'
+import ThemeToggle from './components/ThemeToggle'
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -317,6 +318,7 @@ export default function App() {
           </div>
         </div>
         <div className="topbar-actions">
+          <ThemeToggle size="sm" />
           {!isInstalled && (
             <button
               type="button"
