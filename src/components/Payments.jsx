@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { dueAmount, formatMoney, formatDate } from '../lib/utils'
+import {
+  dueAmount,
+  formatMoney,
+  formatDate,
+  getMemberFacility,
+  hasPersonalTrainer,
+  getTrainerName,
+} from '../lib/utils'
 
 export default function Payments({ members, onCollectPayment }) {
   const [filter, setFilter] = useState('due') // 'all' | 'due' | 'paid'
@@ -20,7 +27,15 @@ export default function Payments({ members, onCollectPayment }) {
       if (filter === 'paid') return dueAmount(m) === 0
       return true
     })
-    .filter((m) => !q || m.name.toLowerCase().includes(q) || m.phone.includes(q))
+    .filter(
+      (m) =>
+        !q ||
+        m.name.toLowerCase().includes(q) ||
+        m.phone.includes(q) ||
+        getMemberFacility(m).toLowerCase().includes(q) ||
+        getTrainerName(m).toLowerCase().includes(q) ||
+        (m.plan && m.plan.toLowerCase().includes(q))
+    )
     .sort((a, b) => dueAmount(b) - dueAmount(a))
 
   return (
@@ -117,7 +132,7 @@ export default function Payments({ members, onCollectPayment }) {
             <thead>
               <tr>
                 <th>Member</th>
-                <th>Plan & Start</th>
+                <th>Plan & Facility</th>
                 <th>Total Fee</th>
                 <th>Paid Amount</th>
                 <th>Due Balance</th>
@@ -142,9 +157,25 @@ export default function Payments({ members, onCollectPayment }) {
                       </div>
                     </td>
 
-                    <td data-label="Plan & Start">
-                      <span>{m.plan || 'Standard'}</span>
-                      <span className="muted small block">Joined {formatDate(m.start_date)}</span>
+                    <td data-label="Plan & Facility">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 600 }}>{m.plan || 'Standard'}</span>
+                          <span className="badge blue" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                            🏢 {getMemberFacility(m)}
+                          </span>
+                          {hasPersonalTrainer(m) && (
+                            <span
+                              className="badge purple"
+                              style={{ fontSize: '10px', padding: '1px 6px' }}
+                              title={getTrainerName(m) ? `Trainer: ${getTrainerName(m)}` : 'Personal Trainer'}
+                            >
+                              ⭐ PT
+                            </span>
+                          )}
+                        </div>
+                        <span className="muted small block">Joined {formatDate(m.start_date)}</span>
+                      </div>
                     </td>
 
                     <td data-label="Total Fee">

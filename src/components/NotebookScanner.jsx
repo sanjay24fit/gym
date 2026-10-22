@@ -307,6 +307,9 @@ export default function NotebookScanner({ existingMembers = [], onImportSuccess,
         name: r.name.trim(),
         phone: r.phone ? r.phone.replace(/[\s-]/g, '') : '',
         plan: r.plan,
+        facility: r.facility || 'Gym & Fitness',
+        personal_trainer: Boolean(r.personal_trainer),
+        trainer_name: r.trainer_name || '',
         start_date: r.start_date,
         end_date: r.end_date,
         total_fee: Number(r.total_fee) || 0,
@@ -314,7 +317,28 @@ export default function NotebookScanner({ existingMembers = [], onImportSuccess,
         notes: r.notes ? r.notes.trim() : 'Scanned from notebook',
       }
 
-      const { error } = await supabase.from('members').insert(payload)
+      let { error } = await supabase.from('members').insert(payload)
+      if (
+        error &&
+        (error.message?.includes('schema cache') ||
+          error.message?.includes('facility') ||
+          error.message?.includes('personal_trainer') ||
+          error.code === 'PGRST204')
+      ) {
+        const fallbackPayload = {
+          name: payload.name,
+          phone: payload.phone,
+          plan: payload.plan,
+          start_date: payload.start_date,
+          end_date: payload.end_date,
+          total_fee: payload.total_fee,
+          paid_amount: payload.paid_amount,
+          notes: payload.notes,
+        }
+        const fallbackRes = await supabase.from('members').insert(fallbackPayload)
+        error = fallbackRes.error
+      }
+
       if (error) {
         failedRecords.push({ ...r, error: error.message })
       } else {

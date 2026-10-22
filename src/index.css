@@ -496,6 +496,11 @@ b, strong {
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.28);
 }
+.badge.purple {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
 .badge.gray {
   background: var(--card-subtle);
   color: var(--muted);
@@ -582,6 +587,110 @@ select option {
 
 .form { display: flex; flex-direction: column; gap: 14px; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* PT (Personal Trainer) Card Box & Toggle */
+.pt-card-box {
+  background: var(--card-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.pt-card-box.active {
+  border-color: rgba(168, 85, 247, 0.45);
+  background: rgba(168, 85, 247, 0.05);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.08);
+}
+
+.pt-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pt-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pt-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.pt-icon {
+  font-size: 16px;
+}
+
+.pt-details-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  animation: fadeIn 0.2s ease;
+}
+
+/* Modern Toggle Switch */
+.switch-label {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  margin: 0 !important;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.switch-label input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+  margin: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-highlight);
+  transition: 0.25s;
+  border-radius: 24px;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.switch-label input:checked + .switch-slider {
+  background-color: #a855f7;
+}
+
+.switch-label input:checked + .switch-slider:before {
+  transform: translateX(20px);
+}
 
 /* ==========================================================================
    APP LAYOUT & HEADER (TOPBAR)
@@ -932,6 +1041,11 @@ select option {
   background: var(--electric-blue-bg);
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.28);
+}
+.alert-pill.purple .alert-pill-count {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
 }
 
 /* Quick Actions Grid */
@@ -1770,6 +1884,11 @@ select option {
   color: #0369a1;
   border-color: rgba(2, 132, 199, 0.25);
 }
+[data-theme="light"] .badge.purple {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border-color: #d8b4fe;
+}
 [data-theme="light"] .badge.gray {
   background: #f1f5f9;
   color: #475569;
@@ -1790,6 +1909,11 @@ select option {
   background: rgba(2, 132, 199, 0.1);
   color: #0369a1;
   border-color: rgba(2, 132, 199, 0.25);
+}
+[data-theme="light"] .alert-pill.purple .alert-pill-count {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border-color: #d8b4fe;
 }
 
 [data-theme="light"] .summary-card.accent .summary-card-icon {

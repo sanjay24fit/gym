@@ -1,4 +1,14 @@
-import { dueAmount, expiryText, formatDate, formatMoney, membershipStatus, daysLeft } from '../lib/utils'
+import {
+  dueAmount,
+  expiryText,
+  formatDate,
+  formatMoney,
+  membershipStatus,
+  daysLeft,
+  getMemberFacility,
+  hasPersonalTrainer,
+  getTrainerName,
+} from '../lib/utils'
 
 function getGreetingAndDate() {
   const hour = new Date().getHours()
@@ -19,6 +29,7 @@ export default function Dashboard({ members, onOpen, onAction, gymName, isInstal
     .sort((a, b) => a.end_date.localeCompare(b.end_date))
   const expired = members.filter((m) => membershipStatus(m) === 'expired')
   const expiringToday = members.filter((m) => daysLeft(m.end_date) === 0)
+  const ptMembers = members.filter((m) => hasPersonalTrainer(m))
 
   const due = members.filter((m) => dueAmount(m) > 0).sort((a, b) => dueAmount(b) - dueAmount(a))
   const totalDue = due.reduce((s, m) => s + dueAmount(m), 0)
@@ -115,6 +126,11 @@ export default function Dashboard({ members, onOpen, onAction, gymName, isInstal
           <div className="alert-pill-count">{due.length}</div>
         </button>
 
+        <button type="button" className="alert-pill purple" onClick={() => onOpen('pt')}>
+          <div className="alert-pill-label">Personal Trainer (PT)</div>
+          <div className="alert-pill-count">{ptMembers.length}</div>
+        </button>
+
         {expiringToday.length > 0 && (
           <button type="button" className="alert-pill warning" onClick={() => onOpen('expiring')}>
             <div className="alert-pill-label">Expiring Today</div>
@@ -205,8 +221,21 @@ export default function Dashboard({ members, onOpen, onAction, gymName, isInstal
                     <div className="list-item-main">
                       <div className="avatar-initials">{initials}</div>
                       <div className="list-item-text">
-                        <b>{m.name}</b>
-                        <span className="muted small">{m.plan || 'Standard'} · {m.phone || 'No phone'}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <b>{m.name}</b>
+                          {hasPersonalTrainer(m) && (
+                            <span
+                              className="badge purple"
+                              style={{ fontSize: '10px', padding: '1px 5px' }}
+                              title={getTrainerName(m) ? `Trainer: ${getTrainerName(m)}` : 'Personal Trainer'}
+                            >
+                              ⭐ PT
+                            </span>
+                          )}
+                        </div>
+                        <span className="muted small">
+                          {m.plan || 'Standard'} · {getMemberFacility(m)} · {m.phone || 'No phone'}
+                        </span>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
@@ -248,8 +277,21 @@ export default function Dashboard({ members, onOpen, onAction, gymName, isInstal
                         {initials}
                       </div>
                       <div className="list-item-text">
-                        <b>{m.name}</b>
-                        <span className="muted small">Paid {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <b>{m.name}</b>
+                          {hasPersonalTrainer(m) && (
+                            <span
+                              className="badge purple"
+                              style={{ fontSize: '10px', padding: '1px 5px' }}
+                              title={getTrainerName(m) ? `Trainer: ${getTrainerName(m)}` : 'Personal Trainer'}
+                            >
+                              ⭐ PT
+                            </span>
+                          )}
+                        </div>
+                        <span className="muted small">
+                          {getMemberFacility(m)} · Paid {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}
+                        </span>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>

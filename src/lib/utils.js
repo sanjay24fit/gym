@@ -7,6 +7,48 @@ export const PLANS = [
   { label: '12 Months', months: 12 },
 ]
 
+export const FACILITIES = [
+  'Gym & Fitness',
+  'Cardio + Strength',
+  'CrossFit & Functional',
+  'Zumba & Aerobics',
+  'Yoga & Pilates',
+  'Swimming Pool',
+  'Steam & Sauna',
+  'All Access (Full Gym)',
+]
+
+export function getMemberFacility(m) {
+  if (!m) return 'Gym & Fitness'
+  if (m.facility && m.facility.trim()) return m.facility.trim()
+  if (m.notes) {
+    const match = m.notes.match(/\[Facility:\s*([^\]|]+)\]/i)
+    if (match && match[1]) return match[1].trim()
+  }
+  return 'Gym & Fitness'
+}
+
+export function hasPersonalTrainer(m) {
+  if (!m) return false
+  if (m.personal_trainer === true || m.personal_trainer === 'true') return true
+  if (m.notes) {
+    if (/\[PT:\s*(true|yes)/i.test(m.notes) || /\[Trainer:/i.test(m.notes)) {
+      return true
+    }
+  }
+  return false
+}
+
+export function getTrainerName(m) {
+  if (!m) return ''
+  if (m.trainer_name && m.trainer_name.trim()) return m.trainer_name.trim()
+  if (m.notes) {
+    const match = m.notes.match(/Trainer:\s*([^\]|]+)/i)
+    if (match && match[1]) return match[1].trim()
+  }
+  return ''
+}
+
 export function toISO(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')

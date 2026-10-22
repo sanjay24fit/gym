@@ -4,7 +4,16 @@ import MemberForm from './MemberForm'
 import PaymentForm from './PaymentForm'
 import NotebookScanner from './NotebookScanner'
 import { supabase } from '../lib/supabase'
-import { dueAmount, expiryText, formatDate, formatMoney, membershipStatus } from '../lib/utils'
+import {
+  dueAmount,
+  expiryText,
+  formatDate,
+  formatMoney,
+  membershipStatus,
+  getMemberFacility,
+  hasPersonalTrainer,
+  getTrainerName,
+} from '../lib/utils'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -12,6 +21,7 @@ const FILTERS = [
   { key: 'expiring', label: 'Expiring soon' },
   { key: 'expired', label: 'Expired' },
   { key: 'due', label: 'Payment due' },
+  { key: 'pt', label: '⭐ Personal Trainer' },
 ]
 
 const STATUS_BADGE = {
@@ -26,6 +36,7 @@ function matchesFilter(m, filter) {
   if (filter === 'expiring') return s === 'expiring'
   if (filter === 'expired') return s === 'expired'
   if (filter === 'due') return dueAmount(m) > 0
+  if (filter === 'pt') return hasPersonalTrainer(m)
   return true
 }
 
@@ -38,16 +49,62 @@ export default function Members({ members, filter, setFilter, reload, initialDia
   const q = search.trim().toLowerCase()
   const list = members
     .filter((m) => matchesFilter(m, filter))
-    .filter((m) => !q || m.name.toLowerCase().includes(q) || m.phone.includes(q))
+    .filter(
+      (m) =>
+        !q ||
+        m.name.toLowerCase().includes(q) ||
+        m.phone.includes(q) ||
+        getMemberFacility(m).toLowerCase().includes(q) ||
+        getTrainerName(m).toLowerCase().includes(q) ||
+        (m.plan && m.plan.toLowerCase().includes(q))
+    )
     .sort((a, b) => a.end_date.localeCompare(b.end_date))
 
   async function save(values) {
     const { type, member } = dialog
-    const { error } =
+    let res =
       type === 'add'
         ? await supabase.from('members').insert(values)
         : await supabase.from('members').update(values).eq('id', member.id)
-    if (error) return error.message
+
+    // Fallback if Postgres columns 'facility', 'personal_trainer', or 'trainer_name' are not yet created in Supabase
+    if (
+      res.error &&
+      (res.error.message?.includes('schema cache') ||
+        res.error.message?.includes('facility') ||
+        res.error.message?.includes('personal_trainer') ||
+        res.error.message?.includes('trainer_name') ||
+        res.error.code === 'PGRST204')
+    ) {
+      const ptTag = values.personal_trainer
+        ? `[PT: Yes${values.trainer_name ? ` | Trainer: ${values.trainer_name}` : ''}]`
+        : ''
+      const facilityTag = `[Facility: ${values.facility || 'Gym & Fitness'}]`
+
+      const cleanNotes = (values.notes || '')
+        .replace(/\[Facility:[^\]]*\]/gi, '')
+        .replace(/\[PT:[^\]]*\]/gi, '')
+        .trim()
+      const fallbackNotes = `${cleanNotes} ${facilityTag} ${ptTag}`.trim()
+
+      const fallbackValues = {
+        name: values.name,
+        phone: values.phone,
+        plan: values.plan,
+        start_date: values.start_date,
+        end_date: values.end_date,
+        total_fee: values.total_fee,
+        paid_amount: values.paid_amount,
+        notes: fallbackNotes,
+      }
+
+      res =
+        type === 'add'
+          ? await supabase.from('members').insert(fallbackValues)
+          : await supabase.from('members').update(fallbackValues).eq('id', member.id)
+    }
+
+    if (res.error) return res.error.message
     setDialog(null)
     await reload()
   }
@@ -93,7 +150,7 @@ export default function Members({ members, filter, setFilter, reload, initialDia
         <div className="search-box">
           <span className="search-icon">🔍</span>
           <input
-            placeholder="Search member name or mobile…"
+            placeholder="Search member, mobile, facility, or trainer…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -123,7 +180,7 @@ export default function Members({ members, filter, setFilter, reload, initialDia
             <thead>
               <tr>
                 <th>Member</th>
-                <th>Plan & Start</th>
+                <th>Plan & Facility</th>
                 <th>Expiry</th>
                 <th>Payment</th>
                 <th></th>
@@ -149,9 +206,25 @@ export default function Members({ members, filter, setFilter, reload, initialDia
                       </div>
                     </td>
 
-                    <td data-label="Plan & Start">
-                      <span>{m.plan || 'Standard'}</span>
-                      <span className="muted small block">Joined {formatDate(m.start_date)}</span>
+                    <td data-label="Plan & Facility">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 600 }}>{m.plan || 'Standard'}</span>
+                          <span className="badge blue" style={{ fontSize: '10.5px', padding: '1px 7px' }}>
+                            🏢 {getMemberFacility(m)}
+                          </span>
+                          {hasPersonalTrainer(m) && (
+                            <span
+                              className="badge purple"
+                              style={{ fontSize: '10.5px', padding: '1px 7px' }}
+                              title={getTrainerName(m) ? `Personal Trainer: ${getTrainerName(m)}` : 'Personal Trainer Included'}
+                            >
+                              ⭐ PT{getTrainerName(m) ? `: ${getTrainerName(m)}` : ''}
+                            </span>
+                          )}
+                        </div>
+                        <span className="muted small block">Joined {formatDate(m.start_date)}</span>
+                      </div>
                     </td>
 
                     <td data-label="Expiry">
