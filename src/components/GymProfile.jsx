@@ -4,8 +4,9 @@ import { supabase } from '../lib/supabase'
 import WhatsAppSupport from './WhatsAppSupport'
 import Modal from './Modal'
 import { useTheme } from '../lib/theme'
+import { initiateSubscriptionPayment, RAZORPAY_ME_HANDLE_URL } from '../lib/razorpay'
 
-export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, isInstalled }) {
+export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, isInstalled, onRefresh }) {
   const { theme, setTheme } = useTheme()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -13,6 +14,10 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState('')
+
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState('')
+  const [paySuccess, setPaySuccess] = useState('')
 
   const validUntil = gym?.valid_until
   const daysRemaining = validUntil ? daysLeft(validUntil) : null
@@ -100,14 +105,16 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
         <div className="card">
           <div className="section-head" style={{ marginBottom: '10px' }}>
             <h4>Subscription Status</h4>
-            <span className="badge green">● Active</span>
+            <span className={`badge ${daysRemaining !== null && daysRemaining <= 0 ? 'red' : 'green'}`}>
+              ● {daysRemaining !== null && daysRemaining <= 0 ? 'Expired' : 'Active Plan'}
+            </span>
           </div>
 
           <p className="small muted" style={{ marginBottom: '14px' }}>
             Your Gym Manager subscription gives you unlimited members, paper register scanning, and automated expiry tracking.
           </p>
 
-          <div className="row" style={{ background: 'var(--card-subtle)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div className="row" style={{ background: 'var(--card-subtle)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '14px' }}>
             <div>
               <span className="small muted block">Plan Valid Until:</span>
               <b>{validUntil ? formatDate(validUntil) : 'Unlimited Access'}</b>
@@ -116,6 +123,49 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
               <span className="small muted block">Remaining Days:</span>
               <b>{daysRemaining !== null ? (daysRemaining >= 0 ? `${daysRemaining} days remaining` : 'Expired') : 'No expiry limit'}</b>
             </div>
+          </div>
+
+          {payError && <div className="alert error small" style={{ marginBottom: '10px' }}>{payError}</div>}
+          {paySuccess && <div className="alert success small" style={{ marginBottom: '10px' }}>{paySuccess}</div>}
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn primary"
+              disabled={paying}
+              onClick={async () => {
+                setPayError('')
+                setPaySuccess('')
+                setPaying(true)
+                await initiateSubscriptionPayment({
+                  gym,
+                  userEmail,
+                  amount: 499,
+                  onSuccess: (data) => {
+                    setPaying(false)
+                    setPaySuccess(data.message || 'Payment successful! Subscription extended by 30 days.')
+                    if (onRefresh) onRefresh()
+                  },
+                  onError: (err) => {
+                    setPaying(false)
+                    setPayError(err)
+                  },
+                })
+              }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <span>{paying ? 'Connecting to Razorpay…' : '⚡ Renew Plan (₹499 / 30 Days)'}</span>
+            </button>
+
+            <a
+              href={RAZORPAY_ME_HANDLE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn secondary"
+              style={{ fontSize: '12.5px', textDecoration: 'none' }}
+            >
+              Direct UPI / QR (@sanjaysalvi2245)
+            </a>
           </div>
         </div>
 

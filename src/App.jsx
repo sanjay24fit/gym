@@ -241,7 +241,9 @@ export default function App() {
       </>
     )
   }
-  if (!account.isAdmin && !canUseGym) return <AccessBlocked gym={gym} onLogout={logout} onRefresh={refresh} />
+  if (!account.isAdmin && !canUseGym) {
+    return <AccessBlocked gym={gym} userEmail={session.user.email} onLogout={logout} onRefresh={refresh} />
+  }
 
   const tabs = [
     ...(canUseGym
@@ -405,6 +407,7 @@ export default function App() {
             onLogout={logout}
             isInstalled={isInstalled}
             onDownloadApp={handleDownloadApp}
+            onRefresh={refresh}
           />
         )}
 
