@@ -164,7 +164,7 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
               className="btn secondary"
               style={{ fontSize: '12.5px', textDecoration: 'none' }}
             >
-              Direct UPI / QR (@sanjaysalvi2245)
+              Direct UPI / QR (Gym Manager)
             </a>
           </div>
         </div>

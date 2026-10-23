@@ -34,6 +34,15 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Unauthorized: invalid token' })
     }
 
+    // Fetch gym details to use gym_name as the display merchant name
+    const { data: gym } = await supabase
+      .from('gyms')
+      .select('gym_name, owner_name, phone')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    const gymName = gym?.gym_name || 'Gym Manager'
+
     const { amount = 499, currency = 'INR', plan = 'monthly' } = req.body || {}
     const amountInPaise = Math.round(Number(amount) * 100) // ₹499 = 49900 paise
 
@@ -50,11 +59,12 @@ export default async function handler(req, res) {
         currency: currency,
         receipt: `receipt_gym_${user.id.slice(0, 8)}_${Date.now()}`,
         notes: {
+          merchant_name: gymName,
+          gym_name: gymName,
           gym_id: user.id,
           user_email: user.email,
           plan: plan,
-          platform: 'GymManager',
-          handle: 'sanjaysalvi2245',
+          platform: 'Gym Manager',
         },
       }),
     })
@@ -74,6 +84,7 @@ export default async function handler(req, res) {
       currency: orderData.currency,
       keyId: razorpayKeyId,
       gymId: user.id,
+      gymName: gymName,
     })
   } catch (err) {
     console.error('Error creating Razorpay order:', err)

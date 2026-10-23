@@ -135,7 +135,7 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
                 className="muted small"
                 style={{ textDecoration: 'underline' }}
               >
-                Or pay directly via UPI / QR (@sanjaysalvi2245)
+                Or pay directly via UPI / QR (Gym Manager)
               </a>
             </div>
           </div>

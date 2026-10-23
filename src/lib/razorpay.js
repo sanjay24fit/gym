@@ -84,15 +84,18 @@ export async function initiateSubscriptionPayment({
       throw new Error(orderData.error || 'Failed to create payment order.')
     }
 
-    const { orderId, keyId } = orderData
+    const { orderId, keyId, gymName: serverGymName } = orderData
+
+    // Use gym's name or fallback to 'Gym Manager' so 'Sanjay Salvi' is never shown to customer
+    const businessTitle = gym?.gym_name || serverGymName || 'Gym Manager'
 
     // 2. Open Razorpay Checkout Modal
     const rzpOptions = {
       key: keyId,
       amount: orderData.amount,
       currency: orderData.currency || 'INR',
-      name: 'Gym Manager Portal',
-      description: 'Monthly Gym Subscription (₹499 / 30 Days)',
+      name: businessTitle, // Display name at the top of Razorpay payment page
+      description: `${businessTitle} · Monthly Subscription (₹499 / 30 Days)`,
       image: '/gym-logo.png',
       order_id: orderId,
       prefill: {
@@ -101,9 +104,10 @@ export async function initiateSubscriptionPayment({
         contact: gym?.phone || '',
       },
       notes: {
+        business_name: businessTitle,
         gym_id: gym?.id,
-        gym_name: gym?.gym_name,
-        handle: 'sanjaysalvi2245',
+        gym_name: businessTitle,
+        platform: 'Gym Manager',
       },
       theme: {
         color: '#2563eb', // Matches Gym Manager athletic blue accent
