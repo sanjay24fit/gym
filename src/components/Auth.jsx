@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import WhatsAppSupport from './WhatsAppSupport'
 import GymLogo from './GymLogo'
 import ThemeToggle from './ThemeToggle'
+import LanguageToggle from './LanguageToggle'
 
 export default function Auth({ onDownloadApp, isInstalled }) {
   const [mode, setMode] = useState('login') // 'login' | 'signup' | 'forgot'
@@ -73,7 +74,8 @@ export default function Auth({ onDownloadApp, isInstalled }) {
 
   return (
     <div className="center-page">
-      <div className="auth-theme-bar">
+      <div className="auth-theme-bar" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <LanguageToggle size="sm" />
         <ThemeToggle size="sm" showLabel />
       </div>
       <form className="card auth-card" onSubmit={submit}>

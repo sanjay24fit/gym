@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import WhatsAppSupport from './WhatsAppSupport'
 import Modal from './Modal'
 import { useTheme } from '../lib/theme'
+import LanguageToggle from './LanguageToggle'
 import { initiateSubscriptionPayment, RAZORPAY_ME_HANDLE_URL } from '../lib/razorpay'
 
 export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, isInstalled, onRefresh }) {
@@ -271,6 +272,15 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Language & Regional Settings Card */}
+        <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <b>App Language / भाषा</b>
+            <span className="small muted block">Choose your preferred language (हिन्दी, English, मराठी, etc.)</span>
+          </div>
+          <LanguageToggle />
         </div>
 
         {/* Password & Security */}

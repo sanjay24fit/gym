@@ -3,6 +3,7 @@ import { formatDate } from '../lib/utils'
 import WhatsAppSupport from './WhatsAppSupport'
 import GymLogo from './GymLogo'
 import ThemeToggle from './ThemeToggle'
+import LanguageToggle from './LanguageToggle'
 import { initiateSubscriptionPayment, RAZORPAY_ME_HANDLE_URL } from '../lib/razorpay'
 
 export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
@@ -53,7 +54,8 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
 
   return (
     <div className="center-page">
-      <div className="auth-theme-bar">
+      <div className="auth-theme-bar" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <LanguageToggle size="sm" />
         <ThemeToggle size="sm" showLabel />
       </div>
       <div className="card auth-card" style={{ textAlign: 'center', maxWidth: '440px' }}>
