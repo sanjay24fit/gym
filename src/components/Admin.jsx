@@ -72,8 +72,12 @@ export default function Admin({ adminId }) {
           <h2>Master Admin Control Panel</h2>
           <span className="muted small">Approve, monitor, and manage all registered gym owner accounts</span>
         </div>
-        <button className="btn primary" onClick={() => setCreating(true)}>
-          + Create Owner Account
+        <button type="button" className="btn primary" onClick={() => setCreating(true)}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>Create Owner Account</span>
         </button>
       </div>
 
@@ -82,7 +86,19 @@ export default function Admin({ adminId }) {
         <div className="summary-card accent">
           <div className="summary-card-head">
             <span className="summary-card-label">Total Gyms</span>
-            <div className="summary-card-icon">🏢</div>
+            <div className="summary-card-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2" />
+                <line x1="9" y1="22" x2="9" y2="22.01" />
+                <line x1="15" y1="22" x2="15" y2="22.01" />
+                <line x1="8" y1="6" x2="8.01" y2="6" />
+                <line x1="16" y1="6" x2="16.01" y2="6" />
+                <line x1="8" y1="10" x2="8.01" y2="10" />
+                <line x1="16" y1="10" x2="16.01" y2="10" />
+                <line x1="8" y1="14" x2="8.01" y2="14" />
+                <line x1="16" y1="14" x2="16.01" y2="14" />
+              </svg>
+            </div>
           </div>
           <div className="summary-card-value">{gyms.length}</div>
           <div className="summary-card-sub">Registered platform accounts</div>
@@ -91,7 +107,11 @@ export default function Admin({ adminId }) {
         <div className="summary-card success">
           <div className="summary-card-head">
             <span className="summary-card-label">Active Portals</span>
-            <div className="summary-card-icon">✓</div>
+            <div className="summary-card-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
           </div>
           <div className="summary-card-value">{active}</div>
           <div className="summary-card-sub">Live and operating</div>
@@ -100,7 +120,12 @@ export default function Admin({ adminId }) {
         <div className="summary-card warning">
           <div className="summary-card-head">
             <span className="summary-card-label">Pending Approval</span>
-            <div className="summary-card-icon">⏳</div>
+            <div className="summary-card-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
           </div>
           <div className="summary-card-value">{pending}</div>
           <div className="summary-card-sub">Awaiting admin review</div>
@@ -109,7 +134,12 @@ export default function Admin({ adminId }) {
         <div className="summary-card danger">
           <div className="summary-card-head">
             <span className="summary-card-label">Blocked Accounts</span>
-            <div className="summary-card-icon" style={{ color: 'var(--danger)' }}>🚫</div>
+            <div className="summary-card-icon" style={{ color: 'var(--danger)' }} aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+              </svg>
+            </div>
           </div>
           <div className="summary-card-value" style={{ color: 'var(--danger)' }}>{blocked}</div>
           <div className="summary-card-sub">Access revoked</div>
@@ -119,7 +149,12 @@ export default function Admin({ adminId }) {
       {/* Toolbar with Search */}
       <div className="toolbar">
         <div className="search-box">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
           <input
             placeholder="Search gym, owner name, or email…"
             value={search}

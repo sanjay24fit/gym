@@ -63,7 +63,13 @@ export default function Payments({ members, onCollectPayment }) {
         <div className="summary-card danger">
           <div className="summary-card-head">
             <span className="summary-card-label">Outstanding Due</span>
-            <div className="summary-card-icon" style={{ color: 'var(--danger)' }}>⚠️</div>
+            <div className="summary-card-icon" style={{ color: 'var(--danger)' }} aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
           </div>
           <div className="summary-card-value" style={{ color: 'var(--danger)' }}>
             {formatMoney(totalDue)}
@@ -76,7 +82,11 @@ export default function Payments({ members, onCollectPayment }) {
         <div className="summary-card accent">
           <div className="summary-card-head">
             <span className="summary-card-label">Payment Clear Rate</span>
-            <div className="summary-card-icon">✓</div>
+            <div className="summary-card-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
           </div>
           <div className="summary-card-value">{clearPercent}%</div>
           <div className="summary-card-sub">
@@ -88,7 +98,12 @@ export default function Payments({ members, onCollectPayment }) {
       {/* Toolbar & Filter Chips */}
       <div className="toolbar">
         <div className="search-box">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
           <input
             placeholder="Search member name or phone…"
             value={search}

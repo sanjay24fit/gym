@@ -21,7 +21,7 @@ const FILTERS = [
   { key: 'expiring', label: 'Expiring soon' },
   { key: 'expired', label: 'Expired' },
   { key: 'due', label: 'Payment due' },
-  { key: 'pt', label: '⭐ Personal Trainer' },
+  { key: 'pt', label: 'Personal Trainer' },
 ]
 
 const STATUS_BADGE = {
@@ -136,11 +136,19 @@ export default function Members({ members, filter, setFilter, reload, initialDia
           <span className="muted small">Manage clients, memberships, and renewal status</span>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn" onClick={() => setDialog({ type: 'scan' })}>
-            📷 Scan Register
+          <button type="button" className="btn" onClick={() => setDialog({ type: 'scan' })}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            <span>Scan Register</span>
           </button>
-          <button className="btn primary" onClick={() => setDialog({ type: 'add' })}>
-            + Add Member
+          <button type="button" className="btn primary" onClick={() => setDialog({ type: 'add' })}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>Add Member</span>
           </button>
         </div>
       </div>
@@ -148,7 +156,12 @@ export default function Members({ members, filter, setFilter, reload, initialDia
       {/* Toolbar: Search & Action */}
       <div className="toolbar">
         <div className="search-box">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
           <input
             placeholder="Search member, mobile, facility, or trainer…"
             value={search}

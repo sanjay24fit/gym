@@ -73,12 +73,13 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
                 width: '56px',
                 height: '56px',
                 borderRadius: '14px',
-                background: 'var(--primary)',
-                color: '#fff',
+                background: 'var(--card-subtle)',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '22px',
+                fontSize: '20px',
                 fontWeight: 700,
               }}
             >
@@ -231,7 +232,7 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
               </div>
               <div className="theme-option-info">
                 <div className="theme-option-name">
-                  <span>🌙 Athletic Dark</span>
+                  <span>Charcoal Dark</span>
                 </div>
                 <div className="theme-option-check">
                   {theme === 'dark' && (
@@ -260,7 +261,7 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
               </div>
               <div className="theme-option-info">
                 <div className="theme-option-name">
-                  <span>☀️ Clean Light</span>
+                  <span>Clean Light</span>
                 </div>
                 <div className="theme-option-check">
                   {theme === 'light' && (
