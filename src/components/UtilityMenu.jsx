@@ -68,7 +68,7 @@ export default function UtilityMenu({
 
   return (
     <div className="utility-menu-wrapper" style={{ position: 'relative' }}>
-      {/* Accessible 3-Line Hamburger Trigger Button */}
+      {/* Accessible 3-Line Hamburger Trigger Button (High Quality Vector) */}
       <button
         ref={buttonRef}
         type="button"
@@ -79,9 +79,31 @@ export default function UtilityMenu({
         aria-haspopup="true"
         title="Settings & Tools"
       >
-        <span className="hamburger-box">
-          <span className="hamburger-inner" />
-        </span>
+        <svg
+          width="21"
+          height="21"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="hamburger-svg"
+          aria-hidden="true"
+        >
+          {isOpen ? (
+            <>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </>
+          ) : (
+            <>
+              <line x1="3.5" y1="5.5" x2="20.5" y2="5.5" />
+              <line x1="3.5" y1="12" x2="20.5" y2="12" />
+              <line x1="3.5" y1="18.5" x2="20.5" y2="18.5" />
+            </>
+          )}
+        </svg>
       </button>
 
       {/* Polished Dropdown Panel */}
