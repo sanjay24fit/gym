@@ -14,8 +14,19 @@ import GymLogo from './components/GymLogo'
 import DownloadAppModal from './components/DownloadAppModal'
 import ResetPassword from './components/ResetPassword'
 import UtilityMenu from './components/UtilityMenu'
+import FitnessApp from './components/FitnessApp/FitnessApp'
 
 export default function App() {
+  const [appMode, setAppMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('view') === 'manager') return 'manager'
+      if (params.get('view') === 'fitness') return 'fitness'
+      const stored = localStorage.getItem('gym_active_mode')
+      if (stored) return stored
+    }
+    return 'fitness'
+  })
   const [session, setSession] = useState(undefined)
   const [loadedAccount, setAccount] = useState(null) // { userId, gym, isAdmin }
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(() => {
@@ -180,6 +191,19 @@ export default function App() {
     await loadMembers()
   }
 
+  if (appMode === 'fitness') {
+    return (
+      <FitnessApp
+        onBackToManager={() => {
+          setAppMode('manager')
+          try {
+            localStorage.setItem('gym_active_mode', 'manager')
+          } catch {}
+        }}
+      />
+    )
+  }
+
   if (!isSupabaseConfigured) {
     return <SetupNotice />
   }
@@ -226,6 +250,33 @@ export default function App() {
   if (!session) {
     return (
       <>
+        <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 9999 }}>
+          <button
+            type="button"
+            onClick={() => {
+              setAppMode('fitness')
+              try { localStorage.setItem('gym_active_mode', 'fitness') } catch {}
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 18px',
+              borderRadius: 999,
+              background: 'linear-gradient(135deg, #38C1A5 0%, #2FA88E 100%)',
+              color: '#FFFFFF',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '0.84rem',
+              boxShadow: '0 8px 24px rgba(56, 193, 165, 0.4)',
+              cursor: 'pointer',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}
+          >
+            <span>🌿 Fitness UI Theme</span>
+            <span>→</span>
+          </button>
+        </div>
         <Auth onDownloadApp={handleDownloadApp} isInstalled={isInstalled} />
         <DownloadAppModal
           isOpen={showDownloadApp}
@@ -340,7 +391,30 @@ export default function App() {
         </nav>
 
         {/* Topbar Right - User Profile Info & Single Utility Hamburger Menu */}
-        <div className="topbar-actions">
+        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => {
+              setAppMode('fitness')
+              try { localStorage.setItem('gym_active_mode', 'fitness') } catch {}
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 14px',
+              borderRadius: 999,
+              background: 'linear-gradient(135deg, #38C1A5 0%, #2FA88E 100%)',
+              color: '#FFFFFF',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+              boxShadow: '0 4px 14px rgba(56, 193, 165, 0.35)',
+              cursor: 'pointer',
+            }}
+          >
+            <span>🌿 Fitness UI</span>
+          </button>
           <UtilityMenu
             gymName={gym?.gym_name}
             userEmail={session.user.email}
