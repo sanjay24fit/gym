@@ -704,33 +704,48 @@ select option {
   box-sizing: border-box;
 }
 
+/* ==========================================================================
+   APP LAYOUT & REDESIGNED HEADER (TOPBAR)
+   ========================================================================== */
+.app {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px 84px;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
+  gap: 16px;
+  padding: 14px 0;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 22px;
+  margin-bottom: 24px;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
-  flex: 1;
+  flex-shrink: 0;
 }
 
 .brand-details {
   min-width: 0;
-  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.brand-details b {
+.brand-gym-title {
   font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.01em;
@@ -738,66 +753,302 @@ select option {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 220px;
 }
 
-.brand-details span {
+.brand-email {
   display: block;
-  font-size: 12.5px;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Primary Desktop Navigation (Centered in Desktop Layout) */
+.nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--card-subtle);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.nav-desktop button {
+  border: none;
+  background: none;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.18s ease;
+  border-radius: var(--radius-sm);
+}
+
+.nav-desktop button:hover {
+  color: var(--text);
+  background: var(--card-hover);
+}
+
+.nav-desktop button.active {
+  color: #38bdf8;
+  background: var(--card);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+}
+
+[data-theme="light"] .nav-desktop button.active {
+  color: #0284c7;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   HAMBURGER BUTTON & UTILITY MENU
+   ========================================================================== */
+.hamburger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.hamburger-btn:hover {
+  background: var(--card-hover);
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.hamburger-box {
+  width: 20px;
+  height: 14px;
+  display: inline-block;
+  position: relative;
+}
+
+.hamburger-inner,
+.hamburger-inner::before,
+.hamburger-inner::after {
+  width: 20px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 2px;
+  position: absolute;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.hamburger-inner {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.hamburger-inner::before {
+  content: '';
+  top: -6px;
+}
+
+.hamburger-inner::after {
+  content: '';
+  bottom: -6px;
+}
+
+.hamburger-btn.active .hamburger-inner {
+  background-color: transparent;
+}
+
+.hamburger-btn.active .hamburger-inner::before {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.hamburger-btn.active .hamburger-inner::after {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Polished Dropdown Panel */
+.utility-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 290px;
+  max-width: calc(100vw - 32px);
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  z-index: 1000;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] .utility-dropdown {
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  border-color: #e2e8f0;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.utility-menu-header {
+  padding: 14px 16px;
+  background: var(--card-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.utility-user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.utility-gym-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.utility-user-email {
+  font-size: 11.5px;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.topbar-actions {
+.utility-menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+.utility-menu-list {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.utility-menu-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.12s ease;
+  box-sizing: border-box;
+}
+
+.utility-menu-item:hover {
+  background: var(--card-hover);
+  color: #38bdf8;
+}
+
+[data-theme="light"] .utility-menu-item:hover {
+  color: #0284c7;
+}
+
+.utility-item-icon {
+  font-size: 17px;
+  line-height: 1;
+  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-/* ==========================================================================
-   DESKTOP NAVIGATION
-   ========================================================================== */
-.nav-desktop {
+.utility-item-content {
   display: flex;
-  gap: 6px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 2px;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
-.nav-desktop button {
-  border: none;
-  background: none;
-  padding: 11px 18px;
-  cursor: pointer;
-  font-size: 14px;
+.utility-item-title {
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.25;
+}
+
+.utility-item-sub {
+  font-size: 11px;
   color: var(--muted);
-  border-bottom: 2px solid transparent;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.15s ease;
-  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  line-height: 1.2;
+  margin-top: 2px;
 }
 
-.nav-desktop button:hover {
-  color: var(--text);
+.utility-item-badge {
+  font-size: 11px;
+  padding: 2px 7px;
   background: var(--card-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--muted);
+  font-weight: 600;
 }
 
-.nav-desktop button.active {
-  color: #38bdf8;
-  border-bottom-color: #38bdf8;
-  background: rgba(56, 189, 248, 0.08);
+.utility-item-arrow {
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 400;
 }
 
-[data-theme="light"] .nav-desktop button.active {
-  color: #0284c7;
-  border-bottom-color: #0284c7;
-  background: rgba(2, 132, 199, 0.08);
+.utility-menu-footer {
+  padding: 6px;
+}
+
+.utility-menu-item.logout {
+  color: var(--danger);
+}
+
+.utility-menu-item.logout:hover {
+  background: var(--danger-bg);
+  color: #fb7185;
 }
 
 /* ==========================================================================
@@ -877,14 +1128,23 @@ select option {
 .dash-welcome {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 22px;
   flex-wrap: wrap;
   gap: 12px;
 }
 
+.dash-welcome-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.dash-welcome-badge {
+  flex-shrink: 0;
+}
+
 .dash-welcome .greeting-title {
-  font-size: 24px;
+  font-size: clamp(20px, 3.5vw, 24px);
   font-weight: 800;
   color: var(--text);
   letter-spacing: -0.015em;
@@ -893,15 +1153,15 @@ select option {
 
 .dash-welcome .date-sub {
   color: var(--muted);
-  font-size: 13.5px;
-  margin-top: 3px;
+  font-size: 13px;
+  margin-top: 4px;
   font-weight: 500;
 }
 
 /* Main Summary Cards Grid */
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -1052,29 +1312,28 @@ select option {
 .quick-actions-bar {
   margin-bottom: 24px;
 }
-.quick-actions-bar h3 {
-  margin-bottom: 12px;
-}
 .quick-actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
 .quick-action-btn {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 13px 16px;
+  gap: 10px;
+  padding: 12px 14px;
+  min-height: 48px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
   box-shadow: var(--shadow-xs);
+  text-align: left;
 }
 
 .quick-action-btn:hover {
@@ -1086,8 +1345,15 @@ select option {
 }
 
 .quick-action-icon {
-  font-size: 19px;
+  font-size: 18px;
   flex-shrink: 0;
+  line-height: 1;
+}
+
+.quick-action-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ==========================================================================
@@ -1479,14 +1745,8 @@ select option {
   .topbar-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
-  }
-
-  .topbar-actions .btn-download-app {
-    padding: 5px 9px;
-    font-size: 11.5px;
-    gap: 4px;
   }
 
   .dash-welcome {
@@ -1656,6 +1916,56 @@ select option {
 
   .auth-card {
     padding: 24px 20px;
+  }
+}
+
+/* Tablet Optimizations (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .nav-desktop button {
+    padding: 6px 10px;
+    font-size: 12.5px;
+    gap: 5px;
+  }
+
+  .brand-gym-title {
+    max-width: 160px;
+  }
+
+  .brand-email {
+    max-width: 150px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small Mobile Screens (<= 360px) */
+@media (max-width: 360px) {
+  .app {
+    padding: 0 10px calc(80px + env(safe-area-inset-bottom));
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alerts-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-welcome .greeting-title {
+    font-size: 18px;
+  }
+
+  .utility-dropdown {
+    width: calc(100vw - 20px);
+    right: -4px;
+  }
+
+  .brand-logo-img {
+    width: 34px;
+    height: 34px;
   }
 }
 

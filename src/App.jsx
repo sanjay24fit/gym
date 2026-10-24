@@ -9,13 +9,11 @@ import Payments from './components/Payments'
 import GymProfile from './components/GymProfile'
 import Admin from './components/Admin'
 import PaymentForm from './components/PaymentForm'
-import WhatsAppSupport from './components/WhatsAppSupport'
 import SetupNotice from './components/SetupNotice'
 import GymLogo from './components/GymLogo'
 import DownloadAppModal from './components/DownloadAppModal'
 import ResetPassword from './components/ResetPassword'
-import ThemeToggle from './components/ThemeToggle'
-import LanguageToggle from './components/LanguageToggle'
+import UtilityMenu from './components/UtilityMenu'
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -311,63 +309,48 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* Header Topbar */}
+      {/* Redesigned Minimalist Modern Dashboard Header */}
       <header className="topbar">
         <div className="brand">
-          <GymLogo size={40} />
+          <GymLogo size={38} />
           <div className="brand-details">
-            <b>{account.isAdmin && tab === 'admin' ? 'Gym Manager – Admin' : gym?.gym_name || 'Gym Manager'}</b>
-            <span className="muted small block">{session.user.email}</span>
+            <span className="brand-gym-title">
+              {account.isAdmin && tab === 'admin' ? 'Gym Manager – Admin' : gym?.gym_name || 'Gym Manager'}
+            </span>
+            <span className="muted small brand-email">{session.user.email}</span>
           </div>
         </div>
-        <div className="topbar-actions">
-          <LanguageToggle size="sm" />
-          <ThemeToggle size="sm" />
-          {!isInstalled && (
+
+        {/* Primary Desktop Navigation (Centered) */}
+        <nav className="nav-desktop" aria-label="Primary Navigation">
+          {tabs.map((t) => (
             <button
+              key={t.key}
               type="button"
-              className="btn-download-app"
-              onClick={handleDownloadApp}
-              title="Download / Install Gym Manager app on your phone"
+              className={tab === t.key ? 'active' : ''}
+              onClick={() => {
+                setMembersInitialDialog(null)
+                setTab(t.key)
+              }}
             >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              <span>Download App</span>
+              <span className="nav-icon" style={{ width: 16, height: 16, display: 'inline-flex' }}>{t.icon}</span>
+              <span>{t.label}</span>
             </button>
-          )}
-          <WhatsAppSupport className="sm" iconSize={12} label="Support" />
-          <button className="btn sm secondary logout-btn" onClick={logout}>Logout</button>
+          ))}
+        </nav>
+
+        {/* Topbar Right - User Profile Info & Single Utility Hamburger Menu */}
+        <div className="topbar-actions">
+          <UtilityMenu
+            gymName={gym?.gym_name}
+            userEmail={session.user.email}
+            isAdmin={account.isAdmin}
+            isInstalled={isInstalled}
+            onDownloadApp={handleDownloadApp}
+            onLogout={logout}
+          />
         </div>
       </header>
-
-      {/* Desktop Navigation */}
-      <nav className="nav-desktop">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            className={tab === t.key ? 'active' : ''}
-            onClick={() => {
-              setMembersInitialDialog(null)
-              setTab(t.key)
-            }}
-          >
-            <span style={{ width: 16, height: 16, display: 'inline-flex' }}>{t.icon}</span>
-            <span>{t.label}</span>
-          </button>
-        ))}
-      </nav>
 
       {/* Main Content Area */}
       <main className="content">
