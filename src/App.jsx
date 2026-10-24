@@ -420,8 +420,8 @@ export default function App() {
         }}
       />
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="bottom-nav">
+      {/* Mobile Floating Bottom Navigation Dock */}
+      <nav className="bottom-nav" aria-label="Quick Navigation Dock">
         <div className="bottom-nav-inner">
           {tabs.map((t) => (
             <button
@@ -431,9 +431,13 @@ export default function App() {
                 setMembersInitialDialog(null)
                 setTab(t.key)
               }}
+              title={t.label}
+              aria-label={t.label}
             >
-              {t.icon}
-              <span>{t.label}</span>
+              <span style={{ display: 'inline-flex', width: 19, height: 19, alignItems: 'center', justifyContent: 'center' }}>
+                {t.icon}
+              </span>
+              {tab === t.key && <span style={{ marginLeft: 2, fontSize: 12 }}>{t.label}</span>}
             </button>
           ))}
         </div>
