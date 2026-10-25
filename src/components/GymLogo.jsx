@@ -11,19 +11,19 @@ export default function GymLogo({ size = 40, className = '' }) {
     >
       <defs>
         <linearGradient id="logoBg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#14243A" />
-          <stop offset="100%" stopColor="#0B1320" />
+          <stop offset="0%" stopColor="#145C43" />
+          <stop offset="100%" stopColor="#0E3D2D" />
         </linearGradient>
         <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#38BDF8" />
-          <stop offset="100%" stopColor="#2563EB" />
+          <stop offset="0%" stopColor="#2BB688" />
+          <stop offset="100%" stopColor="#207A5B" />
         </linearGradient>
         <linearGradient id="accentGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#F59E0B" />
-          <stop offset="100%" stopColor="#FBBF24" />
+          <stop offset="0%" stopColor="#D99520" />
+          <stop offset="100%" stopColor="#F59E0B" />
         </linearGradient>
         <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#2563EB" floodOpacity="0.4" />
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#145C43" floodOpacity="0.35" />
         </filter>
       </defs>
 

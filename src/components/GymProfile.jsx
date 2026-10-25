@@ -207,14 +207,43 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
           <div className="section-head" style={{ marginBottom: '10px' }}>
             <div>
               <h4 style={{ margin: 0 }}>Theme & Appearance</h4>
-              <span className="muted small">Choose between athletic Dark mode and daylight Light mode</span>
+              <span className="muted small">Choose between fresh Off-White Emerald mode and athletic Dark mode</span>
             </div>
             <span className="badge blue">
-              {theme === 'dark' ? '● Dark Mode Active' : '● Light Mode Active'}
+              {theme === 'light' ? '● Off-White Emerald Active' : '● Dark Mode Active'}
             </span>
           </div>
 
           <div className="theme-options-grid">
+            {/* Off-White Emerald Option */}
+            <div
+              className={`theme-option-card ${theme === 'light' ? 'active' : ''}`}
+              onClick={() => setTheme('light')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTheme('light') }}
+            >
+              <div className="theme-option-preview light-preview">
+                <div className="preview-bar" />
+                <div className="preview-body">
+                  <div className="preview-card" />
+                  <div className="preview-accent" />
+                </div>
+              </div>
+              <div className="theme-option-info">
+                <div className="theme-option-name">
+                  <span>Off-White Emerald (Default)</span>
+                </div>
+                <div className="theme-option-check">
+                  {theme === 'light' && (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Dark Theme Option */}
             <div
               className={`theme-option-card ${theme === 'dark' ? 'active' : ''}`}
@@ -236,35 +265,6 @@ export default function GymProfile({ gym, userEmail, onLogout, onDownloadApp, is
                 </div>
                 <div className="theme-option-check">
                   {theme === 'dark' && (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Light Theme Option */}
-            <div
-              className={`theme-option-card ${theme === 'light' ? 'active' : ''}`}
-              onClick={() => setTheme('light')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTheme('light') }}
-            >
-              <div className="theme-option-preview light-preview">
-                <div className="preview-bar" />
-                <div className="preview-body">
-                  <div className="preview-card" />
-                  <div className="preview-accent" />
-                </div>
-              </div>
-              <div className="theme-option-info">
-                <div className="theme-option-name">
-                  <span>Clean Light</span>
-                </div>
-                <div className="theme-option-check">
-                  {theme === 'light' && (
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>

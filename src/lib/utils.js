@@ -114,3 +114,11 @@ export function expiryText(endIso) {
   if (left === 0) return 'Expires today'
   return `${left} day${left === 1 ? '' : 's'} left`
 }
+
+export function generateIdempotencyKey() {
+  if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
+    return window.crypto.randomUUID()
+  }
+  return 'idem_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11)
+}
+

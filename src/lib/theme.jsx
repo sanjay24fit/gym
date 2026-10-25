@@ -12,11 +12,11 @@ const ThemeContext = createContext({
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
-    if (typeof window === 'undefined') return 'dark'
+    if (typeof window === 'undefined') return 'light'
     const saved = localStorage.getItem(THEME_KEY)
     if (saved === 'light' || saved === 'dark') return saved
-    // Default to dark theme for the gym athletic aesthetic
-    return 'dark'
+    // Default to the premium Off-White & Emerald theme
+    return 'light'
   })
 
   const applyTheme = (nextTheme) => {
@@ -27,7 +27,7 @@ export function ThemeProvider({ children }) {
     // Update mobile browser status bar / theme-color
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta) {
-      meta.setAttribute('content', nextTheme === 'light' ? '#f8fafc' : '#090e18')
+      meta.setAttribute('content', nextTheme === 'light' ? '#F7F8F5' : '#0B0B0C')
     }
   }
 

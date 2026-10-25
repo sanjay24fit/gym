@@ -108,6 +108,11 @@ export default function MemberForm({ member, renew, onSave, onDelete, onScanNote
         ? form.custom_facility.trim() || 'Custom Facility'
         : form.facility
 
+    const previousDue = Number(form.previousDue || 0)
+    const planFee = renew
+      ? Math.max(0, (Number(form.total_fee) || 0) - previousDue)
+      : Number(form.total_fee) || 0
+
     const err = await onSave({
       name: form.name.trim(),
       phone: form.phone.trim(),
@@ -117,13 +122,17 @@ export default function MemberForm({ member, renew, onSave, onDelete, onScanNote
       trainer_name: form.personal_trainer ? form.trainer_name.trim() : '',
       start_date: form.start_date,
       end_date: form.end_date,
+      plan_fee: planFee,
       total_fee: Number(form.total_fee) || 0,
       paid_amount: Number(form.paid_amount) || 0,
+      down_payment: Number(form.paid_amount) || 0,
+      payment_method: form.payment_method || 'cash',
       notes: form.notes.trim(),
     })
     setSaving(false)
     if (err) setError(err)
   }
+
 
   const title = renew ? `Renew – ${member.name}` : member ? 'Edit member' : 'Add member'
 

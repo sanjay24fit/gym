@@ -7,6 +7,16 @@ import {
   hasPersonalTrainer,
   getTrainerName,
 } from '../lib/utils'
+import { WhatsAppIcon } from './WhatsAppSupport'
+
+function getPaymentWhatsAppUrl(m) {
+  if (!m || !m.phone) return null
+  const cleanPhone = m.phone.replace(/[^0-9]/g, '')
+  const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone
+  const due = dueAmount(m)
+  const text = `Hello ${m.name}! This is a friendly reminder that a balance of ${formatMoney(due)} is pending for your gym membership (${m.plan || 'Standard'}). Please let us know if you need assistance to clear it. Thank you!`
+  return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`
+}
 
 export default function Payments({ members, onCollectPayment }) {
   const [filter, setFilter] = useState('due') // 'all' | 'due' | 'paid'
@@ -210,23 +220,37 @@ export default function Payments({ members, onCollectPayment }) {
                     </td>
 
                     <td className="actions">
-                      {due > 0 ? (
-                        <button
-                          type="button"
-                          className="btn sm primary"
-                          onClick={() => onCollectPayment(m)}
-                        >
-                          Collect Payment
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn sm"
-                          onClick={() => onCollectPayment(m)}
-                        >
-                          Edit Payment
-                        </button>
-                      )}
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        {due > 0 && getPaymentWhatsAppUrl(m) && (
+                          <a
+                            href={getPaymentWhatsAppUrl(m)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn sm"
+                            style={{ padding: '6px 8px', color: '#16a34a', borderColor: '#bbf7d0', background: '#f0fdf4' }}
+                            title="Send fee reminder on WhatsApp"
+                          >
+                            <WhatsAppIcon size={13} />
+                          </a>
+                        )}
+                        {due > 0 ? (
+                          <button
+                            type="button"
+                            className="btn sm primary"
+                            onClick={() => onCollectPayment(m)}
+                          >
+                            Collect Payment
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn sm"
+                            onClick={() => onCollectPayment(m)}
+                          >
+                            Edit Payment
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )

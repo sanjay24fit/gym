@@ -13,7 +13,24 @@ import {
   getMemberFacility,
   hasPersonalTrainer,
   getTrainerName,
+  generateIdempotencyKey,
 } from '../lib/utils'
+
+import { WhatsAppIcon } from './WhatsAppSupport'
+
+function getMemberWhatsAppUrl(m) {
+  if (!m || !m.phone) return null
+  const cleanPhone = m.phone.replace(/[^0-9]/g, '')
+  const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone
+  const due = dueAmount(m)
+  let text = `Hello ${m.name}! Greetings from the gym.`
+  if (due > 0) {
+    text = `Hello ${m.name}! This is a friendly reminder that a balance of ${formatMoney(due)} is pending for your gym membership (${m.plan || 'Standard'}). Please let us know if you need any assistance clearing it. Thank you!`
+  } else {
+    text = `Hello ${m.name}! Your gym membership (${m.plan || 'Standard'}) is active and valid until ${formatDate(m.end_date)}. Thank you for training with us!`
+  }
+  return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`
+}
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -62,10 +79,86 @@ export default function Members({ members, filter, setFilter, reload, initialDia
 
   async function save(values) {
     const { type, member } = dialog
+
+    if (type === 'pay') {
+      const paymentAmount = Number(values.amount ?? (values.paid_amount - (member?.paid_amount || 0)))
+      const { error } = await supabase.rpc('rpc_record_payment', {
+        p_member_id: member.id,
+        p_amount: paymentAmount,
+        p_payment_method: values.payment_method || 'cash',
+        p_notes: values.notes || 'Counter payment',
+        p_idempotency_key: generateIdempotencyKey(),
+      })
+      if (error) {
+        if (error.message?.includes('function') || error.code === '42883') {
+          const res = await supabase.from('members').update({ paid_amount: values.paid_amount }).eq('id', member.id)
+          if (res.error) return res.error.message
+        } else {
+          return error.message
+        }
+      }
+      setDialog(null)
+      await reload()
+      return
+    }
+
+    if (type === 'renew') {
+      const planFee = Number(values.plan_fee ?? values.total_fee) || 0
+      const downPayment = Number(values.down_payment ?? values.paid_amount ?? 0)
+      const { error } = await supabase.rpc('rpc_renew_membership', {
+        p_member_id: member.id,
+        p_plan_name: values.plan,
+        p_start_date: values.start_date,
+        p_end_date: values.end_date,
+        p_plan_fee: planFee,
+        p_down_payment: downPayment,
+        p_payment_method: values.payment_method || 'cash',
+        p_idempotency_key: generateIdempotencyKey(),
+      })
+      if (error) {
+        if (error.message?.includes('function') || error.code === '42883') {
+          const res = await supabase.from('members').update(values).eq('id', member.id)
+          if (res.error) return res.error.message
+        } else {
+          return error.message
+        }
+      } else {
+        // Also update any changed non-financial attributes (notes, facility, trainer)
+        await supabase
+          .from('members')
+          .update({
+            facility: values.facility,
+            personal_trainer: values.personal_trainer,
+            trainer_name: values.trainer_name,
+            notes: values.notes,
+          })
+          .eq('id', member.id)
+      }
+      setDialog(null)
+      await reload()
+      return
+    }
+
+    // For Edit: omit total_fee and paid_amount so column-level lockdown is never violated
+    const updatePayload =
+      type === 'edit'
+        ? {
+            name: values.name,
+            phone: values.phone,
+            plan: values.plan,
+            facility: values.facility,
+            personal_trainer: values.personal_trainer,
+            trainer_name: values.trainer_name,
+            start_date: values.start_date,
+            end_date: values.end_date,
+            notes: values.notes,
+          }
+        : values
+
     let res =
       type === 'add'
         ? await supabase.from('members').insert(values)
-        : await supabase.from('members').update(values).eq('id', member.id)
+        : await supabase.from('members').update(updatePayload).eq('id', member.id)
 
     // Fallback if Postgres columns 'facility', 'personal_trainer', or 'trainer_name' are not yet created in Supabase
     if (
@@ -87,16 +180,26 @@ export default function Members({ members, filter, setFilter, reload, initialDia
         .trim()
       const fallbackNotes = `${cleanNotes} ${facilityTag} ${ptTag}`.trim()
 
-      const fallbackValues = {
-        name: values.name,
-        phone: values.phone,
-        plan: values.plan,
-        start_date: values.start_date,
-        end_date: values.end_date,
-        total_fee: values.total_fee,
-        paid_amount: values.paid_amount,
-        notes: fallbackNotes,
-      }
+      const fallbackValues =
+        type === 'edit'
+          ? {
+              name: values.name,
+              phone: values.phone,
+              plan: values.plan,
+              start_date: values.start_date,
+              end_date: values.end_date,
+              notes: fallbackNotes,
+            }
+          : {
+              name: values.name,
+              phone: values.phone,
+              plan: values.plan,
+              start_date: values.start_date,
+              end_date: values.end_date,
+              total_fee: values.total_fee,
+              paid_amount: values.paid_amount,
+              notes: fallbackNotes,
+            }
 
       res =
         type === 'add'
@@ -120,7 +223,11 @@ export default function Members({ members, filter, setFilter, reload, initialDia
     const { error } = await supabase.from('members').delete().eq('id', m.id)
     setDeleting(false)
     if (error) {
-      setDeleteError(error.message)
+      if (error.message?.includes('foreign key') || error.code === '23503') {
+        setDeleteError('This member has recorded payment or renewal history and cannot be deleted. Historical financial records must be preserved.')
+      } else {
+        setDeleteError(error.message)
+      }
       return
     }
     setDialog(null)
@@ -188,113 +295,270 @@ export default function Members({ members, filter, setFilter, reload, initialDia
           {members.length === 0 ? 'No members registered yet. Click "+ Add member" or "Scan Register" to start.' : 'No members match the current filter/search.'}
         </div>
       ) : (
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Member</th>
-                <th>Plan & Facility</th>
-                <th>Expiry</th>
-                <th>Payment</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((m) => {
-                const [tone, label] = STATUS_BADGE[membershipStatus(m)]
-                const due = dueAmount(m)
-                const initials = m.name ? m.name.slice(0, 2).toUpperCase() : 'GM'
+        <div className="members-listing-container">
+          {/* 1. Desktop Tabular View (Displayed on screens >= 769px) */}
+          <div className="table-wrap members-desktop-table">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Plan & Facility</th>
+                  <th>Expiry</th>
+                  <th>Payment</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((m, idx) => {
+                  const [tone, label] = STATUS_BADGE[membershipStatus(m)]
+                  const due = dueAmount(m)
+                  const initials = m.name ? m.name.slice(0, 2).toUpperCase() : 'GM'
+                  const waUrl = getMemberWhatsAppUrl(m)
 
-                return (
-                  <tr key={m.id}>
-                    <td data-label="Member">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div className="avatar-initials" style={{ width: '34px', height: '34px', fontSize: '13px' }}>
-                          {initials}
+                  return (
+                    <tr key={m.id}>
+                      <td data-label="Member">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div className="avatar-initials" style={{ width: '36px', height: '36px', fontSize: '13px' }}>
+                            {initials}
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <b>{m.name}</b>
+                              <span className="muted xs font-mono">#{idx + 1}</span>
+                            </div>
+                            <span className="muted small block">{m.phone || 'No phone'}</span>
+                          </div>
                         </div>
-                        <div>
-                          <b>{m.name}</b>
-                          <span className="muted small block">{m.phone || 'No phone'}</span>
-                        </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td data-label="Plan & Facility">
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 600 }}>{m.plan || 'Standard'}</span>
-                          <span className="badge blue" style={{ fontSize: '10.5px', padding: '1px 7px' }}>
-                            🏢 {getMemberFacility(m)}
-                          </span>
-                          {hasPersonalTrainer(m) && (
-                            <span
-                              className="badge purple"
-                              style={{ fontSize: '10.5px', padding: '1px 7px' }}
-                              title={getTrainerName(m) ? `Personal Trainer: ${getTrainerName(m)}` : 'Personal Trainer Included'}
-                            >
-                              ⭐ PT{getTrainerName(m) ? `: ${getTrainerName(m)}` : ''}
+                      <td data-label="Plan & Facility">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 600 }}>{m.plan || 'Standard'}</span>
+                            <span className="badge blue" style={{ fontSize: '10.5px', padding: '1px 7px' }}>
+                              🏢 {getMemberFacility(m)}
                             </span>
-                          )}
+                            {hasPersonalTrainer(m) && (
+                              <span
+                                className="badge purple"
+                                style={{ fontSize: '10.5px', padding: '1px 7px' }}
+                                title={getTrainerName(m) ? `Personal Trainer: ${getTrainerName(m)}` : 'Personal Trainer Included'}
+                              >
+                                ⭐ PT{getTrainerName(m) ? `: ${getTrainerName(m)}` : ''}
+                              </span>
+                            )}
+                          </div>
+                          <span className="muted small block">Joined {formatDate(m.start_date)}</span>
                         </div>
-                        <span className="muted small block">Joined {formatDate(m.start_date)}</span>
+                      </td>
+
+                      <td data-label="Expiry">
+                        <span className={`badge ${tone}`}>{label}</span>
+                        <span className="small block" style={{ marginTop: '3px' }}>
+                          {formatDate(m.end_date)} · {expiryText(m.end_date)}
+                        </span>
+                      </td>
+
+                      <td data-label="Payment">
+                        {due > 0 ? (
+                          <span className="badge red">{formatMoney(due)} due</span>
+                        ) : (
+                          <span className="badge green">Paid</span>
+                        )}
+                        <span className="muted small block font-mono" style={{ marginTop: '3px', fontSize: '12px' }}>
+                          {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}
+                        </span>
+                      </td>
+
+                      <td className="actions">
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                          {waUrl && (
+                            <a
+                              href={waUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn sm"
+                              style={{ padding: '6px 8px', color: '#16a34a', borderColor: '#bbf7d0', background: '#f0fdf4' }}
+                              title="Chat or send reminder on WhatsApp"
+                            >
+                              <WhatsAppIcon size={13} />
+                            </a>
+                          )}
+                          {due > 0 && (
+                            <button
+                              type="button"
+                              className="btn sm primary"
+                              onClick={() => setDialog({ type: 'pay', member: m })}
+                            >
+                              Pay Due
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn sm"
+                            onClick={() => setDialog({ type: 'renew', member: m })}
+                          >
+                            Renew
+                          </button>
+                          <button
+                            type="button"
+                            className="btn sm"
+                            onClick={() => setDialog({ type: 'edit', member: m })}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="btn sm danger"
+                            onClick={() => promptRemove(m)}
+                            title="Remove member"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 2. Mobile Card-Based Member Directory (Inspired by GymBook) */}
+          <div className="members-mobile-cards">
+            {list.map((m, idx) => {
+              const [tone, label] = STATUS_BADGE[membershipStatus(m)]
+              const due = dueAmount(m)
+              const initials = m.name ? m.name.slice(0, 2).toUpperCase() : 'GM'
+              const waUrl = getMemberWhatsAppUrl(m)
+
+              return (
+                <div key={m.id} className="member-gymbook-card">
+                  {/* Card Header: Avatar, Name, M-ID, Status */}
+                  <div className="member-gb-header">
+                    <div className="member-gb-avatar" aria-hidden="true">
+                      {initials}
+                    </div>
+                    <div className="member-gb-info">
+                      <div className="member-gb-name-row">
+                        <b className="member-gb-name">{m.name}</b>
+                        <span className="member-gb-id">M ID: #{idx + 1}</span>
                       </div>
-                    </td>
+                      <div className="member-gb-sub-row">
+                        {m.phone ? (
+                          <a href={`tel:${m.phone}`} className="member-gb-phone">
+                            📞 {m.phone}
+                          </a>
+                        ) : (
+                          <span className="member-gb-phone muted">No phone</span>
+                        )}
+                        <span className={`badge ${tone} member-gb-status`}>{label}</span>
+                      </div>
+                    </div>
+                  </div>
 
-                    <td data-label="Expiry">
-                      <span className={`badge ${tone}`}>{label}</span>
-                      <span className="small block" style={{ marginTop: '2px' }}>
-                        {formatDate(m.end_date)} · {expiryText(m.end_date)}
-                      </span>
-                    </td>
+                  {/* Card Body: Plan, Facility, Expiry & Dues in a clean 2-column grid */}
+                  <div className="member-gb-body">
+                    <div className="member-gb-data-col">
+                      <span className="member-gb-label">Plan & Facility</span>
+                      <div className="member-gb-plan-val">
+                        <span>{m.plan || 'Standard'}</span>
+                        <span className="badge blue xs">🏢 {getMemberFacility(m)}</span>
+                        {hasPersonalTrainer(m) && (
+                          <span className="badge purple xs">⭐ PT</span>
+                        )}
+                      </div>
+                    </div>
 
-                    <td data-label="Payment">
+                    <div className="member-gb-data-col" style={{ textAlign: 'right' }}>
+                      <span className="member-gb-label">Plan Expiry</span>
+                      <span className="member-gb-val font-mono">{formatDate(m.end_date)}</span>
+                      <span className="muted xs block">{expiryText(m.end_date)}</span>
+                    </div>
+
+                    <div className="member-gb-data-col">
+                      <span className="member-gb-label">Joined On</span>
+                      <span className="member-gb-val muted">{formatDate(m.start_date)}</span>
+                    </div>
+
+                    <div className="member-gb-data-col" style={{ textAlign: 'right' }}>
+                      <span className="member-gb-label">Payment Status</span>
                       {due > 0 ? (
-                        <span className="badge red">{formatMoney(due)} due</span>
+                        <div>
+                          <span className="badge red font-mono" style={{ fontSize: '11px' }}>
+                            {formatMoney(due)} due
+                          </span>
+                          <span className="muted xs block font-mono" style={{ marginTop: '2px' }}>
+                            Paid {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}
+                          </span>
+                        </div>
                       ) : (
-                        <span className="badge green">Paid</span>
+                        <div>
+                          <span className="badge green" style={{ fontSize: '11px' }}>Fully Paid</span>
+                          <span className="muted xs block font-mono" style={{ marginTop: '2px' }}>
+                            {formatMoney(m.paid_amount)}
+                          </span>
+                        </div>
                       )}
-                      <span className="muted small block font-mono" style={{ marginTop: '2px', fontSize: '12px' }}>
-                        {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}
-                      </span>
-                    </td>
+                    </div>
+                  </div>
 
-                    <td className="actions">
-                      {due > 0 && (
-                        <button
-                          type="button"
-                          className="btn sm accent"
-                          onClick={() => setDialog({ type: 'pay', member: m })}
-                        >
-                          Payment
-                        </button>
-                      )}
+                  {/* Card Action Ribbon: Touch-Friendly GymBook Actions */}
+                  <div className="member-gb-actions">
+                    {due > 0 && (
                       <button
                         type="button"
-                        className="btn sm"
-                        onClick={() => setDialog({ type: 'renew', member: m })}
+                        className="member-gb-btn primary"
+                        onClick={() => setDialog({ type: 'pay', member: m })}
                       >
-                        Renew
+                        💳 Pay Due
                       </button>
-                      <button
-                        type="button"
-                        className="btn sm"
-                        onClick={() => setDialog({ type: 'edit', member: m })}
+                    )}
+                    <button
+                      type="button"
+                      className="member-gb-btn"
+                      onClick={() => setDialog({ type: 'renew', member: m })}
+                    >
+                      🔄 Renew
+                    </button>
+                    {waUrl && (
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="member-gb-btn whatsapp"
+                        title="Chat on WhatsApp"
                       >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="btn sm danger"
-                        onClick={() => promptRemove(m)}
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                        <WhatsAppIcon size={14} />
+                        <span>WhatsApp</span>
+                      </a>
+                    )}
+                    {m.phone && (
+                      <a href={`tel:${m.phone}`} className="member-gb-btn" title="Call member">
+                        📞 Call
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      className="member-gb-btn"
+                      onClick={() => setDialog({ type: 'edit', member: m })}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="member-gb-btn danger"
+                      onClick={() => promptRemove(m)}
+                      title="Remove member"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

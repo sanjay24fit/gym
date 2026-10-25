@@ -171,7 +171,7 @@ export default function Dashboard({ members, onOpen, onAction, gymName }) {
               cy="50"
               r="40"
               fill="none"
-              stroke="#6366F1"
+              stroke="var(--primary, #145C43)"
               strokeWidth="9"
               strokeDasharray="251.2"
               strokeDashoffset={251.2 - (251.2 * retentionRate) / 100}
@@ -478,6 +478,14 @@ export default function Dashboard({ members, onOpen, onAction, gymName }) {
                       <span className="muted small block font-mono" style={{ marginTop: '2px', fontSize: '11px' }}>
                         {formatDate(m.end_date)}
                       </span>
+                      <button
+                        type="button"
+                        className="link block"
+                        style={{ fontSize: '12px', marginTop: '4px', fontWeight: 700, color: 'var(--primary, #145C43)' }}
+                        onClick={() => (onAction ? onAction('renew', m) : onOpen('expiring'))}
+                      >
+                        Renew Plan
+                      </button>
                     </div>
                   </li>
                 )

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
-import { today } from './lib/utils'
+import { today, generateIdempotencyKey } from './lib/utils'
 import Auth from './components/Auth'
 import AccessBlocked from './components/AccessBlocked'
 import Dashboard from './components/Dashboard'
@@ -162,6 +162,9 @@ export default function App() {
     } else if (action === 'scan') {
       setMembersInitialDialog({ type: 'scan' })
       setTab('members')
+    } else if (action === 'renew' && data) {
+      setMembersInitialDialog({ type: 'renew', member: data })
+      setTab('members')
     } else if (action === 'payments') {
       setTab('payments')
     } else if (action === 'download') {
@@ -174,11 +177,38 @@ export default function App() {
   // Handle payment save
   async function handlePaymentSave(values) {
     if (!paymentDialogMember) return
-    const { error } = await supabase.from('members').update(values).eq('id', paymentDialogMember.id)
-    if (error) return error.message
+    let err = null
+    if (values.amount) {
+      const { error } = await supabase.rpc('rpc_record_payment', {
+        p_member_id: paymentDialogMember.id,
+        p_amount: Number(values.amount),
+        p_payment_method: values.payment_method || 'cash',
+        p_notes: values.notes || 'Counter payment',
+        p_idempotency_key: generateIdempotencyKey(),
+      })
+      if (error) {
+        if (error.message?.includes('function') || error.code === '42883') {
+          const { error: fbErr } = await supabase
+            .from('members')
+            .update({ paid_amount: values.paid_amount })
+            .eq('id', paymentDialogMember.id)
+          err = fbErr?.message
+        } else {
+          err = error.message
+        }
+      }
+    } else {
+      const { error } = await supabase
+        .from('members')
+        .update({ paid_amount: values.paid_amount })
+        .eq('id', paymentDialogMember.id)
+      err = error?.message
+    }
+    if (err) return err
     setPaymentDialogMember(null)
     await loadMembers()
   }
+
 
   if (!isSupabaseConfigured) {
     return <SetupNotice />
