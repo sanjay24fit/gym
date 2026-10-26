@@ -3211,3 +3211,729 @@ body {
   display: none !important;
 }
 
+/* ==========================================================================
+   GYMBOOK SEQUENCE & LAYOUT DESIGN (Matching User Screenshots)
+   ========================================================================== */
+
+.gymbook-dash-wrap,
+.gymbook-members-wrap {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 95px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Header Bar */
+.gymbook-header {
+  background: #085e55;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.gymbook-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gymbook-header-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.gymbook-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gymbook-icon-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: opacity 0.15s;
+}
+
+.gymbook-icon-btn:hover {
+  opacity: 0.85;
+}
+
+.gymbook-badge-num {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Subtabs (Membership | Payments | Attendance) */
+.gymbook-subtabs-bar {
+  display: flex;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 10px;
+}
+
+.gymbook-subtab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 13px 4px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.gymbook-subtab-btn.active {
+  color: #085e55;
+  border-bottom-color: #085e55;
+  font-weight: 700;
+}
+
+.gymbook-subtext {
+  text-align: center;
+  font-size: 12.5px;
+  color: #6b7280;
+  padding: 12px 16px 4px;
+}
+
+/* Sections Flow */
+.gymbook-sections-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 6px;
+}
+
+.gb-sec {
+  padding: 0 16px;
+}
+
+.gb-sec-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.2px;
+}
+
+/* 2-Column Grid */
+.gb-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+/* GymBook Card */
+.gb-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 78px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.gb-card.pointer {
+  cursor: pointer;
+}
+
+.gb-card.pointer:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+}
+
+.gb-card.highlight-due {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+}
+
+.gb-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.gb-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.gb-card-val {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.gb-card-val.teal {
+  color: #085e55;
+}
+
+.gb-card-val.red {
+  color: #dc2626;
+}
+
+.gb-card-val.bold {
+  font-weight: 900;
+}
+
+.gb-card-val.large {
+  font-size: 24px;
+}
+
+.gb-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gb-card-icon.teal {
+  color: #085e55;
+}
+
+.gb-card-lbl {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gb-card-chevron {
+  color: #9ca3af;
+  font-size: 16px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* Full Width Banner Card (e.g. Aaj Ka Collection) */
+.gb-card-banner {
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.gb-banner-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gb-banner-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.gb-banner-lbl {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Filter Pills Row (This Month, Last Month, etc.) */
+.gb-filter-pills-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+}
+
+.gb-filter-pills-row::-webkit-scrollbar {
+  display: none;
+}
+
+.gb-filter-pill {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #4b5563;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.gb-filter-pill.active {
+  background: #085e55;
+  color: #ffffff;
+  border-color: #085e55;
+}
+
+/* Floating Action Button (Record Attendance / Add Member) */
+.gb-fab-btn,
+.gb-fab-add-member {
+  position: fixed;
+  bottom: 84px;
+  right: 18px;
+  background: #085e55;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(8, 94, 85, 0.4);
+  z-index: 40;
+  transition: transform 0.15s;
+}
+
+.gb-fab-btn:hover,
+.gb-fab-add-member:hover {
+  transform: scale(1.03);
+}
+
+/* ==========================================================================
+   MEMBERS PAGE SPECIFIC STYLES (Image 1)
+   ========================================================================== */
+
+.gymbook-search-container {
+  padding: 12px 16px 8px;
+}
+
+.gymbook-search-bar {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  gap: 8px;
+}
+
+.gymbook-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #1f2937;
+  padding: 8px 0;
+  outline: none;
+}
+
+.gymbook-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.gymbook-search-btn {
+  background: transparent;
+  border: none;
+  color: #085e55;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.gymbook-mid-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  margin-left: 6px;
+  position: relative;
+}
+
+.gymbook-mid-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.gymbook-mid-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.gymbook-toggle-slider {
+  width: 32px;
+  height: 18px;
+  background-color: #e5e7eb;
+  border-radius: 18px;
+  transition: 0.2s;
+  position: relative;
+  display: inline-block;
+}
+
+.gymbook-toggle-slider:before {
+  content: "";
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.gymbook-mid-toggle input:checked + .gymbook-toggle-slider {
+  background-color: #085e55;
+}
+
+.gymbook-mid-toggle input:checked + .gymbook-toggle-slider:before {
+  transform: translateX(14px);
+}
+
+/* Horizontal Filters */
+.gymbook-filter-scroll-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 16px 12px;
+  scrollbar-width: none;
+}
+
+.gymbook-filter-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.gb-select-pill,
+.gb-filter-pill-btn {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.gb-filter-pill-btn.active {
+  background: #085e55;
+  color: #ffffff;
+  border-color: #085e55;
+}
+
+/* Member Cards Stream */
+.gymbook-cards-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+/* Member Card */
+.gymbook-member-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top-right corner arc in green */
+.gb-card-corner-arc {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48px;
+  height: 48px;
+  background: radial-gradient(circle at top right, #22c55e 0%, #22c55e 60%, transparent 62%);
+  pointer-events: none;
+}
+
+.gb-card-main-content {
+  display: flex;
+  padding: 16px 14px 12px;
+  gap: 14px;
+}
+
+/* Avatar circle */
+.gb-member-avatar-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #0d7b70;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gb-member-info-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.gb-member-name-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.gb-member-field {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.gb-field-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #085e55;
+}
+
+.gb-field-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.gb-card-trash-btn {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px;
+  margin-right: 12px;
+}
+
+.gb-card-trash-btn:hover {
+  color: #dc2626;
+}
+
+.gb-member-details-cols {
+  display: flex;
+  justify-content: space-between;
+}
+
+.gb-col-left {
+  flex: 1;
+}
+
+.gb-col-right {
+  flex: 1.2;
+}
+
+.gb-field-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.gb-field-pair .gb-field-label {
+  font-size: 11px;
+  color: #085e55;
+  font-weight: 600;
+}
+
+.gb-field-pair .gb-field-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.gb-field-pair .green-text {
+  color: #16a34a;
+  font-weight: 800;
+}
+
+.gb-field-pair .red-text {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+/* Bottom Action Ribbon (6 icons with text) */
+.gb-card-actions-ribbon {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  border-top: 1px solid #f3f4f6;
+  padding: 10px 4px 8px;
+  background: #ffffff;
+}
+
+.gb-action-icon-item {
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 2px;
+}
+
+.gb-action-icon-item.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.gb-action-icon {
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gb-action-text {
+  font-size: 10px;
+  color: #4b5563;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Yellow Currency Banner */
+.gymbook-currency-banner {
+  background: #fef9c3;
+  border: 1px solid #fef08a;
+  color: #854d0e;
+  padding: 10px 16px;
+  margin: 14px 16px 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.gymbook-currency-link {
+  background: transparent;
+  border: none;
+  color: #0284c7;
+  text-decoration: underline;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   BOTTOM NAVIGATION BAR (Matching Screenshots)
+   ========================================================================== */
+
+.gymbook-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  z-index: 50;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.gymbook-bottom-dock {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 0 10px;
+}
+
+.gymbook-nav-tab {
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 2px 8px;
+  min-width: 60px;
+  transition: all 0.15s;
+}
+
+.gymbook-nav-tab.active {
+  color: #085e55;
+}
+
+.gymbook-nav-icon-wrap {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+}
+
+.gymbook-nav-icon-wrap.pill-active {
+  background: #ede9fe;
+  color: #085e55;
+  padding: 4px 20px;
+  border-radius: 16px;
+  width: auto;
+  height: auto;
+}
+
+.gymbook-nav-tab-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.gymbook-nav-tab.active .gymbook-nav-tab-label {
+  color: #085e55;
+  font-weight: 800;
+}
+
+/* Hide desktop topbar on small screens when mobile header is active */
+@media (max-width: 768px) {
+  .app .topbar {
+    display: none;
+  }
+}
+

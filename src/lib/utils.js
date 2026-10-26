@@ -122,3 +122,38 @@ export function generateIdempotencyKey() {
   return 'idem_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11)
 }
 
+export function isMemberBlocked(m) {
+  if (!m) return false
+  if (m.is_blocked === true || m.status === 'blocked') return true
+  if (m.notes && /\[Blocked:\s*true\]/i.test(m.notes)) return true
+  return false
+}
+
+export function getMemberDOB(m) {
+  if (!m) return null
+  if (m.birth_date) return m.birth_date
+  if (m.dob) return m.dob
+  if (m.notes) {
+    const match = m.notes.match(/\[DOB:\s*([0-9-]+)\]/i)
+    if (match && match[1]) return match[1].trim()
+  }
+  return null
+}
+
+export function isBirthdayToday(m) {
+  const dob = getMemberDOB(m)
+  if (!dob) return false
+  const t = today() // YYYY-MM-DD
+  return dob.slice(5) === t.slice(5) // MM-DD match
+}
+
+export function getAdmissionFee(m) {
+  if (!m) return 0
+  if (m.admission_fee) return Number(m.admission_fee) || 0
+  if (m.notes) {
+    const match = m.notes.match(/\[Admission:\s*([0-9.]+)\]/i)
+    if (match && match[1]) return Number(match[1]) || 0
+  }
+  return 0
+}
+

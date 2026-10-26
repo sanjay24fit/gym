@@ -14,6 +14,7 @@ import GymLogo from './components/GymLogo'
 import DownloadAppModal from './components/DownloadAppModal'
 import ResetPassword from './components/ResetPassword'
 import UtilityMenu from './components/UtilityMenu'
+import Reports from './components/Reports'
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -278,20 +279,10 @@ export default function App() {
     ...(canUseGym
       ? [
           {
-            key: 'dashboard',
-            label: 'Home',
-            icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            ),
-          },
-          {
             key: 'members',
             label: 'Members',
             icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -300,12 +291,24 @@ export default function App() {
             ),
           },
           {
-            key: 'payments',
-            label: 'Payments',
+            key: 'dashboard',
+            label: 'Dashboard',
             icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                <path d="M22 12A10 10 0 0 0 12 2v10z" />
+              </svg>
+            ),
+          },
+          {
+            key: 'reports',
+            label: 'Reports',
+            icon: (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
             ),
           },
@@ -313,10 +316,15 @@ export default function App() {
             key: 'gym',
             label: 'Gym',
             icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M3 21h18" />
-                <path d="M5 21V7l8-4v18" />
-                <path d="M19 21V11l-6-3" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                <path d="M9 22v-4h6v4" />
+                <line x1="8" y1="6" x2="8.01" y2="6" strokeWidth="3" />
+                <line x1="16" y1="6" x2="16.01" y2="6" strokeWidth="3" />
+                <line x1="8" y1="10" x2="8.01" y2="10" strokeWidth="3" />
+                <line x1="16" y1="10" x2="16.01" y2="10" strokeWidth="3" />
+                <line x1="8" y1="14" x2="8.01" y2="14" strokeWidth="3" />
+                <line x1="16" y1="14" x2="16.01" y2="14" strokeWidth="3" />
               </svg>
             ),
           },
@@ -328,7 +336,7 @@ export default function App() {
             key: 'admin',
             label: 'Admin Panel',
             icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             ),
@@ -384,10 +392,24 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="content">
+        {tab === 'members' && canUseGym && (
+          <Members
+            members={members}
+            filter={filter}
+            setFilter={setFilter}
+            reload={loadMembers}
+            initialDialog={membersInitialDialog}
+            gymName={gym?.gym_name}
+            gymId={userId}
+            onAction={handleDashboardAction}
+          />
+        )}
+
         {tab === 'dashboard' && canUseGym && (
           <Dashboard
             members={members}
             gymName={gym?.gym_name}
+            gymId={userId}
             isInstalled={isInstalled}
             onOpen={(f) => {
               setFilter(f)
@@ -398,13 +420,11 @@ export default function App() {
           />
         )}
 
-        {tab === 'members' && canUseGym && (
-          <Members
+        {tab === 'reports' && canUseGym && (
+          <Reports
             members={members}
-            filter={filter}
-            setFilter={setFilter}
-            reload={loadMembers}
-            initialDialog={membersInitialDialog}
+            gymName={gym?.gym_name}
+            gymId={userId}
           />
         )}
 
@@ -450,26 +470,30 @@ export default function App() {
         }}
       />
 
-      {/* Mobile Floating Bottom Navigation Dock */}
-      <nav className="bottom-nav" aria-label="Quick Navigation Dock">
-        <div className="bottom-nav-inner">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              className={`bottom-nav-item ${tab === t.key ? 'active' : ''}`}
-              onClick={() => {
-                setMembersInitialDialog(null)
-                setTab(t.key)
-              }}
-              title={t.label}
-              aria-label={t.label}
-            >
-              <span style={{ display: 'inline-flex', width: 19, height: 19, alignItems: 'center', justifyContent: 'center' }}>
-                {t.icon}
-              </span>
-              {tab === t.key && <span style={{ marginLeft: 2, fontSize: 12 }}>{t.label}</span>}
-            </button>
-          ))}
+      {/* Mobile Bottom Navigation Dock (Matching Screenshots) */}
+      <nav className="gymbook-bottom-nav" aria-label="Bottom Navigation">
+        <div className="gymbook-bottom-dock">
+          {tabs.map((t) => {
+            const isActive = tab === t.key
+            return (
+              <button
+                key={t.key}
+                type="button"
+                className={`gymbook-nav-tab ${isActive ? 'active' : ''}`}
+                onClick={() => {
+                  setMembersInitialDialog(null)
+                  setTab(t.key)
+                }}
+                title={t.label}
+                aria-label={t.label}
+              >
+                <div className={`gymbook-nav-icon-wrap ${isActive ? 'pill-active' : ''}`}>
+                  {t.icon}
+                </div>
+                <span className="gymbook-nav-tab-label">{t.label}</span>
+              </button>
+            )
+          })}
         </div>
       </nav>
     </div>
