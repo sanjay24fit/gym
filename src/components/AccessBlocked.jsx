@@ -5,9 +5,11 @@ import WhatsAppSupport from './WhatsAppSupport'
 import GymLogo from './GymLogo'
 import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
+import Modal from './Modal'
 import { initiateSubscriptionPayment, RAZORPAY_ME_HANDLE_URL } from '../lib/razorpay'
 
 export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [loadingPay, setLoadingPay] = useState(false)
   const [payError, setPayError] = useState('')
   const [paySuccess, setPaySuccess] = useState('')
@@ -64,7 +66,7 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
 
   return (
     <div className="center-page">
-      <div className="auth-theme-bar" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <div className="auth-theme-bar">
         <LanguageToggle size="sm" />
         <ThemeToggle size="sm" showLabel />
       </div>
@@ -157,10 +159,45 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
           🔄 Refresh Account Status
         </button>
         <WhatsAppSupport label="Need Help? Contact Admin via WhatsApp" className="full" />
-        <button className="btn secondary full" style={{ marginTop: '8px' }} onClick={onLogout}>
+        <button className="btn secondary full" style={{ marginTop: '8px' }} onClick={() => setShowLogoutModal(true)}>
           Logout
         </button>
       </div>
+
+      {showLogoutModal && (
+        <Modal title="Confirm Sign Out" onClose={() => setShowLogoutModal(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.5, color: 'var(--text)' }}>
+              Are you sure you want to log out? <br />
+              <span className="muted small" style={{ display: 'inline-block', marginTop: '4px' }}>
+                (क्या आप वाकई लॉग आउट करना चाहते हैं?)
+              </span>
+            </p>
+            <p className="muted small" style={{ margin: 0 }}>
+              You will be signed out from this device and will need to log in again to access your account.
+            </p>
+            <div className="modal-actions" style={{ marginTop: '16px' }}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel (रद्द करें)
+              </button>
+              <button
+                type="button"
+                className="btn danger-solid"
+                onClick={() => {
+                  setShowLogoutModal(false)
+                  onLogout()
+                }}
+              >
+                Yes, Log Out (लॉग आउट करें)
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

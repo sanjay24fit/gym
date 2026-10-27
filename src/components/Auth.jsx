@@ -74,7 +74,7 @@ export default function Auth({ onDownloadApp, isInstalled }) {
 
   return (
     <div className="center-page">
-      <div className="auth-theme-bar" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <div className="auth-theme-bar">
         <LanguageToggle size="sm" />
         <ThemeToggle size="sm" showLabel />
       </div>

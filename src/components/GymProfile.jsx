@@ -16,6 +16,7 @@ export default function GymProfile({
   onDownloadApp,
 }) {
   const { theme, setTheme } = useTheme()
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -329,11 +330,7 @@ export default function GymProfile({
           <button
             type="button"
             className="btn danger"
-            onClick={() => {
-              if (confirm('Are you sure you want to sign out?')) {
-                onLogout()
-              }
-            }}
+            onClick={() => setShowLogoutModal(true)}
           >
             Logout
           </button>
@@ -387,6 +384,41 @@ export default function GymProfile({
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {showLogoutModal && (
+        <Modal title="Confirm Sign Out" onClose={() => setShowLogoutModal(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.5, color: 'var(--text)' }}>
+              Are you sure you want to log out? <br />
+              <span className="muted small" style={{ display: 'inline-block', marginTop: '4px' }}>
+                (क्या आप वाकई लॉग आउट करना चाहते हैं?)
+              </span>
+            </p>
+            <p className="muted small" style={{ margin: 0 }}>
+              You will be signed out from this device and will need to log in again with your email and password to access your gym records.
+            </p>
+            <div className="modal-actions" style={{ marginTop: '16px' }}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel (रद्द करें)
+              </button>
+              <button
+                type="button"
+                className="btn danger-solid"
+                onClick={() => {
+                  setShowLogoutModal(false)
+                  onLogout()
+                }}
+              >
+                Yes, Log Out (लॉग आउट करें)
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>
