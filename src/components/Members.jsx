@@ -1,0 +1,359 @@
+import { useState } from 'react'
+import Modal from './Modal'
+import MemberForm from './MemberForm'
+import PaymentForm from './PaymentForm'
+import NotebookScanner from './NotebookScanner'
+import { supabase } from '../lib/supabase'
+import { updateMemberPayment } from '../lib/payments'
+import {
+  dueAmount,
+  expiryText,
+  formatDate,
+  formatMoney,
+  membershipStatus,
+  getMemberFacility,
+  hasPersonalTrainer,
+  getTrainerName,
+  isSchemaDriftError,
+  buildFallbackMemberValues,
+} from '../lib/utils'
+
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'active', label: 'Active' },
+  { key: 'expiring', label: 'Expiring soon' },
+  { key: 'expired', label: 'Expired' },
+  { key: 'due', label: 'Payment due' },
+  { key: 'pt', label: 'Personal Trainer' },
+]
+
+const STATUS_BADGE = {
+  active: ['green', 'Active'],
+  expiring: ['amber', 'Expiring'],
+  expired: ['gray', 'Expired'],
+}
+
+function matchesFilter(m, filter) {
+  const s = membershipStatus(m)
+  if (filter === 'active') return s !== 'expired'
+  if (filter === 'expiring') return s === 'expiring'
+  if (filter === 'expired') return s === 'expired'
+  if (filter === 'due') return dueAmount(m) > 0
+  if (filter === 'pt') return hasPersonalTrainer(m)
+  return true
+}
+
+export default function Members({ members, filter, setFilter, reload, initialDialog = null }) {
+  const [search, setSearch] = useState('')
+  const [dialog, setDialog] = useState(initialDialog) // { type: 'add'|'edit'|'renew'|'pay'|'remove'|'scan', member }
+  const [prevInitialDialog, setPrevInitialDialog] = useState(initialDialog)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  // N6: keep the dialog in sync with the App-level shortcut prop, so
+  // Dashboard → Add/Scan also works if this component stays mounted.
+  // Render-time adjustment (React docs pattern) — no effect, no extra render.
+  // A null prop never closes or reopens a dialog (closing is user-controlled).
+  if (initialDialog !== prevInitialDialog) {
+    setPrevInitialDialog(initialDialog)
+    if (initialDialog) setDialog(initialDialog)
+  }
+
+  const q = search.trim().toLowerCase()
+  const list = members
+    .filter((m) => matchesFilter(m, filter))
+    .filter(
+      (m) =>
+        !q ||
+        m.name.toLowerCase().includes(q) ||
+        m.phone.includes(q) ||
+        getMemberFacility(m).toLowerCase().includes(q) ||
+        getTrainerName(m).toLowerCase().includes(q) ||
+        (m.plan && m.plan.toLowerCase().includes(q))
+    )
+    .sort((a, b) => a.end_date.localeCompare(b.end_date))
+
+  async function save(values) {
+    const { type, member } = dialog
+
+    // Payment flow: same single-column paid_amount update as the App-level
+    // PaymentForm (Payments tab / Dashboard dues) — shared helper (T01 S1).
+    if (type === 'pay') {
+      const errMsg = await updateMemberPayment(member.id, values.paid_amount)
+      if (errMsg) return errMsg
+      setDialog(null)
+      await reload()
+      return
+    }
+
+    let res =
+      type === 'add'
+        ? await supabase.from('members').insert(values)
+        : await supabase.from('members').update(values).eq('id', member.id)
+
+    // Fallback if Postgres columns 'facility', 'personal_trainer', or 'trainer_name' are not yet created in Supabase
+    if (res.error && isSchemaDriftError(res.error)) {
+      res =
+        type === 'add'
+          ? await supabase.from('members').insert(buildFallbackMemberValues(values))
+          : await supabase.from('members').update(buildFallbackMemberValues(values)).eq('id', member.id)
+    }
+
+    if (res.error) return res.error.message
+    setDialog(null)
+    await reload()
+  }
+
+  function promptRemove(m) {
+    setDeleteError('')
+    setDialog({ type: 'remove', member: m })
+  }
+
+  async function confirmRemove(m) {
+    setDeleting(true)
+    setDeleteError('')
+    const { error } = await supabase.from('members').delete().eq('id', m.id)
+    setDeleting(false)
+    if (error) {
+      setDeleteError(error.message)
+      return
+    }
+    setDialog(null)
+    await reload()
+  }
+
+  return (
+    <div>
+      {/* Page Header */}
+      <div className="section-head" style={{ marginBottom: '16px' }}>
+        <div>
+          <h2>Members</h2>
+          <span className="muted small">Manage members, memberships, and renewal status</span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button type="button" className="btn" onClick={() => setDialog({ type: 'scan' })}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            <span>Scan Register</span>
+          </button>
+          <button type="button" className="btn primary" onClick={() => setDialog({ type: 'add' })}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>Add Member</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Toolbar: Search & Action */}
+      <div className="toolbar">
+        <div className="search-box">
+          <span className="search-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
+          <input
+            placeholder="Search member, mobile, facility, or trainer…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Filter Chips */}
+        <div className="chips" style={{ margin: 0 }}>
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              className={`chip ${filter === f.key ? 'active' : ''}`}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label} <span>{members.filter((m) => matchesFilter(m, f.key)).length}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="card empty">
+          {members.length === 0 ? 'No members found yet. Click "+ Add Member" or "Scan Register" to start.' : 'No matching members found.'}
+        </div>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Plan & Facility</th>
+                <th>Expiry</th>
+                <th>Payment</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((m) => {
+                const [tone, label] = STATUS_BADGE[membershipStatus(m)]
+                const due = dueAmount(m)
+                const initials = m.name ? m.name.slice(0, 2).toUpperCase() : 'GM'
+
+                return (
+                  <tr key={m.id}>
+                    <td data-label="Member">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="avatar-initials" style={{ width: '34px', height: '34px', fontSize: '13px' }}>
+                          {initials}
+                        </div>
+                        <div>
+                          <b>{m.name}</b>
+                          <span className="muted small block">{m.phone || 'No phone'}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td data-label="Plan & Facility">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 600 }}>{m.plan || 'Standard'}</span>
+                          <span className="badge blue" style={{ fontSize: '10.5px', padding: '1px 7px' }}>
+                            {getMemberFacility(m)}
+                          </span>
+                          {hasPersonalTrainer(m) && (
+                            <span
+                              className="badge purple"
+                              style={{ fontSize: '10.5px', padding: '1px 7px' }}
+                              title={getTrainerName(m) ? `Personal Trainer: ${getTrainerName(m)}` : 'Personal Trainer Included'}
+                            >
+                              PT{getTrainerName(m) ? `: ${getTrainerName(m)}` : ''}
+                            </span>
+                          )}
+                        </div>
+                        <span className="muted small block">Joined {formatDate(m.start_date)}</span>
+                      </div>
+                    </td>
+
+                    <td data-label="Expiry">
+                      <span className={`badge ${tone}`}>{label}</span>
+                      <span className="small block" style={{ marginTop: '2px' }}>
+                        {formatDate(m.end_date)} · {expiryText(m.end_date)}
+                      </span>
+                    </td>
+
+                    <td data-label="Payment">
+                      {due > 0 ? (
+                        <span className="badge red">{formatMoney(due)} due</span>
+                      ) : (
+                        <span className="badge green">Paid</span>
+                      )}
+                      <span className="muted small block font-mono" style={{ marginTop: '2px', fontSize: '12px' }}>
+                        {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}
+                      </span>
+                    </td>
+
+                    <td className="actions">
+                      {due > 0 && (
+                        <button
+                          type="button"
+                          className="btn sm accent"
+                          onClick={() => setDialog({ type: 'pay', member: m })}
+                        >
+                          Payment
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn sm"
+                        onClick={() => setDialog({ type: 'renew', member: m })}
+                      >
+                        Renew
+                      </button>
+                      <button
+                        type="button"
+                        className="btn sm"
+                        onClick={() => setDialog({ type: 'edit', member: m })}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn sm danger"
+                        onClick={() => promptRemove(m)}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Remove Confirmation Modal */}
+      {dialog && dialog.type === 'remove' && (
+        <Modal title="Remove Member" onClose={() => !deleting && setDialog(null)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.5 }}>
+              Are you sure you want to remove <b>{dialog.member.name}</b> from gym records?
+            </p>
+            {dueAmount(dialog.member) > 0 && (
+              <div className="alert error">
+                Pending balance: <b>{formatMoney(dueAmount(dialog.member))}</b> due.
+              </div>
+            )}
+            <p className="muted small" style={{ margin: 0 }}>
+              This will permanently delete this member's details and records.
+            </p>
+            {deleteError && <div className="alert error">{deleteError}</div>}
+            <div className="modal-actions">
+              <button type="button" className="btn" onClick={() => setDialog(null)} disabled={deleting}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn danger-solid"
+                disabled={deleting}
+                onClick={() => confirmRemove(dialog.member)}
+              >
+                {deleting ? 'Removing…' : 'Remove Member'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Notebook Scanner Modal */}
+      {dialog && dialog.type === 'scan' && (
+        <NotebookScanner
+          existingMembers={members}
+          onImportSuccess={async () => {
+            setDialog(null)
+            await reload()
+          }}
+          onClose={() => setDialog(null)}
+        />
+      )}
+
+      {/* Payment Form Modal */}
+      {dialog && dialog.type === 'pay' && (
+        <PaymentForm member={dialog.member} onSave={save} onClose={() => setDialog(null)} />
+      )}
+
+      {/* Member Form Modal */}
+      {dialog && ['add', 'edit', 'renew'].includes(dialog.type) && (
+        <MemberForm
+          member={dialog.member}
+          renew={dialog.type === 'renew'}
+          onSave={save}
+          onDelete={promptRemove}
+          onScanNotebook={() => setDialog({ type: 'scan' })}
+          onClose={() => setDialog(null)}
+        />
+      )}
+    </div>
+  )
+}
