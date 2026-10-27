@@ -53,9 +53,9 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
           <div style={{ display: 'inline-block', marginBottom: '8px' }}>
             <GymLogo size={52} />
           </div>
-          <h3 style={{ margin: '4px 0 2px' }}>Download Gym Manager</h3>
+          <h3 style={{ margin: '4px 0 2px' }}>Download Gym Manager APK</h3>
           <p className="small muted">
-            Install the app on your home screen for fast, full-screen offline-ready access.
+            Install the app / APK on your phone for fast, full-screen offline-ready access.
           </p>
         </div>
 
@@ -103,7 +103,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
-                  <span>{installing ? 'Installing...' : 'Install App Now (1-Tap)'}</span>
+                  <span>{installing ? 'Downloading APK...' : 'Download APK / Install Now (1-Tap)'}</span>
                 </button>
               </div>
             )}

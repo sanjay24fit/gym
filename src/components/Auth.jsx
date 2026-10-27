@@ -94,28 +94,19 @@ export default function Auth({ onDownloadApp, isInstalled }) {
         </div>
 
         {!isInstalled && onDownloadApp && mode !== 'forgot' && (
-          <div style={{ textAlign: 'center', margin: '4px 0 6px' }}>
+          <div style={{ textAlign: 'center', margin: '4px 0 8px' }}>
             <button
               type="button"
-              className="link small"
+              className="btn-download-app"
               onClick={onDownloadApp}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                background: 'none',
-                border: 'none',
-                padding: '4px 8px',
-                cursor: 'pointer',
-                fontSize: '12.5px',
-              }}
+              title="Download APK / Install app"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              <span>Install app on phone</span>
+              <span>Download APK</span>
             </button>
           </div>
         )}
