@@ -391,13 +391,7 @@ export default function GymProfile({
         <Modal title="Confirm Sign Out" onClose={() => setShowLogoutModal(false)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <p style={{ margin: 0, fontSize: '15px', lineHeight: 1.5, color: 'var(--text)' }}>
-              Are you sure you want to log out? <br />
-              <span className="muted small" style={{ display: 'inline-block', marginTop: '4px' }}>
-                (क्या आप वाकई लॉग आउट करना चाहते हैं?)
-              </span>
-            </p>
-            <p className="muted small" style={{ margin: 0 }}>
-              You will be signed out from this device and will need to log in again with your email and password to access your gym records.
+              Are you sure you want to log out?
             </p>
             <div className="modal-actions" style={{ marginTop: '16px' }}>
               <button
@@ -405,7 +399,7 @@ export default function GymProfile({
                 className="btn"
                 onClick={() => setShowLogoutModal(false)}
               >
-                Cancel (रद्द करें)
+                Cancel
               </button>
               <button
                 type="button"
@@ -415,7 +409,7 @@ export default function GymProfile({
                   onLogout()
                 }}
               >
-                Yes, Log Out (लॉग आउट करें)
+                Log Out
               </button>
             </div>
           </div>
