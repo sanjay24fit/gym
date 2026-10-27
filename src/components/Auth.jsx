@@ -40,7 +40,7 @@ export default function Auth({ onDownloadApp, isInstalled }) {
       }
 
       const redirectUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}${window.location.pathname}`
+        ? `${window.location.origin}/`
         : undefined
 
       const { error: resetErr } = await supabase.auth.resetPasswordForEmail(emailToReset, {
@@ -226,7 +226,7 @@ export default function Auth({ onDownloadApp, isInstalled }) {
                 gap: '4px',
               }}
             >
-              <span>Forgot password? (पासवर्ड भूल गए?)</span>
+              <span>Forgot password?</span>
             </button>
           </div>
         )}

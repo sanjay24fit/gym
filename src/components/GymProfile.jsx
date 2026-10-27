@@ -18,8 +18,11 @@ export default function GymProfile({
   const { theme, setTheme } = useTheme()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState('')
@@ -39,26 +42,46 @@ export default function GymProfile({
     setPasswordError('')
     setPasswordSuccess('')
 
+    if (!currentPassword) {
+      setPasswordError('Please enter your current password.')
+      return
+    }
+
     if (newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters.')
+      setPasswordError('New password must be at least 6 characters.')
       return
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match.')
+      setPasswordError('New passwords do not match.')
       return
     }
 
     setPasswordLoading(true)
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
+
+    // Verify current password first via Supabase auth
+    const { error: verifyErr } = await supabase.auth.signInWithPassword({
+      email: userEmail,
+      password: currentPassword,
+    })
+
+    if (verifyErr) {
+      setPasswordLoading(false)
+      setPasswordError('Incorrect current password. Please try again.')
+      return
+    }
+
+    // Current password verified -> proceed to update password
+    const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword })
     setPasswordLoading(false)
 
-    if (error) {
-      setPasswordError(error.message)
+    if (updateErr) {
+      setPasswordError(updateErr.message)
     } else {
       setPasswordSuccess('Password successfully updated!')
       setTimeout(() => {
         setShowPasswordModal(false)
+        setCurrentPassword('')
         setNewPassword('')
         setConfirmPassword('')
         setPasswordSuccess('')
@@ -338,40 +361,114 @@ export default function GymProfile({
       </div>
 
       {showPasswordModal && (
-        <Modal title="Change Password" onClose={() => setShowPasswordModal(false)}>
+        <Modal
+          title="Change Password"
+          onClose={() => {
+            setShowPasswordModal(false)
+            setCurrentPassword('')
+            setNewPassword('')
+            setConfirmPassword('')
+            setPasswordError('')
+          }}
+        >
           <form onSubmit={handlePasswordSubmit}>
             <label>
-              New Password *
-              <input
-                required
-                type="password"
-                minLength={6}
-                placeholder="Minimum 6 characters"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
+              Current Password *
+              <div style={{ position: 'relative' }}>
+                <input
+                  required
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  placeholder="Enter current password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  style={{ paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--muted)',
+                    cursor: 'pointer',
+                    padding: '6px',
+                    fontSize: '14px',
+                  }}
+                >
+                  {showCurrentPassword ? '👁️' : '🔒'}
+                </button>
+              </div>
             </label>
-            <label style={{ marginTop: '8px' }}>
+
+            <label style={{ marginTop: '12px' }}>
+              New Password *
+              <div style={{ position: 'relative' }}>
+                <input
+                  required
+                  type={showNewPassword ? 'text' : 'password'}
+                  minLength={6}
+                  placeholder="Minimum 6 characters"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  style={{ paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--muted)',
+                    cursor: 'pointer',
+                    padding: '6px',
+                    fontSize: '14px',
+                  }}
+                >
+                  {showNewPassword ? '👁️' : '🔒'}
+                </button>
+              </div>
+            </label>
+
+            <label style={{ marginTop: '12px' }}>
               Confirm New Password *
               <input
                 required
-                type="password"
+                type={showNewPassword ? 'text' : 'password'}
                 minLength={6}
                 placeholder="Re-enter new password"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </label>
 
-            {passwordError && <div className="alert error" style={{ marginTop: '10px' }}>{passwordError}</div>}
-            {passwordSuccess && <div className="alert success" style={{ marginTop: '10px' }}>{passwordSuccess}</div>}
+            {passwordError && <div className="alert error" style={{ marginTop: '12px' }}>{passwordError}</div>}
+            {passwordSuccess && <div className="alert success" style={{ marginTop: '12px' }}>{passwordSuccess}</div>}
 
-            <div className="dialog-actions" style={{ marginTop: '16px' }}>
+            <div className="dialog-actions" style={{ marginTop: '18px' }}>
               <button
                 type="button"
                 className="btn"
                 disabled={passwordLoading}
-                onClick={() => setShowPasswordModal(false)}
+                onClick={() => {
+                  setShowPasswordModal(false)
+                  setCurrentPassword('')
+                  setNewPassword('')
+                  setConfirmPassword('')
+                  setPasswordError('')
+                }}
               >
                 Cancel
               </button>
