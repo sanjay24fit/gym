@@ -284,7 +284,7 @@ export default function GymProfile({
         <div className="card settings-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <b>App Language / भाषा</b>
-            <span className="small muted block">Choose your preferred language (हिन्दी, English, मराठी, etc.)</span>
+            <span className="small muted block">Choose your preferred language (हिन्दी, English, Hinglish, मराठी, etc.)</span>
           </div>
           <LanguageToggle />
         </div>

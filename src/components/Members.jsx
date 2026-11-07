@@ -43,7 +43,7 @@ function matchesFilter(m, filter) {
   return true
 }
 
-export default function Members({ members, filter, setFilter, reload, initialDialog = null }) {
+export default function Members({ members, filter, setFilter, reload, initialDialog = null, onPreviewMemberPass = null }) {
   const [search, setSearch] = useState('')
   const [dialog, setDialog] = useState(initialDialog) // { type: 'add'|'edit'|'renew'|'pay'|'remove'|'scan', member }
   const [prevInitialDialog, setPrevInitialDialog] = useState(initialDialog)
@@ -254,6 +254,17 @@ export default function Members({ members, filter, setFilter, reload, initialDia
                     </td>
 
                     <td className="actions">
+                      {onPreviewMemberPass && (
+                        <button
+                          type="button"
+                          className="btn sm"
+                          title="View & Share Member Pass"
+                          onClick={() => onPreviewMemberPass(m)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                        >
+                          💳 Pass
+                        </button>
+                      )}
                       {due > 0 && (
                         <button
                           type="button"
@@ -350,6 +361,7 @@ export default function Members({ members, filter, setFilter, reload, initialDia
           renew={dialog.type === 'renew'}
           onSave={save}
           onDelete={promptRemove}
+          onPreviewPass={onPreviewMemberPass ? () => { const m = dialog.member; setDialog(null); onPreviewMemberPass(m); } : null}
           onScanNotebook={() => setDialog({ type: 'scan' })}
           onClose={() => setDialog(null)}
         />

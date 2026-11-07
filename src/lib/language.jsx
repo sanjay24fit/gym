@@ -1,5 +1,6 @@
 /* oxlint-disable react/only-export-components */
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { applyHinglishToDOM, translateToHinglish } from './hinglish'
 
 const LANGUAGE_KEY = 'gym_language'
 
@@ -7,6 +8,7 @@ export const SUPPORTED_LANGUAGES = [
   // Primary Indian Languages
   { code: 'en', name: 'English', native: 'English', flag: '🇬🇧', region: 'India / Global' },
   { code: 'hi', name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳', region: 'India' },
+  { code: 'hinglish', name: 'Hinglish', native: 'Hinglish', flag: '🇮🇳', region: 'India (हिंग्लिश)' },
   { code: 'mr', name: 'Marathi', native: 'मराठी', flag: '🇮🇳', region: 'India (Maharashtra)' },
   { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી', flag: '🇮🇳', region: 'India (Gujarat)' },
   { code: 'pa', name: 'Punjabi', native: 'ਪੰਜਾਬੀ', flag: '🇮🇳', region: 'India (Punjab)' },
@@ -39,12 +41,13 @@ const LanguageContext = createContext({
   currentLanguage: 'en',
   setLanguage: () => {},
   languages: SUPPORTED_LANGUAGES,
+  t: (text) => text,
 })
 
 function setTranslateCookie(langCode) {
   if (typeof document === 'undefined') return
   const hostname = window.location.hostname
-  const value = langCode === 'en' ? '' : `/en/${langCode}`
+  const value = (langCode === 'en' || langCode === 'hinglish') ? '' : `/en/${langCode}`
 
   if (!value) {
     // Reset translation to original English
@@ -93,10 +96,25 @@ export function LanguageProvider({ children }) {
 
     // Apply saved language cookie on mount
     const saved = localStorage.getItem(LANGUAGE_KEY)
-    if (saved && saved !== 'en') {
+    if (saved && saved !== 'en' && saved !== 'hinglish') {
       setTranslateCookie(saved)
     }
   }, [])
+
+  // Activate Hinglish DOM translation when hinglish is selected
+  useEffect(() => {
+    if (currentLanguage === 'hinglish') {
+      const cleanup = applyHinglishToDOM()
+      return cleanup
+    }
+  }, [currentLanguage])
+
+  const t = useCallback((text) => {
+    if (currentLanguage === 'hinglish') {
+      return translateToHinglish(text)
+    }
+    return text
+  }, [currentLanguage])
 
   const setLanguage = (langCode) => {
     setCurrentLanguageState(langCode)
@@ -111,9 +129,9 @@ export function LanguageProvider({ children }) {
     // Trigger Google Translate dropdown element if available in DOM
     const combo = document.querySelector('.goog-te-combo')
     if (combo) {
-      combo.value = langCode
+      combo.value = (langCode === 'en' || langCode === 'hinglish') ? '' : langCode
       combo.dispatchEvent(new Event('change'))
-    } else {
+    } else if (langCode !== 'hinglish') {
       // Reload page once to let the googtrans cookie apply cleanly
       window.location.reload()
     }
@@ -128,6 +146,7 @@ export function LanguageProvider({ children }) {
         selectedLang,
         setLanguage,
         languages: SUPPORTED_LANGUAGES,
+        t,
       }}
     >
       {children}

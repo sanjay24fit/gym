@@ -2804,4 +2804,36 @@ body {
   color: inherit;
 }
 
+/* --------------------------------------------------------------------------
+   MEMBER PORTAL STYLES
+   -------------------------------------------------------------------------- */
+.member-portal-app {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.member-vip-card {
+  position: relative;
+  background: linear-gradient(135deg, #181920 0%, #0d0e12 60%, #1c1d26 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.45) !important;
+}
+
+[data-theme="light"] .member-vip-card {
+  background: linear-gradient(135deg, #2b2738 0%, #1e1b29 60%, #362f47 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+.member-qr-wrapper:hover {
+  transform: scale(1.03);
+}
+
+@media (max-width: 640px) {
+  .member-vip-card {
+    padding: 18px !important;
+  }
+}
+
+
 

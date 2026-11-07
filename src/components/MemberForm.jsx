@@ -75,7 +75,7 @@ function initialForm(member, renew) {
   }
 }
 
-export default function MemberForm({ member, renew, onSave, onDelete, onScanNotebook, onClose }) {
+export default function MemberForm({ member, renew, onSave, onDelete, onScanNotebook, onClose, onPreviewPass = null }) {
   const [form, setForm] = useState(() => initialForm(member, renew))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -237,6 +237,16 @@ export default function MemberForm({ member, renew, onSave, onDelete, onScanNote
               onClick={() => onDelete(member)}
             >
               Remove member
+            </button>
+          )}
+          {member && !renew && onPreviewPass && (
+            <button
+              type="button"
+              className="btn"
+              onClick={onPreviewPass}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+            >
+              💳 View Pass
             </button>
           )}
           <button type="button" className="btn" onClick={onClose}>Cancel</button>

@@ -57,7 +57,7 @@ export default function LanguageModal({ onClose }) {
           <input
             type="text"
             autoFocus
-            placeholder="Search language / भाषा खोजें (Hindi, Marathi, Gujarati…)"
+            placeholder="Search language / भाषा खोजें (Hindi, Hinglish, Marathi…)"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
