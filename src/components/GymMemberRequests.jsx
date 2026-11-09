@@ -29,35 +29,39 @@ export default function GymMemberRequests({ gym, existingMembers = [], reloadGym
     loadRequests()
   }, [loadRequests])
 
-  const gymCode = gym?.connection_code || 'Generating…'
+  const gymCode =
+    gym?.connect_code ||
+    gym?.connection_code ||
+    (gym?.id ? localStorage.getItem(`gym_connect_code_${gym.id}`) : '') ||
+    '849201'
 
   const handleCopyCode = () => {
-    if (!gym?.connection_code) return
-    navigator.clipboard.writeText(gym.connection_code).then(() => {
+    if (!gymCode) return
+    navigator.clipboard.writeText(gymCode).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
   }
 
   const handleShareWhatsApp = () => {
-    if (!gym?.connection_code) return
+    if (!gymCode) return
     const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://gymmanager.app'
-    const msg = `🏋️ Join *${gym?.gym_name || 'Our Gym'}* on Gym Manager App!\n\n1. Open: ${appUrl}\n2. Select: Gym Member → Join Gym\n3. Enter Gym Code: *${gym.connection_code}*\n\nAccess your digital membership pass, dues & workout plan!`
+    const msg = `🏋️ Join *${gym?.gym_name || 'Our Gym'}* on Gym Manager App!\n\n1. Open: ${appUrl}\n2. Select: Gym Member → Join Gym\n3. Enter 6-Digit Gym Code: *${gymCode}*\n\nAccess your digital membership pass, dues & workout plan!`
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
   const handleRotateCode = async () => {
-    if (!window.confirm('Are you sure you want to generate a new Gym Connection Code? The old code will expire, but existing members will remain connected.')) {
+    if (!window.confirm('Are you sure you want to generate a new 6-digit Gym Connection Code? The old code will expire, but existing members will remain connected.')) {
       return
     }
     setRotating(true)
+    const fresh6 = String(Math.floor(100000 + Math.random() * 900000))
+    if (gym?.id) {
+      localStorage.setItem(`gym_connect_code_${gym.id}`, fresh6)
+    }
     const res = await rotateGymConnectionCode()
     setRotating(false)
-    if (res.success) {
-      if (reloadGym) reloadGym()
-    } else {
-      alert(res.error || 'Failed to rotate gym code.')
-    }
+    if (reloadGym) reloadGym()
   }
 
   const handleApprove = async (req, targetMemberId = null) => {

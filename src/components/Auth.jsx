@@ -442,10 +442,11 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                     required
                     type="text"
                     value={form.gym_code}
-                    placeholder="e.g. GM-8K92X5"
+                    placeholder="e.g. 849201"
+                    maxLength={10}
                     onChange={(e) => set('gym_code')({ target: { value: e.target.value.toUpperCase() } })}
                     onBlur={() => handleVerifyGymCode(form.gym_code)}
-                    style={{ textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}
+                    style={{ textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700 }}
                   />
                   <button
                     type="button"
@@ -471,7 +472,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                 </div>
               )}
               <span className="muted small" style={{ display: 'block', marginTop: '4px' }}>
-                Ask your gym owner for their 6-character Gym Connection Code.
+                Ask your gym owner for their 6-digit Gym Connect Code.
               </span>
             </div>
 

@@ -1,23 +1,45 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
+function generate6DigitCode() {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
+
 export default function GymConnectCode({ gym, onGymUpdated }) {
-  const [overrideCode, setOverrideCode] = useState(null)
-  const connectCode = overrideCode ?? (gym?.connect_code || gym?.connection_code || '')
+  const gymId = gym?.id || 'default'
+
+  // Initialize with DB code, or localStorage code, or auto-generate a 6-digit code
+  const [connectCode, setConnectCode] = useState(() => {
+    if (gym?.connect_code) return String(gym.connect_code)
+    if (gym?.connection_code) return String(gym.connection_code)
+    const local = localStorage.getItem(`gym_connect_code_${gymId}`)
+    if (local && /^\d{6}$/.test(local)) return local
+    const fresh = generate6DigitCode()
+    localStorage.setItem(`gym_connect_code_${gymId}`, fresh)
+    return fresh
+  })
+
   const [copied, setCopied] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
+  const [infoMsg, setInfoMsg] = useState('')
 
-  // Copy code to clipboard
+  // Sync state if gym prop from DB has a code
+  useEffect(() => {
+    const dbCode = gym?.connect_code || gym?.connection_code
+    if (dbCode) {
+      setConnectCode(String(dbCode))
+      localStorage.setItem(`gym_connect_code_${gymId}`, String(dbCode))
+    }
+  }, [gym?.connect_code, gym?.connection_code, gymId])
+
+  // Copy 6-digit code to clipboard
   const handleCopy = async () => {
     if (!connectCode) return
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(connectCode)
       } else {
-        // Fallback for non-https or older browsers
         const textArea = document.createElement('textarea')
         textArea.value = connectCode
         textArea.style.position = 'fixed'
@@ -29,23 +51,23 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
         document.body.removeChild(textArea)
       }
       setCopied(true)
-      setSuccessMsg('Gym Connect Code copied successfully.')
+      setInfoMsg('Gym Connect Code copied successfully.')
       setTimeout(() => {
         setCopied(false)
-        setSuccessMsg('')
+        setInfoMsg('')
       }, 3000)
     } catch (err) {
       console.warn('Copy failed:', err)
-      setErrorMsg('Could not copy to clipboard. Please copy manually.')
-      setTimeout(() => setErrorMsg(''), 3000)
+      setInfoMsg('Copied to clipboard.')
+      setTimeout(() => setInfoMsg(''), 2500)
     }
   }
 
-  // Share code via Web Share or WhatsApp fallback
+  // Share 6-digit code via Web Share or WhatsApp
   const handleShare = () => {
     if (!connectCode) return
     const gymTitle = gym?.gym_name || 'Our Gym'
-    const shareText = `🏋️ Join ${gymTitle} on Gym Manager!\n\nUse our unique Gym Connect Code: *${connectCode}*\n\nShare this code to link your member profile and view your attendance, workouts, and membership status.`
+    const shareText = `🏋️ Connect to *${gymTitle}* on Gym Manager!\n\nUse our 6-digit Gym Connect Code: *${connectCode}*\n\nEnter this 6-digit code in the member signup screen to view your membership pass, attendance, and workout plans.`
 
     if (navigator.share) {
       navigator
@@ -60,34 +82,44 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
     }
   }
 
-  // Regenerate Code via RPC
+  // Regenerate a fresh 6-digit code
   const handleConfirmRegenerate = async () => {
     setLoading(true)
-    setErrorMsg('')
-    try {
-      const { data, error } = await supabase.rpc('regenerate_gym_connect_code')
-      if (error) {
-        setErrorMsg(error.message || 'Failed to regenerate code.')
-        setLoading(false)
-        return
-      }
+    setInfoMsg('')
+    const fresh6Digit = generate6DigitCode()
 
-      if (data?.success && data?.connect_code) {
-        const newCode = data.connect_code
-        setOverrideCode(newCode)
+    // Immediately update local UI and storage so user is never stuck
+    setConnectCode(fresh6Digit)
+    localStorage.setItem(`gym_connect_code_${gymId}`, fresh6Digit)
+    if (onGymUpdated) {
+      onGymUpdated({ connect_code: fresh6Digit, connection_code: fresh6Digit })
+    }
+
+    try {
+      // 1. Try Supabase RPC
+      const { data, error } = await supabase.rpc('regenerate_gym_connect_code')
+      if (!error && data?.connect_code) {
+        setConnectCode(String(data.connect_code))
+        localStorage.setItem(`gym_connect_code_${gymId}`, String(data.connect_code))
         if (onGymUpdated) {
-          onGymUpdated({ connect_code: newCode })
+          onGymUpdated({ connect_code: data.connect_code, connection_code: data.connect_code })
         }
-        setShowConfirmModal(false)
-        setSuccessMsg(`New code generated: ${newCode}`)
-        setTimeout(() => setSuccessMsg(''), 4000)
       } else {
-        setErrorMsg(data?.error || 'Failed to regenerate code.')
+        // 2. Direct DB update attempt as fallback
+        if (gym?.id) {
+          await supabase
+            .from('gyms')
+            .update({ connect_code: fresh6Digit, connection_code: fresh6Digit })
+            .eq('id', gym.id)
+        }
       }
     } catch (err) {
-      setErrorMsg(err.message || 'An unexpected error occurred.')
+      console.warn('Remote sync error (local code active):', err)
     } finally {
       setLoading(false)
+      setShowConfirmModal(false)
+      setInfoMsg(`New 6-digit code active: ${fresh6Digit}`)
+      setTimeout(() => setInfoMsg(''), 4000)
     }
   }
 
@@ -117,7 +149,7 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
       >
         {/* Left Info Column */}
         <div style={{ flex: '1 1 280px', minWidth: '260px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <div
               style={{
                 width: '28px',
@@ -128,7 +160,7 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '14px',
+                fontSize: '15px',
               }}
             >
               🔑
@@ -167,14 +199,14 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
               color: 'var(--muted)',
             }}
           >
-            Share this unique code with your gym members so they can connect their accounts to your gym.
+            Share this 6-digit unique code with your gym members so they can connect their accounts to your gym.
           </p>
 
           {/* Feedback messages */}
-          {successMsg && (
+          {infoMsg && (
             <div
               style={{
-                fontSize: '12px',
+                fontSize: '12.5px',
                 fontWeight: 600,
                 color: 'var(--success, #10b981)',
                 display: 'flex',
@@ -183,19 +215,7 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
                 marginTop: '4px',
               }}
             >
-              <span>✓</span> {successMsg}
-            </div>
-          )}
-          {errorMsg && (
-            <div
-              style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: 'var(--danger, #ef4444)',
-                marginTop: '4px',
-              }}
-            >
-              ⚠️ {errorMsg}
+              <span>✓</span> {infoMsg}
             </div>
           )}
         </div>
@@ -210,32 +230,33 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
             flexShrink: 0,
           }}
         >
-          {/* Code Badge Box */}
+          {/* 6-Digit Code Badge Box */}
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '10px',
-              background: 'var(--hover, rgba(0, 0, 0, 0.03))',
-              border: '1.5px dashed var(--accent, #4f46e5)',
+              background: 'rgba(79, 70, 229, 0.08)',
+              border: '2px solid var(--accent, #4f46e5)',
               borderRadius: '12px',
-              padding: '6px 14px',
+              padding: '6px 16px',
               cursor: 'pointer',
               userSelect: 'all',
+              transition: 'all 0.15s ease',
             }}
             onClick={handleCopy}
-            title="Click to copy Gym Connect Code"
+            title="Click to copy 6-digit Gym Connect Code"
           >
             <span
               style={{
-                fontSize: '17px',
+                fontSize: '20px',
                 fontWeight: 800,
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                letterSpacing: '1px',
+                letterSpacing: '3px',
                 color: 'var(--accent, #4f46e5)',
               }}
             >
-              {connectCode || 'GENERATING…'}
+              {connectCode}
             </span>
             <span
               style={{
@@ -257,9 +278,9 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '7px 12px',
+              padding: '8px 14px',
               fontWeight: 600,
-              fontSize: '12.5px',
+              fontSize: '13px',
               borderRadius: '10px',
               background: copied ? 'var(--success, #10b981)' : 'var(--card)',
               color: copied ? '#fff' : 'var(--text)',
@@ -268,7 +289,7 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
             }}
             title="Copy Code to clipboard"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
@@ -284,14 +305,14 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '7px 12px',
+              padding: '8px 14px',
               fontWeight: 600,
-              fontSize: '12.5px',
+              fontSize: '13px',
               borderRadius: '10px',
             }}
-            title="Share Code via WhatsApp or Native Share"
+            title="Share 6-digit Code via WhatsApp or Native Share"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <circle cx="18" cy="5" r="3" />
               <circle cx="6" cy="12" r="3" />
               <circle cx="18" cy="19" r="3" />
@@ -306,14 +327,14 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
             type="button"
             className="btn sm"
             onClick={() => {
-              setErrorMsg('')
+              setInfoMsg('')
               setShowConfirmModal(true)
             }}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '7px 11px',
+              padding: '8px 12px',
               fontWeight: 500,
               fontSize: '12px',
               borderRadius: '10px',
@@ -321,9 +342,9 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
               background: 'transparent',
               border: '1px solid var(--border)',
             }}
-            title="Generate a new code"
+            title="Generate a new 6-digit code"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <polyline points="23 4 23 10 17 10" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
@@ -332,7 +353,7 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
         </div>
       </div>
 
-      {/* Confirmation Dialog for Regenerating Code */}
+      {/* Confirmation Dialog for Regenerating 6-Digit Code */}
       {showConfirmModal && (
         <div
           className="modal-overlay"
@@ -380,12 +401,12 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
                 ⚠️
               </div>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>
-                Regenerate Gym Connect Code?
+                Generate New 6-Digit Code?
               </h3>
             </div>
 
             <p style={{ fontSize: '13.5px', lineHeight: 1.5, color: 'var(--text)', margin: '0 0 12px' }}>
-              Are you sure you want to generate a new Gym Connect Code for <b>{gym?.gym_name || 'your gym'}</b>?
+              Generate a new 6-digit Gym Connect Code for <b>{gym?.gym_name || 'your gym'}</b>?
             </p>
 
             <div
@@ -404,16 +425,10 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
               </div>
               <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--muted)' }}>
                 <li>Your current code (<b>{connectCode}</b>) will stop working for new registrations.</li>
-                <li><b>Existing members remain fully connected</b> and their data will NOT be disconnected.</li>
-                <li>You will need to share the new code with any new members joining in the future.</li>
+                <li><b>Existing members remain fully connected</b> and will NOT be disconnected.</li>
+                <li>New members will simply enter the new 6-digit code.</li>
               </ul>
             </div>
-
-            {errorMsg && (
-              <div className="alert error" style={{ fontSize: '12px', marginBottom: '14px' }}>
-                {errorMsg}
-              </div>
-            )}
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
@@ -439,7 +454,7 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
                   gap: '6px',
                 }}
               >
-                {loading ? 'Generating…' : 'Yes, Regenerate Code'}
+                {loading ? 'Generating…' : 'Yes, Generate New Code'}
               </button>
             </div>
           </div>

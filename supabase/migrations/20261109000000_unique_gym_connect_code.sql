@@ -34,9 +34,12 @@ declare
   collision boolean := true;
 begin
   while collision loop
-    -- Generate GYM- + 5 random digits (10000 to 99999)
-    new_code := 'GYM-' || lpad(floor(random() * 90000 + 10000)::text, 5, '0');
-    select exists (select 1 from public.gyms where connect_code = new_code) into collision;
+    -- Generate clean 6-digit numeric code (100000 to 999999)
+    new_code := floor(random() * 900000 + 100000)::text;
+    select exists (
+      select 1 from public.gyms
+      where connect_code = new_code or connection_code = new_code
+    ) into collision;
   end loop;
   return new_code;
 end;
@@ -177,18 +180,18 @@ declare
   gym_rec record;
 begin
   norm_code := upper(trim(coalesce(gym_code, '')));
-
-  if length(norm_code) < 3 then
-    return jsonb_build_object('valid', false, 'error', 'Invalid code format.');
+  if norm_code like 'GYM-%' then
+    norm_code := substr(norm_code, 5);
   end if;
 
   select id, gym_name, owner_name, status
   from public.gyms
-  where upper(connect_code) = norm_code
+  where upper(coalesce(connect_code, connection_code, '')) = norm_code
+     or upper(replace(coalesce(connect_code, connection_code, ''), 'GYM-', '')) = norm_code
   into gym_rec;
 
   if gym_rec.id is null then
-    return jsonb_build_object('valid', false, 'error', 'Invalid Gym Connect Code.');
+    return jsonb_build_object('valid', false, 'error', 'Invalid 6-digit Gym Connect Code.');
   end if;
 
   if gym_rec.status = 'blocked' then

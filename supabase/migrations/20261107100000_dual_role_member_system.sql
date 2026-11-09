@@ -26,14 +26,18 @@ returns text
 language plpgsql
 as $$
 declare
-  chars text := '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; -- Exclude ambiguous chars (0, 1, I, O)
-  result text := 'GM-';
-  i integer;
+  new_code text;
+  collision boolean := true;
 begin
-  for i in 1..6 loop
-    result := result || substr(chars, floor(random() * length(chars) + 1)::integer, 1);
+  while collision loop
+    -- Generate 6-digit numeric code (100000 to 999999)
+    new_code := floor(random() * 900000 + 100000)::text;
+    select exists (
+      select 1 from public.gyms
+      where coalesce(connect_code, connection_code) = new_code
+    ) into collision;
   end loop;
-  return result;
+  return new_code;
 end;
 $$;
 
@@ -240,14 +244,18 @@ declare
   gym_rec record;
 begin
   norm_code := upper(trim(coalesce(gym_code, '')));
+  if norm_code like 'GYM-%' then
+    norm_code := substr(norm_code, 5);
+  end if;
 
   select id, gym_name, owner_name, status
   from public.gyms
   where upper(coalesce(connect_code, connection_code, '')) = norm_code
+     or upper(replace(coalesce(connect_code, connection_code, ''), 'GYM-', '')) = norm_code
   into gym_rec;
 
   if gym_rec.id is null then
-    return jsonb_build_object('valid', false, 'error', 'Invalid Gym Connection Code. Please verify with your gym owner.');
+    return jsonb_build_object('valid', false, 'error', 'Invalid 6-digit Gym Connect Code.');
   end if;
 
   if gym_rec.status = 'blocked' then
