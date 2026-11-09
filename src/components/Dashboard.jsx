@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import GymConnectCode from './GymConnectCode'
 import {
   dueAmount,
   expiryText,
@@ -24,7 +25,7 @@ function getGreetingAndDate() {
   return { greeting, todayFormatted }
 }
 
-export default function Dashboard({ members, onOpen, onAction, gymName }) {
+export default function Dashboard({ members, onOpen, onAction, gymName, gym, onGymUpdated }) {
   const [showNotificationPopup, setShowNotificationPopup] = useState(false)
 
   const active = members.filter((m) => membershipStatus(m) !== 'expired')
@@ -223,7 +224,8 @@ export default function Dashboard({ members, onOpen, onAction, gymName }) {
         )}
       </div>
 
-      {/* Pastel grid & Membership Health card consolidated above (D4). */}
+      {/* Gym Connect Code Section */}
+      <GymConnectCode gym={gym} onGymUpdated={onGymUpdated} />
 
       {/* 5. Quick Recaps & Operations Row */}
       <div className="quick-recaps-grid">
