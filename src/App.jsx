@@ -143,6 +143,24 @@ export default function App() {
         return
       }
 
+      // Fallback: If user signed up as a member in user_metadata, preserve member portal routing
+      if (!isAdmin && !gymData && session?.user?.user_metadata?.role === 'member') {
+        const fallbackMember = {
+          success: true,
+          status: 'pending',
+          gym: { gym_name: 'Connected Gym', owner_name: 'Gym Owner' },
+          request: {
+            full_name: session.user.user_metadata.full_name || 'Member',
+            phone: session.user.user_metadata.phone || '',
+            gym_code_used: session.user.user_metadata.gym_code || '',
+            created_at: session.user.created_at,
+          },
+        }
+        setAuthMemberData(fallbackMember)
+        setAccount({ userId, role: 'member', memberData: fallbackMember })
+        return
+      }
+
       if (gymRes.error && !gymRes.error.message?.includes('0 rows')) {
         if (!memberRes.data?.success) {
           setLoadError(gymRes.error.message)
@@ -161,7 +179,7 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [userId, refreshKey])
+  }, [userId, refreshKey, session])
 
   const gym = account?.gym
   // Frontend access gate — shared predicate mirroring SQL is_usable() (D1).
@@ -494,6 +512,7 @@ export default function App() {
             filter={filter}
             setFilter={setFilter}
             reload={loadMembers}
+            gym={gym}
             initialDialog={membersInitialDialog}
             onPreviewMemberPass={(m) => setMemberPreview({ member: m, gym })}
           />

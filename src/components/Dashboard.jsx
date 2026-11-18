@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import GymConnectCode from './GymConnectCode'
+import ExpiryWhatsAppModal from './ExpiryWhatsAppModal'
+import { WhatsAppIcon } from './WhatsAppSupport'
 import {
   dueAmount,
   expiryText,
@@ -12,6 +14,7 @@ import {
   getTrainerName,
   collectionRate,
 } from '../lib/utils'
+import { buildWhatsAppReminderUrl, markReminderSent } from '../lib/whatsappReminder'
 
 function getGreetingAndDate() {
   const hour = new Date().getHours()
@@ -27,6 +30,7 @@ function getGreetingAndDate() {
 
 export default function Dashboard({ members, onOpen, onAction, gymName, gym, onGymUpdated }) {
   const [showNotificationPopup, setShowNotificationPopup] = useState(false)
+  const [showExpiryWhatsAppModal, setShowExpiryWhatsAppModal] = useState(false)
 
   const active = members.filter((m) => membershipStatus(m) !== 'expired')
   const expiring = members
@@ -34,6 +38,7 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
     .sort((a, b) => a.end_date.localeCompare(b.end_date))
   const expired = members.filter((m) => membershipStatus(m) === 'expired')
   const expiringToday = members.filter((m) => daysLeft(m.end_date) === 0)
+  const expiringIn2Days = members.filter((m) => daysLeft(m.end_date) === 2)
   const ptMembers = members.filter((m) => hasPersonalTrainer(m))
 
   const due = members.filter((m) => dueAmount(m) > 0).sort((a, b) => dueAmount(b) - dueAmount(a))
@@ -48,9 +53,8 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
   const { greeting, todayFormatted } = getGreetingAndDate()
   const gymInitials = (gymName ? gymName.slice(0, 2) : 'GM').toUpperCase()
 
-  // Alert-dot weight: each pending item counts once (expiring members + dues
-  // members) — the dot only gates on > 0, so visible behavior is unchanged.
-  const pendingAlertsCount = expiringToday.length + due.length
+  // Alert-dot weight: includes expiring today, expiring in 2 days (urgent WhatsApp reminder), and dues
+  const pendingAlertsCount = expiringToday.length + expiringIn2Days.length + due.length
 
   return (
     <div className="dashboard-content" style={{ paddingBottom: '32px' }}>
@@ -126,7 +130,38 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
               Close
             </button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12.5px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px' }}>
+            {expiringIn2Days.length > 0 && (
+              <div
+                style={{
+                  background: 'var(--amber-subtle, #fef3c7)',
+                  border: '1px solid var(--amber, #f59e0b)',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#b45309', fontWeight: 700 }}>
+                    ⏰ {expiringIn2Days.length} membership{expiringIn2Days.length === 1 ? '' : 's'} expiring in 2 days!
+                  </span>
+                  <button
+                    type="button"
+                    className="btn sm btn-whatsapp"
+                    style={{ padding: '3px 8px', fontSize: '11px' }}
+                    onClick={() => {
+                      setShowNotificationPopup(false)
+                      setShowExpiryWhatsAppModal(true)
+                    }}
+                  >
+                    <WhatsAppIcon size={11} />
+                    <span>Send Reminders</span>
+                  </button>
+                </div>
+                <span style={{ fontSize: '11.5px', color: '#92400e', display: 'block', marginTop: '3px' }}>
+                  Member ke register number par 2-day WhatsApp expiry reminder bhejein.
+                </span>
+              </div>
+            )}
             {expiringToday.length > 0 ? (
               <span style={{ color: 'var(--warning)', fontWeight: 600 }}>
                 ⚠️ {expiringToday.length} membership{expiringToday.length === 1 ? '' : 's'} expiring today!
@@ -140,6 +175,67 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
               </span>
             )}
           </div>
+        </div>
+      )}
+
+      {/* 2-Day Expiry Urgent WhatsApp Action Banner */}
+      {expiringIn2Days.length > 0 && (
+        <div
+          className="card"
+          style={{
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(37, 211, 102, 0.12) 100%)',
+            border: '1px solid var(--amber, #f59e0b)',
+            borderRadius: 'var(--radius-xl)',
+            padding: '14px 18px',
+            marginBottom: '16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                background: '#f59e0b',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                flexShrink: 0,
+              }}
+            >
+              ⏰
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <b style={{ fontSize: '14.5px' }}>
+                  {expiringIn2Days.length} Member{expiringIn2Days.length > 1 ? 's' : ''} Expiring in 2 Days!
+                </b>
+                <span className="badge amber" style={{ fontSize: '11px', padding: '1px 7px' }}>
+                  WhatsApp Alert
+                </span>
+              </div>
+              <span style={{ fontSize: '12.5px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>
+                Member ke register number par WhatsApp notification bhejein: <i>"Aapki membership khatam hone wali hai"</i>
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-whatsapp"
+            onClick={() => setShowExpiryWhatsAppModal(true)}
+            style={{ padding: '8px 16px', fontSize: '13px' }}
+          >
+            <WhatsAppIcon size={14} />
+            <span>Send 2-Day WhatsApp Reminders ({expiringIn2Days.length})</span>
+          </button>
         </div>
       )}
 
@@ -319,6 +415,30 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
                       <span className="muted small block font-mono" style={{ marginTop: '2px', fontSize: '11px' }}>
                         {formatDate(m.end_date)}
                       </span>
+                      {daysLeft(m.end_date) <= 2 && daysLeft(m.end_date) >= 0 && (
+                        <button
+                          type="button"
+                          className="btn sm btn-whatsapp"
+                          style={{ padding: '2px 8px', fontSize: '11px', marginTop: '4px' }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const url = buildWhatsAppReminderUrl({
+                              phone: m.phone,
+                              memberName: m.name,
+                              gymName: gymName || gym?.gym_name,
+                              endDate: m.end_date,
+                              daysLeftCount: daysLeft(m.end_date),
+                              ownerPhone: gym?.phone,
+                            })
+                            markReminderSent(m.id, m.end_date)
+                            window.open(url, '_blank')
+                          }}
+                          title="Send WhatsApp Expiry Reminder"
+                        >
+                          <WhatsAppIcon size={10} />
+                          <span>WhatsApp</span>
+                        </button>
+                      )}
                     </div>
                   </li>
                 )
@@ -403,6 +523,14 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
           )}
         </section>
       </div>
+
+      {/* 2-Day Expiry WhatsApp Notification Modal */}
+      <ExpiryWhatsAppModal
+        isOpen={showExpiryWhatsAppModal}
+        onClose={() => setShowExpiryWhatsAppModal(false)}
+        members={members}
+        gym={gym || { gym_name: gymName }}
+      />
     </div>
   )
 }

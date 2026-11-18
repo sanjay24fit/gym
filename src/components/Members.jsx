@@ -5,8 +5,10 @@ import PaymentForm from './PaymentForm'
 import NotebookScanner from './NotebookScanner'
 import { supabase } from '../lib/supabase'
 import { updateMemberPayment } from '../lib/payments'
+import { WhatsAppIcon } from './WhatsAppSupport'
 import {
   dueAmount,
+  daysLeft,
   expiryText,
   formatDate,
   formatMoney,
@@ -17,11 +19,13 @@ import {
   isSchemaDriftError,
   buildFallbackMemberValues,
 } from '../lib/utils'
+import { buildWhatsAppReminderUrl, markReminderSent } from '../lib/whatsappReminder'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'active', label: 'Active' },
   { key: 'expiring', label: 'Expiring soon' },
+  { key: 'expiring_2d', label: '⏰ Expiring (2 Days)' },
   { key: 'expired', label: 'Expired' },
   { key: 'due', label: 'Payment due' },
   { key: 'pt', label: 'Personal Trainer' },
@@ -37,13 +41,22 @@ function matchesFilter(m, filter) {
   const s = membershipStatus(m)
   if (filter === 'active') return s !== 'expired'
   if (filter === 'expiring') return s === 'expiring'
+  if (filter === 'expiring_2d') return daysLeft(m.end_date) === 2 || (daysLeft(m.end_date) <= 2 && daysLeft(m.end_date) >= 0)
   if (filter === 'expired') return s === 'expired'
   if (filter === 'due') return dueAmount(m) > 0
   if (filter === 'pt') return hasPersonalTrainer(m)
   return true
 }
 
-export default function Members({ members, filter, setFilter, reload, initialDialog = null, onPreviewMemberPass = null }) {
+export default function Members({
+  members,
+  filter,
+  setFilter,
+  reload,
+  initialDialog = null,
+  onPreviewMemberPass = null,
+  gym = null,
+}) {
   const [search, setSearch] = useState('')
   const [dialog, setDialog] = useState(initialDialog) // { type: 'add'|'edit'|'renew'|'pay'|'remove'|'scan', member }
   const [prevInitialDialog, setPrevInitialDialog] = useState(initialDialog)
@@ -72,6 +85,20 @@ export default function Members({ members, filter, setFilter, reload, initialDia
         (m.plan && m.plan.toLowerCase().includes(q))
     )
     .sort((a, b) => a.end_date.localeCompare(b.end_date))
+
+  const handleSendExpiryWhatsApp = (m) => {
+    const left = daysLeft(m.end_date)
+    const url = buildWhatsAppReminderUrl({
+      phone: m.phone,
+      memberName: m.name,
+      gymName: gym?.gym_name,
+      endDate: m.end_date,
+      daysLeftCount: left,
+      ownerPhone: gym?.phone,
+    })
+    markReminderSent(m.id, m.end_date)
+    window.open(url, '_blank')
+  }
 
   async function save(values) {
     const { type, member } = dialog
@@ -254,6 +281,18 @@ export default function Members({ members, filter, setFilter, reload, initialDia
                     </td>
 
                     <td className="actions">
+                      {daysLeft(m.end_date) <= 2 && daysLeft(m.end_date) >= 0 && (
+                        <button
+                          type="button"
+                          className="btn sm btn-whatsapp"
+                          title="Send 2-Day Expiry WhatsApp Notification"
+                          onClick={() => handleSendExpiryWhatsApp(m)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                        >
+                          <WhatsAppIcon size={11} />
+                          <span>Remind</span>
+                        </button>
+                      )}
                       {onPreviewMemberPass && (
                         <button
                           type="button"

@@ -87,6 +87,46 @@ export default function MemberHomeTab({
         </button>
       </div>
 
+      {/* 2-Day Expiry Urgent In-App Notice */}
+      {daysRemaining <= 2 && daysRemaining >= 0 && (
+        <div
+          className="card"
+          style={{
+            borderRadius: '16px',
+            padding: '14px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap',
+            background: 'var(--amber-subtle, #fef3c7)',
+            border: '1px solid var(--amber, #f59e0b)',
+            color: '#92400e',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '24px' }}>⚠️</span>
+            <div>
+              <b style={{ display: 'block', fontSize: '14px' }}>
+                Aapki gym membership {daysRemaining === 2 ? '2 din me' : daysRemaining === 1 ? 'kal' : 'aaj'} khatam hone wali hai!
+              </b>
+              <span style={{ fontSize: '12px', opacity: 0.9 }}>
+                Apni regular fitness training jari rakhne ke liye kripya samay par renew karwayein ({formatDate(member.end_date)}).
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="btn sm btn-whatsapp"
+            onClick={() => onWhatsAppContact()}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            <span>💬 Renew on WhatsApp</span>
+          </button>
+        </div>
+      )}
+
       {/* ==============================================================
           B. DIGITAL VIP MEMBERSHIP CARD & COUNTDOWN
       ============================================================== */}

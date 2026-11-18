@@ -1,22 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
-
-function generate6DigitCode() {
-  return String(Math.floor(100000 + Math.random() * 900000))
-}
+import { rotateGymConnectionCode } from '../lib/memberAuth'
 
 export default function GymConnectCode({ gym, onGymUpdated }) {
-  const gymId = gym?.id || 'default'
-
-  // Initialize with DB code, or localStorage code, or auto-generate a 6-digit code
   const [connectCode, setConnectCode] = useState(() => {
-    if (gym?.connect_code) return String(gym.connect_code)
-    if (gym?.connection_code) return String(gym.connection_code)
-    const local = localStorage.getItem(`gym_connect_code_${gymId}`)
-    if (local && /^\d{6}$/.test(local)) return local
-    const fresh = generate6DigitCode()
-    localStorage.setItem(`gym_connect_code_${gymId}`, fresh)
-    return fresh
+    return gym?.connect_code || gym?.connection_code || ''
   })
 
   const [copied, setCopied] = useState(false)
@@ -24,14 +11,23 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
   const [loading, setLoading] = useState(false)
   const [infoMsg, setInfoMsg] = useState('')
 
-  // Sync state if gym prop from DB has a code
+  // Sync state if gym prop from DB has a code, or auto-fetch/generate via DB RPC if missing
   useEffect(() => {
     const dbCode = gym?.connect_code || gym?.connection_code
     if (dbCode) {
       setConnectCode(String(dbCode))
-      localStorage.setItem(`gym_connect_code_${gymId}`, String(dbCode))
+    } else if (gym?.id) {
+      // Auto-generate in database if gym has no code yet
+      rotateGymConnectionCode().then((res) => {
+        if (res && res.connect_code) {
+          setConnectCode(String(res.connect_code))
+          if (onGymUpdated) {
+            onGymUpdated({ connect_code: res.connect_code, connection_code: res.connect_code })
+          }
+        }
+      }).catch(() => {})
     }
-  }, [gym?.connect_code, gym?.connection_code, gymId])
+  }, [gym?.connect_code, gym?.connection_code, gym?.id, onGymUpdated])
 
   // Copy 6-digit code to clipboard
   const handleCopy = async () => {
@@ -82,44 +78,30 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
     }
   }
 
-  // Regenerate a fresh 6-digit code
+  // Regenerate a fresh 6-digit code via secure database logic
   const handleConfirmRegenerate = async () => {
     setLoading(true)
     setInfoMsg('')
-    const fresh6Digit = generate6DigitCode()
-
-    // Immediately update local UI and storage so user is never stuck
-    setConnectCode(fresh6Digit)
-    localStorage.setItem(`gym_connect_code_${gymId}`, fresh6Digit)
-    if (onGymUpdated) {
-      onGymUpdated({ connect_code: fresh6Digit, connection_code: fresh6Digit })
-    }
 
     try {
-      // 1. Try Supabase RPC
-      const { data, error } = await supabase.rpc('regenerate_gym_connect_code')
-      if (!error && data?.connect_code) {
-        setConnectCode(String(data.connect_code))
-        localStorage.setItem(`gym_connect_code_${gymId}`, String(data.connect_code))
+      const res = await rotateGymConnectionCode()
+      if (res && res.success && res.connect_code) {
+        const newCode = String(res.connect_code)
+        setConnectCode(newCode)
         if (onGymUpdated) {
-          onGymUpdated({ connect_code: data.connect_code, connection_code: data.connect_code })
+          onGymUpdated({ connect_code: newCode, connection_code: newCode })
         }
+        setInfoMsg(`New 6-digit code saved in database: ${newCode}`)
       } else {
-        // 2. Direct DB update attempt as fallback
-        if (gym?.id) {
-          await supabase
-            .from('gyms')
-            .update({ connect_code: fresh6Digit, connection_code: fresh6Digit })
-            .eq('id', gym.id)
-        }
+        setInfoMsg(res?.error || 'Database error generating code. Please verify database migration.')
       }
     } catch (err) {
-      console.warn('Remote sync error (local code active):', err)
+      console.warn('Code rotation error:', err)
+      setInfoMsg(err.message || 'Error communicating with database.')
     } finally {
       setLoading(false)
       setShowConfirmModal(false)
-      setInfoMsg(`New 6-digit code active: ${fresh6Digit}`)
-      setTimeout(() => setInfoMsg(''), 4000)
+      setTimeout(() => setInfoMsg(''), 5000)
     }
   }
 

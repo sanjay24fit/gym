@@ -58,6 +58,11 @@ export const HINGLISH_DICTIONARY = {
   // --- Members Screen & Filters ---
   'All': 'Sabhi Members',
   'Expiring soon': 'Jald Expire Hone Wale',
+  '⏰ Expiring (2 Days)': '⏰ 2 Din me Expire Hone Wale',
+  'Send 2-Day WhatsApp Reminders': '2 Din WhatsApp Reminders Bhejein',
+  'Send WhatsApp Reminder': 'WhatsApp Reminder Bhejein',
+  'Send WhatsApp': 'WhatsApp Bhejein',
+  'Send Reminders': 'Reminders Bhejein',
   'Payment due': 'Fees Baaki Hai',
   'Personal Trainer': 'Personal Trainer (PT)',
   'Search member, mobile, facility, or trainer…': 'Member, mobile, facility ya trainer search karein…',
@@ -253,6 +258,8 @@ export const HINGLISH_PATTERNS = [
 
   // N memberships expiring today!
   [/^(\d+)\s+memberships?\s+expiring\s+today!?$/i, '$1 membership aaj expire ho rahi hain!'],
+  [/^(\d+)\s+memberships?\s+expiring\s+in\s+2\s+days!?$/i, '$1 membership 2 din me expire ho rahi hain!'],
+  [/^(\d+)\s+members?\s+expiring\s+in\s+2\s+days!?$/i, '$1 member 2 din me expire ho rahe hain!'],
 
   // N members with pending dues (₹...)
   [/^(\d+)\s+members\s+with\s+pending\s+dues\s*(\([^)]+\))?\.?$/i, '$1 members ki fees baaki hai $2.'],

@@ -29,11 +29,7 @@ export default function GymMemberRequests({ gym, existingMembers = [], reloadGym
     loadRequests()
   }, [loadRequests])
 
-  const gymCode =
-    gym?.connect_code ||
-    gym?.connection_code ||
-    (gym?.id ? localStorage.getItem(`gym_connect_code_${gym.id}`) : '') ||
-    '849201'
+  const gymCode = gym?.connect_code || gym?.connection_code || ''
 
   const handleCopyCode = () => {
     if (!gymCode) return
@@ -55,13 +51,13 @@ export default function GymMemberRequests({ gym, existingMembers = [], reloadGym
       return
     }
     setRotating(true)
-    const fresh6 = String(Math.floor(100000 + Math.random() * 900000))
-    if (gym?.id) {
-      localStorage.setItem(`gym_connect_code_${gym.id}`, fresh6)
-    }
     const res = await rotateGymConnectionCode()
     setRotating(false)
-    if (reloadGym) reloadGym()
+    if (res?.success) {
+      if (reloadGym) reloadGym()
+    } else {
+      alert(res?.error || 'Failed to rotate gym code in database.')
+    }
   }
 
   const handleApprove = async (req, targetMemberId = null) => {
