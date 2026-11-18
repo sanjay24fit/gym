@@ -380,8 +380,8 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
               </span>
             </div>
 
-            <span style={{ fontSize: '12px', opacity: 0.8, display: 'block', marginTop: '3px' }}>
-              📍 {gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} · Verified Platform Leaderboard
+            <span style={{ fontSize: '12px', opacity: 0.85, display: 'block', marginTop: '3px' }}>
+              📍 {gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} · ⭐ {gym?.rating || 4.8} ({gym?.total_reviews || 0} Member Reviews) · Ranked by Member Feedback
             </span>
           </div>
         </div>

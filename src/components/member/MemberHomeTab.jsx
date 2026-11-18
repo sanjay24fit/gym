@@ -283,6 +283,50 @@ export default function MemberHomeTab({
         </div>
       </div>
 
+      {/* ⭐ Rate & Review Gym Action Prompt */}
+      <div
+        className="card"
+        style={{
+          padding: '14px 18px',
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
+          border: '1px solid rgba(245, 158, 11, 0.25)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '22px' }}>⭐</span>
+          <div>
+            <b style={{ fontSize: '13.5px', display: 'block' }}>
+              Rate & Review {gym?.gym_name || 'Your Gym'}
+            </b>
+            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+              Aapka genuine review is gym ki city leaderboard ranking decide karta hai.
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="btn sm"
+          onClick={() => onNavigateTab('profile')}
+          style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            color: '#FFFFFF',
+            border: 'none',
+            padding: '6px 14px',
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span>⭐ Rate Gym</span>
+        </button>
+      </div>
+
       {/* ==============================================================
           D. QUICK ACTIONS GRID
       ============================================================== */}

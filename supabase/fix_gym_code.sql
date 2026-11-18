@@ -903,5 +903,248 @@ $$;
 grant execute on function public.update_gym_location(text, text, text[]) to authenticated;
 grant execute on function public.get_city_gym_rankings(text, uuid) to anon, authenticated;
 
+-- ----------------------------------------------------------------------------
+-- 15. GENUINE MEMBER REVIEWS & REVIEW-DRIVEN CITY RANKING SYSTEM
+-- ----------------------------------------------------------------------------
+create table if not exists public.gym_reviews (
+  id uuid primary key default gen_random_uuid(),
+  gym_id uuid not null references public.gyms(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete set null,
+  member_id uuid references public.members(id) on delete set null,
+  rating integer not null check (rating >= 1 and rating <= 5),
+  review_text text not null default '',
+  reviewer_name text not null default 'Verified Member',
+  aspect_equipment integer default 5 check (aspect_equipment >= 1 and aspect_equipment <= 5),
+  aspect_cleanliness integer default 5 check (aspect_cleanliness >= 1 and aspect_cleanliness <= 5),
+  aspect_trainer integer default 5 check (aspect_trainer >= 1 and aspect_trainer <= 5),
+  aspect_vibe integer default 5 check (aspect_vibe >= 1 and aspect_vibe <= 5),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists gym_reviews_gym_idx on public.gym_reviews (gym_id, created_at desc);
+create index if not exists gym_reviews_user_idx on public.gym_reviews (user_id);
+create index if not exists gym_reviews_member_idx on public.gym_reviews (member_id);
+
+alter table public.gym_reviews enable row level security;
+
+drop policy if exists "gym_reviews_select_all" on public.gym_reviews;
+create policy "gym_reviews_select_all" on public.gym_reviews for select to public using (true);
+
+drop policy if exists "gym_reviews_insert_authenticated" on public.gym_reviews;
+create policy "gym_reviews_insert_authenticated" on public.gym_reviews for insert to public with check (true);
+
+drop policy if exists "gym_reviews_update_own" on public.gym_reviews;
+create policy "gym_reviews_update_own" on public.gym_reviews for update to authenticated
+  using (user_id = auth.uid() or member_id in (select id from public.members where user_id = auth.uid()));
+
+create or replace function public.sync_gym_review_stats()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target_gym uuid;
+  avg_score numeric(3, 1);
+  total_cnt integer;
+begin
+  target_gym := coalesce(new.gym_id, old.gym_id);
+
+  select
+    round(coalesce(avg(rating), 4.8)::numeric, 1),
+    count(*)::integer
+  from public.gym_reviews
+  where gym_id = target_gym
+  into avg_score, total_cnt;
+
+  update public.gyms
+  set rating = avg_score,
+      total_reviews = total_cnt
+  where id = target_gym;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_sync_gym_review_stats on public.gym_reviews;
+create trigger trg_sync_gym_review_stats
+  after insert or update or delete on public.gym_reviews
+  for each row execute function public.sync_gym_review_stats();
+
+create or replace function public.submit_gym_review(
+  p_gym_id uuid,
+  p_rating integer,
+  p_review_text text default '',
+  p_reviewer_name text default 'Verified Member',
+  p_aspect_equipment integer default 5,
+  p_aspect_cleanliness integer default 5,
+  p_aspect_trainer integer default 5,
+  p_aspect_vibe integer default 5,
+  p_member_id uuid default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  review_id uuid;
+  new_avg numeric(3, 1);
+  new_cnt integer;
+  clean_name text;
+begin
+  if p_gym_id is null then
+    return jsonb_build_object('success', false, 'error', 'Gym ID is required.');
+  end if;
+
+  if p_rating < 1 or p_rating > 5 then
+    return jsonb_build_object('success', false, 'error', 'Rating must be between 1 and 5 stars.');
+  end if;
+
+  clean_name := coalesce(nullif(trim(p_reviewer_name), ''), 'Verified Member');
+
+  if uid is not null and exists (select 1 from public.gym_reviews where gym_id = p_gym_id and user_id = uid) then
+    update public.gym_reviews
+    set rating = p_rating,
+        review_text = coalesce(p_review_text, ''),
+        reviewer_name = clean_name,
+        aspect_equipment = coalesce(p_aspect_equipment, 5),
+        aspect_cleanliness = coalesce(p_aspect_cleanliness, 5),
+        aspect_trainer = coalesce(p_aspect_trainer, 5),
+        aspect_vibe = coalesce(p_aspect_vibe, 5),
+        updated_at = now()
+    where gym_id = p_gym_id and user_id = uid
+    returning id into review_id;
+  elsif p_member_id is not null and exists (select 1 from public.gym_reviews where gym_id = p_gym_id and member_id = p_member_id) then
+    update public.gym_reviews
+    set rating = p_rating,
+        review_text = coalesce(p_review_text, ''),
+        reviewer_name = clean_name,
+        aspect_equipment = coalesce(p_aspect_equipment, 5),
+        aspect_cleanliness = coalesce(p_aspect_cleanliness, 5),
+        aspect_trainer = coalesce(p_aspect_trainer, 5),
+        aspect_vibe = coalesce(p_aspect_vibe, 5),
+        updated_at = now()
+    where gym_id = p_gym_id and member_id = p_member_id
+    returning id into review_id;
+  else
+    insert into public.gym_reviews (
+      gym_id,
+      user_id,
+      member_id,
+      rating,
+      review_text,
+      reviewer_name,
+      aspect_equipment,
+      aspect_cleanliness,
+      aspect_trainer,
+      aspect_vibe
+    ) values (
+      p_gym_id,
+      uid,
+      p_member_id,
+      p_rating,
+      coalesce(p_review_text, ''),
+      clean_name,
+      coalesce(p_aspect_equipment, 5),
+      coalesce(p_aspect_cleanliness, 5),
+      coalesce(p_aspect_trainer, 5),
+      coalesce(p_aspect_vibe, 5)
+    )
+    returning id into review_id;
+  end if;
+
+  select
+    round(coalesce(avg(rating), 4.8)::numeric, 1),
+    count(*)::integer
+  from public.gym_reviews
+  where gym_id = p_gym_id
+  into new_avg, new_cnt;
+
+  update public.gyms
+  set rating = new_avg,
+      total_reviews = new_cnt
+  where id = p_gym_id;
+
+  return jsonb_build_object(
+    'success', true,
+    'review_id', review_id,
+    'rating', new_avg,
+    'total_reviews', new_cnt
+  );
+end;
+$$;
+
+create or replace function public.get_gym_reviews(p_gym_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  avg_rating numeric(3, 1) := 4.8;
+  tot_reviews integer := 0;
+  reviews_arr jsonb := '[]'::jsonb;
+  star_5 integer := 0;
+  star_4 integer := 0;
+  star_3 integer := 0;
+  star_2 integer := 0;
+  star_1 integer := 0;
+begin
+  select
+    round(coalesce(avg(rating), 4.8)::numeric, 1),
+    count(*)::integer,
+    count(*) filter (where rating = 5)::integer,
+    count(*) filter (where rating = 4)::integer,
+    count(*) filter (where rating = 3)::integer,
+    count(*) filter (where rating = 2)::integer,
+    count(*) filter (where rating = 1)::integer
+  from public.gym_reviews
+  where gym_id = p_gym_id
+  into avg_rating, tot_reviews, star_5, star_4, star_3, star_2, star_1;
+
+  select coalesce(jsonb_agg(
+    jsonb_build_object(
+      'id', r.id,
+      'rating', r.rating,
+      'review_text', r.review_text,
+      'reviewer_name', r.reviewer_name,
+      'aspect_equipment', r.aspect_equipment,
+      'aspect_cleanliness', r.aspect_cleanliness,
+      'aspect_trainer', r.aspect_trainer,
+      'aspect_vibe', r.aspect_vibe,
+      'created_at', r.created_at
+    ) order by r.created_at desc
+  ), '[]'::jsonb)
+  from (
+    select * from public.gym_reviews
+    where gym_id = p_gym_id
+    order by created_at desc
+    limit 20
+  ) r
+  into reviews_arr;
+
+  return jsonb_build_object(
+    'success', true,
+    'gym_id', p_gym_id,
+    'average_rating', coalesce(avg_rating, 4.8),
+    'total_reviews', coalesce(tot_reviews, 0),
+    'stars', jsonb_build_object(
+      '5', star_5,
+      '4', star_4,
+      '3', star_3,
+      '2', star_2,
+      '1', star_1
+    ),
+    'reviews', reviews_arr
+  );
+end;
+$$;
+
+grant execute on function public.submit_gym_review(uuid, integer, text, text, integer, integer, integer, integer, uuid) to anon, authenticated;
+grant execute on function public.get_gym_reviews(uuid) to anon, authenticated;
+
 -- Refresh PostgREST schema cache immediately
 notify pgrst, 'reload schema';

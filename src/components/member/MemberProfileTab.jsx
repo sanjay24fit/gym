@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ThemeToggle from '../ThemeToggle'
 import LanguageToggle from '../LanguageToggle'
 import { formatDate } from '../../lib/utils'
 import { normalizePhone } from '../../lib/memberPortal'
 import { supabase } from '../../lib/supabase'
+import MemberReviewModal from '../MemberReviewModal'
+import { getStoredMemberReview } from '../../lib/reviews'
 
 export default function MemberProfileTab({
   member,
@@ -17,6 +19,16 @@ export default function MemberProfileTab({
   const [passLoading, setPassLoading] = useState(false)
   const [passError, setPassError] = useState('')
   const [passSuccess, setPassSuccess] = useState('')
+
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [existingReview, setExistingReview] = useState(null)
+
+  useEffect(() => {
+    if (gym?.id) {
+      const stored = getStoredMemberReview(gym.id, member?.id)
+      if (stored) setExistingReview(stored)
+    }
+  }, [gym?.id, member?.id])
 
   const gymPhone = gym?.phone || ''
   const cleanGymPhone = normalizePhone(gymPhone)
@@ -247,6 +259,68 @@ export default function MemberProfileTab({
         </div>
       </div>
 
+      {/* ⭐ Rate & Review Your Gym (Decides City Leaderboard Ranking) */}
+      <div
+        className="card"
+        style={{
+          padding: '20px',
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.04) 100%)',
+          border: '1px solid rgba(245, 158, 11, 0.25)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '18px' }}>⭐</span>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800 }}>
+                Rate & Review {gym?.gym_name || 'Your Gym'}
+              </h3>
+            </div>
+            <p className="muted small" style={{ margin: '4px 0 0', lineHeight: 1.45 }}>
+              Aapka genuine feedback is gym ki city leaderboard ranking (e.g. Udaipur 200+ Gyms) me <b>35% weightage</b> rakhta hai!
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="btn sm"
+            onClick={() => setShowReviewModal(true)}
+            style={{
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              color: '#FFFFFF',
+              border: 'none',
+              padding: '6px 14px',
+              fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+            }}
+          >
+            {existingReview ? '✏️ Edit Review' : '⭐ Write Review'}
+          </button>
+        </div>
+
+        {existingReview ? (
+          <div style={{ background: 'var(--card)', borderRadius: '10px', padding: '10px 14px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+              <span style={{ color: '#fbbf24', fontSize: '15px' }}>
+                {'★'.repeat(existingReview.rating)}{'☆'.repeat(5 - existingReview.rating)}
+              </span>
+              <b style={{ fontSize: '12.5px' }}>{existingReview.rating} / 5 Stars</b>
+              <span className="badge green" style={{ fontSize: '10px', padding: '1px 6px' }}>Verified Member Review</span>
+            </div>
+            {existingReview.reviewText && (
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text)', fontStyle: 'italic', opacity: 0.9 }}>
+                "{existingReview.reviewText}"
+              </p>
+            )}
+          </div>
+        ) : (
+          <div style={{ fontSize: '12px', color: 'var(--muted)', background: 'var(--card)', padding: '8px 12px', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+            Machinery, cleanliness, aur trainers ke baare me apna review dein taaki aapka gym rank me aage badhe.
+          </div>
+        )}
+      </div>
+
       {/* 3. Gym Rules & Etiquette Card */}
       <div className="card" style={{ padding: '20px', borderRadius: '16px' }}>
         <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 700 }}>
@@ -400,6 +474,15 @@ export default function MemberProfileTab({
           </div>
         </div>
       )}
+
+      {/* Member Review & Rating Modal */}
+      <MemberReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        gym={gym}
+        member={member}
+        onReviewSubmitted={(saved) => setExistingReview(saved)}
+      />
     </div>
   )
 }

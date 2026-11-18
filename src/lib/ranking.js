@@ -29,8 +29,9 @@ export const STANDARD_FACILITIES = [
 
 /**
  * Calculates local ranking score fallback if Supabase RPC is offline
+ * Weighs Genuine Member Reviews as the primary deciding factor (35% Weightage)
  */
-export function calculateLocalGymScore({ members = [], facilities = [] }) {
+export function calculateLocalGymScore({ members = [], facilities = [], rating = 4.8, reviewCount = 12 }) {
   const total = members.length
   const active = members.filter((m) => {
     if (!m.end_date) return true
@@ -38,19 +39,22 @@ export function calculateLocalGymScore({ members = [], facilities = [] }) {
     return end >= new Date(new Date().toDateString())
   }).length
 
-  // 1. Member Volume Score (8 to 35 pts)
-  const memberScore = Math.min(35, Number((8 + (active / Math.max(1, active, 80)) * 27).toFixed(1)))
+  // 1. Member Volume Score (6 to 30 pts)
+  const memberScore = Math.min(30, Number((6 + (active / Math.max(1, active, 80)) * 24).toFixed(1)))
 
-  // 2. Member Retention Score (10 to 25 pts)
+  // 2. Member Retention Score (8 to 20 pts)
   const retentionRatio = total > 0 ? active / total : 0.85
-  const retentionScore = Math.min(25, Number((10 + retentionRatio * 15).toFixed(1)))
+  const retentionScore = Math.min(20, Number((8 + retentionRatio * 12).toFixed(1)))
 
-  // 3. Facilities Score (10 to 20 pts)
+  // 3. Facilities Score (6 to 15 pts)
   const facCount = Array.isArray(facilities) ? facilities.length : 3
-  const facilitiesScore = Math.min(20, Number((10 + facCount * 2.5).toFixed(1)))
+  const facilitiesScore = Math.min(15, Number((6 + facCount * 2.0).toFixed(1)))
 
-  // 4. Reputation Score (19.2 pts base)
-  const reputationScore = 19.2
+  // 4. GENUINE MEMBER REVIEWS (PRIMARY FACTOR: Max 35 pts)
+  // Real star ratings directly decide which gym ranks high or drops down
+  const safeRating = Math.max(1, Math.min(5, Number(rating) || 4.8))
+  const safeReviewCount = Number(reviewCount) || 12
+  const reputationScore = Math.min(35, Number(((safeRating * 5.6) + Math.min(7.0, safeReviewCount * 0.7)).toFixed(1)))
 
   const totalScore = Number((memberScore + retentionScore + facilitiesScore + reputationScore).toFixed(1))
 
