@@ -33,6 +33,8 @@ export default function GymProfile({
   const [paySuccess, setPaySuccess] = useState('')
 
   const [selectedCity, setSelectedCity] = useState(gym?.city || 'Udaipur')
+  const [selectedState, setSelectedState] = useState(gym?.state || 'Rajasthan')
+  const [selectedPincode, setSelectedPincode] = useState(gym?.pincode || '')
   const [selectedArea, setSelectedArea] = useState(gym?.area || 'City Center')
   const [gymFacilities, setGymFacilities] = useState(() => {
     if (Array.isArray(gym?.facilities) && gym.facilities.length > 0) return gym.facilities
@@ -49,6 +51,8 @@ export default function GymProfile({
     setLocationSuccess('')
     const res = await updateGymLocation({
       city: selectedCity,
+      state: selectedState,
+      pincode: selectedPincode,
       area: selectedArea,
       facilities: gymFacilities,
     })
@@ -185,20 +189,48 @@ export default function GymProfile({
             Aapka gym kis city me operate karta hai? City select karne par aapka gym us city ke total gyms (e.g. Udaipur 200+ Gyms) me rank hoga.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, marginBottom: '4px' }}>
                 City (Ranking Region) *
               </label>
-              <select
+              <input
+                type="text"
+                placeholder="e.g. Udaipur"
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
+                required
                 style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--input-bg, var(--card))', color: 'var(--text)' }}
-              >
-                {POPULAR_CITIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, marginBottom: '4px' }}>
+                State *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Rajasthan"
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                required
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--input-bg, var(--card))', color: 'var(--text)' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, marginBottom: '4px' }}>
+                PIN Code *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 313001"
+                maxLength={6}
+                value={selectedPincode}
+                onChange={(e) => setSelectedPincode(e.target.value)}
+                required
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--input-bg, var(--card))', color: 'var(--text)' }}
+              />
             </div>
 
             <div>
@@ -207,7 +239,7 @@ export default function GymProfile({
               </label>
               <input
                 type="text"
-                placeholder="e.g. Hiran Magri, Sector 4 / Fatehpura"
+                placeholder="e.g. Hiran Magri / City Center"
                 value={selectedArea}
                 onChange={(e) => setSelectedArea(e.target.value)}
                 required

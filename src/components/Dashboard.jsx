@@ -322,13 +322,13 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
         )}
       </div>
 
-      {/* 🏆 City Gym Ranking & Leaderboard Widget */}
+      {/* 🏆 City Gym Ranking Widget -> Direct Link to Rankings Tab */}
       <div
         className="card"
         style={{
-          background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%)',
+          background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
           color: '#FFFFFF',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
+          border: '1px solid rgba(255, 255, 255, 0.16)',
           borderRadius: 'var(--radius-xl)',
           padding: '16px 20px',
           marginBottom: '16px',
@@ -363,7 +363,7 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <b style={{ fontSize: '15.5px', color: '#FFFFFF' }}>
-                {gym?.city || 'Udaipur'} Gym Ranking: #{active.length >= 80 ? '1' : active.length >= 30 ? '2' : '3'}
+                {gym?.city || 'Udaipur'} City Rankings
               </b>
               <span
                 style={{
@@ -376,12 +376,12 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
                   borderRadius: '999px',
                 }}
               >
-                Top 10% · 200+ Gyms
+                ★ {Number(gym?.rating || 5.0).toFixed(1)} ({gym?.total_reviews || 0} Reviews)
               </span>
             </div>
 
-            <span style={{ fontSize: '12px', opacity: 0.85, display: 'block', marginTop: '3px' }}>
-              📍 {gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} · ⭐ {gym?.rating || 4.8} ({gym?.total_reviews || 0} Member Reviews) · Ranked by Member Feedback
+            <span style={{ fontSize: '12px', opacity: 0.85, display: 'block', marginTop: '3px', color: '#cbd5e1' }}>
+              📍 {gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} {gym?.pincode ? `(${gym.pincode})` : ''} · Ranked by Member Reviews & Ratings
             </span>
           </div>
         </div>
@@ -389,17 +389,19 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
         <button
           type="button"
           className="btn"
-          onClick={() => setShowLeaderboardModal(true)}
+          onClick={() => (onAction ? onAction('rankings') : setShowLeaderboardModal(true))}
           style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            color: '#FFFFFF',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
+            background: '#FFFFFF',
+            color: '#0f172a',
+            border: 'none',
             fontSize: '12.5px',
-            padding: '7px 14px',
+            fontWeight: 700,
+            padding: '8px 16px',
+            borderRadius: '10px',
             whiteSpace: 'nowrap',
           }}
         >
-          <span>View City Leaderboard (200+ Gyms) →</span>
+          <span>View City Rankings & Leaderboard →</span>
         </button>
       </div>
 

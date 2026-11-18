@@ -7,6 +7,8 @@ import MemberAttendanceTab from './member/MemberAttendanceTab'
 import MemberWorkoutTab from './member/MemberWorkoutTab'
 import MemberPaymentsTab from './member/MemberPaymentsTab'
 import MemberProfileTab from './member/MemberProfileTab'
+import MemberReviewModal from './MemberReviewModal'
+import { getStoredMemberReview } from '../lib/reviews'
 import { fetchEliteMemberData } from '../lib/eliteMember'
 import { dueAmount } from '../lib/utils'
 
@@ -23,6 +25,8 @@ export default function MemberPortal({
 
   // Live elite data state
   const [eliteData, setEliteData] = useState(null)
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [currentReview, setCurrentReview] = useState(null)
 
   // Load elite data on mount
   useEffect(() => {
@@ -36,6 +40,16 @@ export default function MemberPortal({
       cancelled = true
     }
   }, [])
+
+  // Sync member review state
+  useEffect(() => {
+    const gymId = eliteData?.gym?.id || initialGym?.id
+    const memberId = eliteData?.member?.id || initialMember?.id
+    if (gymId) {
+      const stored = getStoredMemberReview(gymId, memberId)
+      if (stored) setCurrentReview(stored)
+    }
+  }, [eliteData?.gym?.id, eliteData?.member?.id, initialGym?.id, initialMember?.id])
 
   const handleRefresh = async () => {
     if (refreshing) return
@@ -195,6 +209,8 @@ export default function MemberPortal({
             announcements={announcements}
             notifications={notifications}
             onNavigateTab={(tab) => setActiveTab(tab)}
+            onOpenReview={() => setShowReviewModal(true)}
+            memberReview={currentReview}
             onRefresh={handleRefresh}
           />
         )}
@@ -230,6 +246,8 @@ export default function MemberPortal({
             gym={gym}
             onLogout={onLogout}
             onOpenPass={() => setActiveTab('home')}
+            onOpenReview={() => setShowReviewModal(true)}
+            memberReview={currentReview}
           />
         )}
       </main>
@@ -389,6 +407,20 @@ export default function MemberPortal({
           <span>Profile</span>
         </button>
       </nav>
+
+      {/* 4. Member Review & Rating Modal */}
+      <MemberReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        gym={gym}
+        member={member}
+        existingReview={currentReview}
+        onSuccess={(savedReview) => {
+          setCurrentReview(savedReview)
+          setShowReviewModal(false)
+          handleRefresh()
+        }}
+      />
     </div>
   )
 }

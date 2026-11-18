@@ -24,6 +24,10 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     gym_name: '',
     owner_name: '',
     phone: '',
+    city: 'Udaipur',
+    state: 'Rajasthan',
+    pincode: '',
+    area: '',
     full_name: '',
     gym_code: '',
   })
@@ -153,18 +157,32 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     }
 
     // ------------------------------------------------------------------------
-    // CASE 4: Gym Owner Registration
+    // CASE 4: Gym Owner Registration (With City, State, Pincode)
     // ------------------------------------------------------------------------
     if (role === 'owner' && ownerMode === 'signup') {
+      const cleanCity = (form.city || 'Udaipur').trim()
+      const cleanState = (form.state || 'Rajasthan').trim()
+      const cleanPincode = (form.pincode || '').trim()
+
+      if (!cleanCity) {
+        setError('Please enter your Gym City.')
+        setLoading(false)
+        return
+      }
+
       const { data, error: signupErr } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
         options: {
           data: {
             role: 'owner',
-            gym_name: form.gym_name,
-            owner_name: form.owner_name,
-            phone: form.phone,
+            gym_name: form.gym_name.trim(),
+            owner_name: form.owner_name.trim(),
+            phone: form.phone.trim(),
+            city: cleanCity,
+            state: cleanState,
+            pincode: cleanPincode,
+            area: form.area.trim(),
           },
         },
       })
@@ -375,12 +393,34 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
           </div>
         )}
 
-        {/* Owner Signup Fields */}
+        {/* Owner Signup Fields: Gym Name, Owner Name, Phone, City, State, Pincode */}
         {role === 'owner' && ownerMode === 'signup' && (
           <>
             <label>Gym Name *<input required value={form.gym_name} placeholder="e.g. Iron Fitness Club" onChange={set('gym_name')} /></label>
             <label>Owner Name *<input required value={form.owner_name} placeholder="e.g. Rahul Sharma" onChange={set('owner_name')} /></label>
             <label>Mobile Number *<input required type="tel" value={form.phone} placeholder="10-digit mobile number" onChange={set('phone')} /></label>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <label style={{ margin: 0 }}>
+                City *
+                <input required value={form.city} placeholder="e.g. Udaipur" onChange={set('city')} />
+              </label>
+              <label style={{ margin: 0 }}>
+                State *
+                <input required value={form.state} placeholder="e.g. Rajasthan" onChange={set('state')} />
+              </label>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <label style={{ margin: 0 }}>
+                PIN Code *
+                <input required type="text" maxLength={6} value={form.pincode} placeholder="e.g. 313001" onChange={set('pincode')} />
+              </label>
+              <label style={{ margin: 0 }}>
+                Area / Locality
+                <input value={form.area} placeholder="e.g. Hiran Magri" onChange={set('area')} />
+              </label>
+            </div>
           </>
         )}
 

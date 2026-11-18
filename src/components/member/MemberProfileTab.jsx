@@ -12,6 +12,8 @@ export default function MemberProfileTab({
   gym,
   onLogout,
   onOpenPass = null,
+  onOpenReview = null,
+  memberReview = null,
 }) {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -24,11 +26,13 @@ export default function MemberProfileTab({
   const [existingReview, setExistingReview] = useState(null)
 
   useEffect(() => {
-    if (gym?.id) {
+    if (memberReview) {
+      setExistingReview(memberReview)
+    } else if (gym?.id) {
       const stored = getStoredMemberReview(gym.id, member?.id)
       if (stored) setExistingReview(stored)
     }
-  }, [gym?.id, member?.id])
+  }, [gym?.id, member?.id, memberReview])
 
   const gymPhone = gym?.phone || ''
   const cleanGymPhone = normalizePhone(gymPhone)
@@ -285,7 +289,7 @@ export default function MemberProfileTab({
           <button
             type="button"
             className="btn sm"
-            onClick={() => setShowReviewModal(true)}
+            onClick={() => (onOpenReview ? onOpenReview() : setShowReviewModal(true))}
             style={{
               background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
               color: '#FFFFFF',

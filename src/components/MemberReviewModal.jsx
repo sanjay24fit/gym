@@ -7,6 +7,8 @@ export default function MemberReviewModal({
   onClose,
   gym,
   member,
+  existingReview = null,
+  onSuccess = null,
   onReviewSubmitted = null,
 }) {
   const [rating, setRating] = useState(5)
@@ -23,11 +25,13 @@ export default function MemberReviewModal({
 
   useEffect(() => {
     if (!isOpen || !gym?.id) return
-    const stored = getStoredMemberReview(gym.id, member?.id)
+    const stored = existingReview || getStoredMemberReview(gym.id, member?.id)
     if (stored) {
       setRating(stored.rating || 5)
-      setReviewText(stored.reviewText || '')
-      if (stored.reviewerName) setReviewerName(stored.reviewerName)
+      setReviewText(stored.review_text || stored.reviewText || '')
+      if (stored.reviewer_name || stored.reviewerName) {
+        setReviewerName(stored.reviewer_name || stored.reviewerName)
+      }
       if (stored.aspects) {
         setEquipmentRating(stored.aspects.equipment || 5)
         setCleanlinessRating(stored.aspects.cleanliness || 5)
@@ -35,7 +39,7 @@ export default function MemberReviewModal({
         setVibeRating(stored.aspects.vibe || 5)
       }
     }
-  }, [isOpen, gym?.id, member?.id])
+  }, [isOpen, gym?.id, member?.id, existingReview])
 
   if (!isOpen) return null
 
@@ -73,12 +77,15 @@ export default function MemberReviewModal({
 
     if (res.success) {
       setSuccessMsg('Review submitted successfully! Aapka review is gym ki city leaderboard ranking me jud chuka hai.')
+      if (onSuccess) {
+        onSuccess(res.review)
+      }
       if (onReviewSubmitted) {
         onReviewSubmitted(res.review)
       }
       setTimeout(() => {
         onClose()
-      }, 1800)
+      }, 1500)
     } else {
       setErrorMsg(res.error || 'Failed to submit review.')
     }

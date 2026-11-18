@@ -9,6 +9,8 @@ export default function MemberHomeTab({
   announcements = [],
   notifications = [],
   onNavigateTab,
+  onOpenReview,
+  memberReview,
   onWhatsAppContact,
 }) {
   const [showNotifDrawer, setShowNotifDrawer] = useState(false)
@@ -283,14 +285,14 @@ export default function MemberHomeTab({
         </div>
       </div>
 
-      {/* ⭐ Rate & Review Gym Action Prompt */}
+      {/* ⭐ Rate & Review Gym Action Prompt (Compulsory & Prominent) */}
       <div
         className="card"
         style={{
-          padding: '14px 18px',
+          padding: '16px 20px',
           borderRadius: '16px',
-          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
-          border: '1px solid rgba(245, 158, 11, 0.25)',
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.06) 100%)',
+          border: '1px solid rgba(245, 158, 11, 0.35)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -298,14 +300,47 @@ export default function MemberHomeTab({
           flexWrap: 'wrap',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '22px' }}>⭐</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: '#f59e0b',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              flexShrink: 0,
+            }}
+          >
+            ⭐
+          </div>
           <div>
-            <b style={{ fontSize: '13.5px', display: 'block' }}>
-              Rate & Review {gym?.gym_name || 'Your Gym'}
-            </b>
-            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-              Aapka genuine review is gym ki city leaderboard ranking decide karta hai.
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <b style={{ fontSize: '14px' }}>
+                {memberReview ? 'Aapka Gym Review & Rating' : `Rate & Review ${gym?.gym_name || 'Your Gym'}`}
+              </b>
+              {!memberReview && (
+                <span
+                  style={{
+                    background: '#f59e0b',
+                    color: '#FFFFFF',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '1px 6px',
+                    borderRadius: '999px',
+                  }}
+                >
+                  Feedback
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: '12px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>
+              {memberReview
+                ? `Aapne ${memberReview.rating}★ rating di hai · "${memberReview.review_text || memberReview.reviewText || 'Verified Review'}"`
+                : 'Aapka review gym ki city leaderboard ranking decide karega!'}
             </span>
           </div>
         </div>
@@ -313,17 +348,19 @@ export default function MemberHomeTab({
         <button
           type="button"
           className="btn sm"
-          onClick={() => onNavigateTab('profile')}
+          onClick={() => (onOpenReview ? onOpenReview() : onNavigateTab('profile'))}
           style={{
             background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
             color: '#FFFFFF',
             border: 'none',
-            padding: '6px 14px',
+            padding: '7px 16px',
             fontWeight: 700,
+            fontSize: '12px',
+            borderRadius: '10px',
             whiteSpace: 'nowrap',
           }}
         >
-          <span>⭐ Rate Gym</span>
+          <span>{memberReview ? '✏️ Edit Review' : '⭐ Give Review'}</span>
         </button>
       </div>
 

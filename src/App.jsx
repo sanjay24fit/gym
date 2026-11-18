@@ -20,6 +20,7 @@ import MemberPortal from './components/MemberPortal'
 import GymMemberRequests from './components/GymMemberRequests'
 import MemberPendingApproval from './components/MemberPendingApproval'
 import MemberRejected from './components/MemberRejected'
+import CityRankings from './components/CityRankings'
 
 export default function App() {
   const [session, setSession] = useState(undefined)
@@ -231,6 +232,8 @@ export default function App() {
       setTab('members')
     } else if (action === 'payments') {
       setTab('payments')
+    } else if (action === 'rankings') {
+      setTab('rankings')
     } else if (action === 'profile') {
       setTab('profile')
     } else if (action === 'download') {
@@ -417,6 +420,20 @@ export default function App() {
           ),
         },
         {
+          key: 'rankings',
+          label: 'Rankings',
+          icon: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+              <path d="M4 22h16" />
+              <path d="M10 14.66V17c0 .55-.45 1-1 1H7" />
+              <path d="M14 14.66V17c0 .55.45 1 1 1h2" />
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+            </svg>
+          ),
+        },
+        {
           key: 'requests',
           label: 'Requests',
           icon: (
@@ -528,6 +545,13 @@ export default function App() {
               setMembersInitialDialog({ type: 'edit', member: m })
               setTab('members')
             }}
+          />
+        )}
+
+        {tab === 'rankings' && canUseGym && (
+          <CityRankings
+            gym={gym}
+            onRefreshGym={refresh}
           />
         )}
 
