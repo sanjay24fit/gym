@@ -6,6 +6,7 @@ import Modal from './Modal'
 import { useTheme } from '../lib/theme'
 import LanguageToggle from './LanguageToggle'
 import { initiateSubscriptionPayment, RAZORPAY_ME_HANDLE_URL } from '../lib/razorpay'
+import { POPULAR_CITIES, STANDARD_FACILITIES, updateGymLocation } from '../lib/ranking'
 
 export default function GymProfile({
   gym,
@@ -30,6 +31,35 @@ export default function GymProfile({
   const [paying, setPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [paySuccess, setPaySuccess] = useState('')
+
+  const [selectedCity, setSelectedCity] = useState(gym?.city || 'Udaipur')
+  const [selectedArea, setSelectedArea] = useState(gym?.area || 'City Center')
+  const [gymFacilities, setGymFacilities] = useState(() => {
+    if (Array.isArray(gym?.facilities) && gym.facilities.length > 0) return gym.facilities
+    return ['Cardio Zone (Treadmill, Cycles, Steppers)', 'Strength & Heavy Free Weights', 'Personal Training (Certified Coaches)']
+  })
+  const [savingLocation, setSavingLocation] = useState(false)
+  const [locationSuccess, setLocationSuccess] = useState('')
+  const [locationError, setLocationError] = useState('')
+
+  async function handleSaveLocation(e) {
+    e.preventDefault()
+    setSavingLocation(true)
+    setLocationError('')
+    setLocationSuccess('')
+    const res = await updateGymLocation({
+      city: selectedCity,
+      area: selectedArea,
+      facilities: gymFacilities,
+    })
+    setSavingLocation(false)
+    if (res.success) {
+      setLocationSuccess('Gym location and facilities saved! City leaderboard rank updated.')
+      if (onRefresh) onRefresh()
+    } else {
+      setLocationError(res.error || 'Failed to update location.')
+    }
+  }
 
   const validUntil = gym?.valid_until
   const daysRemaining = validUntil ? daysLeft(validUntil) : null
@@ -138,6 +168,107 @@ export default function GymProfile({
             </div>
           </div>
         </div>
+
+        {/* Gym Location & City Leaderboard Settings */}
+        <form className="card" onSubmit={handleSaveLocation}>
+          <div className="section-head" style={{ marginBottom: '10px' }}>
+            <div>
+              <h4 style={{ margin: 0 }}>📍 Gym City & Ranking Location</h4>
+              <span className="muted small">Set your city and area for the City Leaderboard & Market Ranking</span>
+            </div>
+            <span className="badge purple">
+              🏆 Leaderboard Active
+            </span>
+          </div>
+
+          <p className="small muted" style={{ marginBottom: '14px' }}>
+            Aapka gym kis city me operate karta hai? City select karne par aapka gym us city ke total gyms (e.g. Udaipur 200+ Gyms) me rank hoga.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, marginBottom: '4px' }}>
+                City (Ranking Region) *
+              </label>
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--input-bg, var(--card))', color: 'var(--text)' }}
+              >
+                {POPULAR_CITIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, marginBottom: '4px' }}>
+                Area / Locality *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Hiran Magri, Sector 4 / Fatehpura"
+                value={selectedArea}
+                onChange={(e) => setSelectedArea(e.target.value)}
+                required
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--input-bg, var(--card))', color: 'var(--text)' }}
+              />
+            </div>
+          </div>
+
+          {/* Verified Facilities Checklist */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 700, marginBottom: '6px' }}>
+              Gym Facilities & Equipment (Adds +20 pts to Rank Score)
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '6px' }}>
+              {STANDARD_FACILITIES.map((f) => {
+                const checked = gymFacilities.includes(f.label)
+                return (
+                  <label
+                    key={f.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      padding: '7px 10px',
+                      borderRadius: '8px',
+                      background: checked ? 'var(--card-hover)' : 'transparent',
+                      border: '1px solid var(--border)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setGymFacilities([...gymFacilities, f.label])
+                        } else {
+                          setGymFacilities(gymFacilities.filter((x) => x !== f.label))
+                        }
+                      }}
+                    />
+                    <span>{f.label}</span>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+
+          {locationSuccess && <div className="alert success small" style={{ marginBottom: '12px' }}>✓ {locationSuccess}</div>}
+          {locationError && <div className="alert error small" style={{ marginBottom: '12px' }}>✕ {locationError}</div>}
+
+          <button
+            type="submit"
+            className="btn primary"
+            disabled={savingLocation}
+            style={{ padding: '8px 18px', fontSize: '13px' }}
+          >
+            <span>{savingLocation ? 'Updating Location…' : 'Save City & Facilities'}</span>
+          </button>
+        </form>
 
         {/* Subscription & Validity Card */}
         <div className="card">

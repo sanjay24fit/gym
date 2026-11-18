@@ -231,6 +231,8 @@ export default function App() {
       setTab('members')
     } else if (action === 'payments') {
       setTab('payments')
+    } else if (action === 'profile') {
+      setTab('profile')
     } else if (action === 'download') {
       handleDownloadApp()
     } else if (action === 'pay' && data) {
