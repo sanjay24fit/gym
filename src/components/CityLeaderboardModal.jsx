@@ -39,10 +39,13 @@ export default function CityLeaderboardModal({
 
   if (!isOpen) return null
 
-  const myRank = rankData?.my_rank || 1
-  const myScore = rankData?.my_score || 91.5
-  const myTier = rankData?.tier_badge || 'Gold Club'
-  const myPercentile = rankData?.city_percentile || 'Top 10%'
+  const totalReviews = reviewsData?.total_reviews || 0
+  const avgRating = totalReviews > 0 ? Number(reviewsData?.average_rating || 0).toFixed(1) : 'No reviews yet'
+  const isRanked = Boolean(rankData?.my_rank && totalReviews > 0)
+  const myRank = isRanked ? `#${rankData?.my_rank}` : 'Not Ranked'
+  const myScore = rankData?.my_score || 0
+  const myTier = isRanked ? (rankData?.tier_badge || 'Gold Club') : 'New Club'
+  const myPercentile = isRanked ? (rankData?.city_percentile || 'Ranked') : 'Unranked'
   const estimatedCityGyms = rankData?.estimated_city_gyms || 220
   const breakdown = rankData?.score_breakdown || {
     member_score: 25,
@@ -51,9 +54,7 @@ export default function CityLeaderboardModal({
     reputation_score: 30,
   }
 
-  const avgRating = reviewsData?.average_rating || 4.8
-  const totalReviews = reviewsData?.total_reviews || 0
-  const trophy = myRank === 1 ? '🥇' : myRank === 2 ? '🥈' : myRank === 3 ? '🥉' : '🏆'
+  const trophy = isRanked && rankData?.my_rank === 1 ? '🥇' : isRanked && rankData?.my_rank === 2 ? '🥈' : isRanked && rankData?.my_rank === 3 ? '🥉' : '🏆'
 
   return (
     <Modal title={`🏆 ${selectedCity} Gym Leaderboard & Rankings`} onClose={onClose}>
@@ -77,9 +78,9 @@ export default function CityLeaderboardModal({
         <div
           className="card"
           style={{
-            background: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 60%, #172554 100%)',
+            background: 'linear-gradient(135deg, #145C43 0%, #0C3829 100%)',
             color: '#FFFFFF',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
+            border: '1px solid rgba(53, 185, 130, 0.3)',
             borderRadius: '20px',
             padding: '20px 22px',
             boxShadow: '0 12px 28px rgba(0, 0, 0, 0.35)',

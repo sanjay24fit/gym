@@ -6,7 +6,7 @@ import Modal from './Modal'
 import { useTheme } from '../lib/theme'
 import LanguageToggle from './LanguageToggle'
 import { initiateSubscriptionPayment, RAZORPAY_ME_HANDLE_URL } from '../lib/razorpay'
-import { POPULAR_CITIES, STANDARD_FACILITIES, updateGymLocation } from '../lib/ranking'
+import { STANDARD_FACILITIES, updateGymLocation } from '../lib/ranking'
 
 export default function GymProfile({
   gym,
@@ -375,7 +375,7 @@ export default function GymProfile({
           <div className="section-head" style={{ marginBottom: '10px' }}>
             <div>
               <h4 style={{ margin: 0 }}>Theme & Appearance</h4>
-              <span className="muted small">Choose between Deep Plum Dark mode and Lavender Light mode</span>
+              <span className="muted small">Choose between Forest Charcoal Dark mode and Off-White Light mode</span>
             </div>
             <span className="badge blue">
               {theme === 'dark' ? '● Dark Mode Active' : '● Light Mode Active'}
@@ -400,7 +400,7 @@ export default function GymProfile({
               </div>
               <div className="theme-option-info">
                 <div className="theme-option-name">
-                  <span>Deep Plum Dark</span>
+                  <span>Forest Charcoal Dark</span>
                 </div>
                 <div className="theme-option-check">
                   {theme === 'dark' && (
@@ -429,7 +429,7 @@ export default function GymProfile({
               </div>
               <div className="theme-option-info">
                 <div className="theme-option-name">
-                  <span>Lavender Light</span>
+                  <span>Off-White Emerald Light</span>
                 </div>
                 <div className="theme-option-check">
                   {theme === 'light' && (

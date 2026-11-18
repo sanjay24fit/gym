@@ -94,8 +94,8 @@ export default function MemberProfileTab({
         style={{
           padding: '24px',
           borderRadius: '20px',
-          background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(147, 51, 234, 0.05) 100%)',
-          border: '1px solid rgba(79, 70, 229, 0.2)',
+          background: 'linear-gradient(135deg, rgba(20, 92, 67, 0.08) 0%, rgba(53, 185, 130, 0.05) 100%)',
+          border: '1px solid rgba(20, 92, 67, 0.2)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -109,14 +109,14 @@ export default function MemberProfileTab({
             width: '80px',
             height: '80px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+            background: 'linear-gradient(135deg, #145C43 0%, #35B982 100%)',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '32px',
             fontWeight: 800,
-            boxShadow: '0 8px 24px rgba(79, 70, 229, 0.35)',
+            boxShadow: '0 8px 24px rgba(20, 92, 67, 0.35)',
             marginBottom: '14px',
           }}
         >
@@ -183,8 +183,8 @@ export default function MemberProfileTab({
             style={{
               marginTop: '16px',
               background: 'var(--card)',
-              border: '1px solid var(--accent, #4f46e5)',
-              color: 'var(--accent, #4f46e5)',
+              border: '1px solid var(--primary, #145C43)',
+              color: 'var(--primary, #145C43)',
               fontWeight: 700,
               fontSize: '13px',
             }}

@@ -4,6 +4,7 @@ import WhatsAppSupport from './WhatsAppSupport'
 import GymLogo from './GymLogo'
 import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
+import { GYM_IMAGES } from '../lib/assets'
 import { lookupMemberPortal, normalizePhone } from '../lib/memberPortal'
 import { verifyGymConnectionCode, submitMemberJoinRequest } from '../lib/memberAuth'
 
@@ -280,27 +281,40 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
         <ThemeToggle size="sm" showLabel />
       </div>
 
-      <form className="card auth-card" onSubmit={submit} style={{ maxWidth: '420px', width: '100%' }}>
-        {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+      <form className="card auth-card" onSubmit={submit} style={{ maxWidth: '440px', width: '100%', padding: '0 0 28px', overflow: 'hidden' }}>
+        {/* Premium Gym Hero Visual Header */}
+        <div style={{ position: 'relative', height: '120px', width: '100%', overflow: 'hidden', background: '#145C43' }}>
+          <img
+            src={GYM_IMAGES.authGymInterior}
+            alt="Gym Interior"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
+            loading="lazy"
+          />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(20, 92, 67, 0.3) 0%, var(--card) 100%)' }} />
+          <div style={{ position: 'absolute', bottom: '6px', left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
             <GymLogo size={52} />
           </div>
-          <h1 style={{ fontSize: '22px', margin: '0 0 4px', fontWeight: 800 }}>
-            {isForgotMode
-              ? 'Reset Password'
-              : role === 'owner'
-              ? 'Gym Manager · Owner'
-              : 'Gym Manager · Member'}
-          </h1>
-          <p className="muted small" style={{ margin: 0 }}>
-            {isForgotMode
-              ? 'Enter your registered email to receive a password reset link'
-              : role === 'owner'
-              ? 'Smart management portal for gym owners'
-              : 'Connect to your gym with your Gym Code'}
-          </p>
         </div>
+
+        {/* Content Body */}
+        <div style={{ padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Brand Header */}
+          <div style={{ textAlign: 'center', marginBottom: '2px' }}>
+            <h1 style={{ fontSize: '21px', margin: '0 0 4px', fontWeight: 800 }}>
+              {isForgotMode
+                ? 'Reset Password'
+                : role === 'owner'
+                ? 'Gym Manager · Owner'
+                : 'Gym Manager · Member'}
+            </h1>
+            <p className="muted small" style={{ margin: 0 }}>
+              {isForgotMode
+                ? 'Enter your registered email to receive a password reset link'
+                : role === 'owner'
+                ? 'Smart management portal for gym owners'
+                : 'Connect to your gym with your Gym Code'}
+            </p>
+          </div>
 
         {/* APK Download Button if applicable */}
         {!isInstalled && onDownloadApp && !isForgotMode && (
@@ -698,8 +712,9 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
           </p>
         )}
 
-        <div className="auth-support" style={{ marginTop: '14px', textAlign: 'center' }}>
-          <WhatsAppSupport variant="link" label="Need assistance? WhatsApp Support" />
+          <div className="auth-support" style={{ marginTop: '14px', textAlign: 'center' }}>
+            <WhatsAppSupport variant="link" label="Need assistance? WhatsApp Support" />
+          </div>
         </div>
       </form>
     </div>

@@ -63,15 +63,15 @@ export default function MemberAttendanceTab({ attendance = {}, gym: _gym }) {
             style={{
               padding: '14px',
               borderRadius: '14px',
-              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(79, 70, 229, 0.03) 100%)',
-              border: '1px solid rgba(79, 70, 229, 0.25)',
+              background: 'linear-gradient(135deg, rgba(20, 92, 67, 0.1) 0%, rgba(53, 185, 130, 0.04) 100%)',
+              border: '1px solid rgba(20, 92, 67, 0.25)',
               textAlign: 'center',
             }}
           >
             <span className="muted small block" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
               Consistency Rate
             </span>
-            <div style={{ fontSize: '26px', fontWeight: 900, color: 'var(--accent, #4f46e5)', margin: '4px 0 2px' }}>
+            <div style={{ fontSize: '26px', fontWeight: 900, color: 'var(--primary, #145C43)', margin: '4px 0 2px' }}>
               {attendanceRate}%
             </div>
             <span className="xs muted">Monthly workout frequency</span>

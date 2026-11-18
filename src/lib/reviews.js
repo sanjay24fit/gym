@@ -98,9 +98,9 @@ export async function fetchGymReviews(gymId) {
   if (!gymId) {
     return {
       success: true,
-      average_rating: 4.8,
-      total_reviews: 14,
-      stars: { 5: 11, 4: 2, 3: 1, 2: 0, 1: 0 },
+      average_rating: 0,
+      total_reviews: 0,
+      stars: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
       reviews: [],
     }
   }
@@ -124,39 +124,16 @@ export async function fetchGymReviews(gymId) {
     if (qErr || !rows || rows.length === 0) {
       return {
         success: true,
-        average_rating: 4.8,
-        total_reviews: 12,
-        stars: { 5: 10, 4: 2, 3: 0, 2: 0, 1: 0 },
-        reviews: [
-          {
-            id: 'mock-1',
-            rating: 5,
-            reviewer_name: 'Rahul Sharma',
-            review_text: 'Best gym in Udaipur! Equipment is always clean and trainers are super supportive.',
-            created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-            aspect_equipment: 5,
-            aspect_cleanliness: 5,
-            aspect_trainer: 5,
-            aspect_vibe: 5,
-          },
-          {
-            id: 'mock-2',
-            rating: 5,
-            reviewer_name: 'Amit Verma',
-            review_text: 'Great workout environment, very spacious cardio area and heavy dumbbells available.',
-            created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
-            aspect_equipment: 5,
-            aspect_cleanliness: 4,
-            aspect_trainer: 5,
-            aspect_vibe: 5,
-          },
-        ],
+        average_rating: 0,
+        total_reviews: 0,
+        stars: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+        reviews: [],
       }
     }
 
     const total = rows.length
-    const sum = rows.reduce((s, r) => s + Number(r.rating || 5), 0)
-    const avg = Number((sum / total).toFixed(1))
+    const sum = rows.reduce((s, r) => s + Number(r.rating || 0), 0)
+    const avg = total > 0 ? Number((sum / total).toFixed(1)) : 0
 
     return {
       success: true,
@@ -174,9 +151,9 @@ export async function fetchGymReviews(gymId) {
   } catch (_err) {
     return {
       success: true,
-      average_rating: 4.8,
-      total_reviews: 12,
-      stars: { 5: 10, 4: 2, 3: 0, 2: 0, 1: 0 },
+      average_rating: 0,
+      total_reviews: 0,
+      stars: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
       reviews: [],
     }
   }

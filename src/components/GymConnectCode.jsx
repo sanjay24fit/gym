@@ -137,8 +137,8 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
                 width: '28px',
                 height: '28px',
                 borderRadius: '8px',
-                background: 'rgba(79, 70, 229, 0.12)',
-                color: 'var(--accent, #4f46e5)',
+                background: 'rgba(20, 92, 67, 0.12)',
+                color: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -218,8 +218,8 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '10px',
-              background: 'rgba(79, 70, 229, 0.08)',
-              border: '2px solid var(--accent, #4f46e5)',
+              background: 'var(--card-subtle)',
+              border: '2px solid var(--primary)',
               borderRadius: '12px',
               padding: '6px 16px',
               cursor: 'pointer',
@@ -235,7 +235,7 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
                 fontWeight: 800,
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                 letterSpacing: '3px',
-                color: 'var(--accent, #4f46e5)',
+                color: 'var(--primary)',
               }}
             >
               {connectCode}

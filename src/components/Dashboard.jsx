@@ -326,35 +326,35 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
       <div
         className="card"
         style={{
-          background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
+          background: 'linear-gradient(135deg, #145C43 0%, #0C3829 100%)',
           color: '#FFFFFF',
-          border: '1px solid rgba(255, 255, 255, 0.16)',
+          border: '1px solid rgba(53, 185, 130, 0.35)',
           borderRadius: 'var(--radius-xl)',
-          padding: '16px 20px',
+          padding: '18px 22px',
           marginBottom: '16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '12px',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+          gap: '14px',
+          boxShadow: '0 8px 24px rgba(20, 92, 67, 0.25)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div
             style={{
-              width: '44px',
-              height: '44px',
+              width: '46px',
+              height: '46px',
               borderRadius: '14px',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              color: '#FFFFFF',
+              background: 'linear-gradient(135deg, #D6B46A 0%, #B89649 100%)',
+              color: '#18231E',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '22px',
               fontWeight: 800,
               flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+              boxShadow: '0 4px 12px rgba(214, 180, 106, 0.35)',
             }}
           >
             🏆
@@ -362,26 +362,28 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <b style={{ fontSize: '15.5px', color: '#FFFFFF' }}>
+              <b style={{ fontSize: '16px', color: '#FFFFFF', letterSpacing: '-0.01em' }}>
                 {gym?.city || 'Udaipur'} City Rankings
               </b>
               <span
                 style={{
-                  background: 'rgba(245, 158, 11, 0.25)',
-                  border: '1px solid rgba(245, 158, 11, 0.4)',
-                  color: '#fbbf24',
+                  background: 'rgba(53, 185, 130, 0.22)',
+                  border: '1px solid rgba(53, 185, 130, 0.45)',
+                  color: '#A7F3D0',
                   fontSize: '11px',
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '999px',
                 }}
               >
-                ★ {Number(gym?.rating || 5.0).toFixed(1)} ({gym?.total_reviews || 0} Reviews)
+                {(gym?.total_reviews || 0) > 0
+                  ? `★ ${Number(gym.rating).toFixed(1)} (${gym.total_reviews} Reviews)`
+                  : 'No reviews yet'}
               </span>
             </div>
 
-            <span style={{ fontSize: '12px', opacity: 0.85, display: 'block', marginTop: '3px', color: '#cbd5e1' }}>
-              📍 {gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} {gym?.pincode ? `(${gym.pincode})` : ''} · Ranked by Member Reviews & Ratings
+            <span style={{ fontSize: '12.5px', opacity: 0.9, display: 'block', marginTop: '3px', color: '#E2E8F0' }}>
+              📍 {gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} {gym?.pincode ? `· PIN ${gym.pincode}` : ''} · Live Leaderboard Decided by Member Reviews
             </span>
           </div>
         </div>
@@ -392,13 +394,14 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
           onClick={() => (onAction ? onAction('rankings') : setShowLeaderboardModal(true))}
           style={{
             background: '#FFFFFF',
-            color: '#0f172a',
+            color: '#145C43',
             border: 'none',
             fontSize: '12.5px',
             fontWeight: 700,
-            padding: '8px 16px',
-            borderRadius: '10px',
+            padding: '9px 18px',
+            borderRadius: 'var(--radius-full)',
             whiteSpace: 'nowrap',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           }}
         >
           <span>View City Rankings & Leaderboard →</span>

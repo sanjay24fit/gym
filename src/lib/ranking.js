@@ -79,22 +79,110 @@ export function calculateLocalGymScore({ members = [], facilities: _facilities =
 }
 
 /**
+ * Normalizes and ranks registered gyms.
+ * RULE: Never show 5.0 rating or #1 rank when there are zero verified reviews!
+ * Gyms without verified reviews receive 'Not Ranked Yet'.
+ */
+export function normalizeGymRankingData(gymsList = [], activeGymId = null) {
+  const processed = gymsList.map((g) => {
+    const totalReviews = Number(g.total_reviews) || 0
+    // CRITICAL: Never show a 5.0 rating when there are zero reviews
+    const rating = totalReviews > 0 ? Number(g.rating) || 0 : 0
+    const isMyGym = Boolean(g.is_my_gym || (activeGymId && (g.gym_id === activeGymId || g.id === activeGymId)))
+    const hasReviews = totalReviews > 0
+
+    return {
+      ...g,
+      gym_id: g.gym_id || g.id,
+      gym_name: g.gym_name || 'Fitness Club',
+      city: g.city || '',
+      state: g.state || 'Rajasthan',
+      pincode: g.pincode || '',
+      area: g.area || 'City Center',
+      rating,
+      total_reviews: totalReviews,
+      has_reviews: hasReviews,
+      is_my_gym: isMyGym,
+    }
+  })
+
+  // Separate ranked gyms (hasReviews === true) and unranked gyms (hasReviews === false)
+  const ranked = processed.filter((g) => g.has_reviews)
+  const unranked = processed.filter((g) => !g.has_reviews)
+
+  // Sort ranked gyms by rating desc, then total_reviews desc, then score desc
+  ranked.sort((a, b) => {
+    if (b.rating !== a.rating) return b.rating - a.rating
+    if (b.total_reviews !== a.total_reviews) return b.total_reviews - a.total_reviews
+    return (b.score || 0) - (a.score || 0)
+  })
+
+  // Assign sequential ranks ONLY to gyms with genuine reviews
+  ranked.forEach((g, idx) => {
+    g.rank = idx + 1
+    g.rank_display = `#${idx + 1}`
+    g.is_ranked = true
+  })
+
+  // Unranked gyms have no artificial rank
+  unranked.forEach((g) => {
+    g.rank = null
+    g.rank_display = 'Not Ranked Yet'
+    g.is_ranked = false
+  })
+
+  const combined = [...ranked, ...unranked]
+
+  // Find my gym status
+  const myGym = combined.find((g) => g.is_my_gym)
+  const myRank = myGym && myGym.is_ranked ? myGym.rank : null
+  const myRankDisplay = myGym && myGym.is_ranked ? `#${myGym.rank}` : 'Not Ranked Yet'
+
+  return {
+    gyms: combined,
+    rankedGyms: ranked,
+    unrankedGyms: unranked,
+    myRank,
+    myRankDisplay,
+    totalRegistered: combined.length,
+  }
+}
+
+/**
  * Fetches ACTUAL registered gyms in the specified city from Supabase.
  * Strictly queries real gyms and orders them by real member reviews/ratings.
  * Zero placeholder fake gyms.
  */
 export async function fetchRegisteredCityGyms(city = 'Udaipur', gymId = null) {
   const cleanCity = (city || 'Udaipur').trim()
+  let activeId = gymId
+  if (!activeId) {
+    try {
+      const { data: userData } = await supabase.auth.getUser()
+      activeId = userData?.user?.id || null
+    } catch (_uErr) {
+      // Continue
+    }
+  }
 
   // 1. Try secure RPC function
   try {
     const { data, error } = await supabase.rpc('get_registered_city_gyms', {
       p_city: cleanCity,
-      p_gym_id: gymId || null,
+      p_gym_id: activeId || null,
     })
 
     if (!error && data?.success && Array.isArray(data?.gyms)) {
-      return data
+      const normalized = normalizeGymRankingData(data.gyms, activeId)
+      return {
+        success: true,
+        city: cleanCity,
+        total_registered: normalized.totalRegistered,
+        my_rank: normalized.myRank,
+        my_rank_display: normalized.myRankDisplay,
+        gyms: normalized.gyms,
+        ranked_gyms: normalized.rankedGyms,
+      }
     }
   } catch (_e) {
     // Continue to direct table query fallback
@@ -113,52 +201,31 @@ export async function fetchRegisteredCityGyms(city = 'Udaipur', gymId = null) {
         (g) => (g.city || 'Udaipur').trim().toLowerCase() === cityLower
       )
 
-      // Sort by rating desc, then total_reviews desc, then created_at asc
-      filtered.sort((a, b) => {
-        const rateA = Number(a.rating) || 5.0
-        const rateB = Number(b.rating) || 5.0
-        if (rateB !== rateA) return rateB - rateA
-        const revA = Number(a.total_reviews) || 0
-        const revB = Number(b.total_reviews) || 0
-        return revB - revA
-      })
-
-      const myId = gymId || (await supabase.auth.getUser()).data.user?.id
-      const ranked = filtered.map((g, idx) => ({
-        rank: idx + 1,
-        gym_id: g.id,
-        gym_name: g.gym_name || 'Fitness Club',
-        city: g.city || cleanCity,
-        state: g.state || 'Rajasthan',
-        pincode: g.pincode || '',
-        area: g.area || 'City Center',
-        rating: Number(g.rating) || 5.0,
-        total_reviews: Number(g.total_reviews) || 0,
-        score: Number(((Number(g.rating) || 5.0) * 10 + Math.min(25, (Number(g.total_reviews) || 0) * 2.5)).toFixed(1)),
-        is_my_gym: g.id === myId,
-      }))
-
-      const myRank = ranked.find((g) => g.is_my_gym)?.rank || 1
+      const normalized = normalizeGymRankingData(filtered, activeId)
 
       return {
         success: true,
         city: cleanCity,
-        total_registered: ranked.length,
-        my_rank: myRank,
-        gyms: ranked,
+        total_registered: normalized.totalRegistered,
+        my_rank: normalized.myRank,
+        my_rank_display: normalized.myRankDisplay,
+        gyms: normalized.gyms,
+        ranked_gyms: normalized.rankedGyms,
       }
     }
   } catch (_err) {
     // Table query failed
   }
 
-  // Single fallback if current gym is known
+  // Fallback: If no other gyms in city, return clean empty list
   return {
     success: true,
     city: cleanCity,
-    total_registered: 1,
-    my_rank: 1,
+    total_registered: 0,
+    my_rank: null,
+    my_rank_display: 'Not Ranked Yet',
     gyms: [],
+    ranked_gyms: [],
   }
 }
 
