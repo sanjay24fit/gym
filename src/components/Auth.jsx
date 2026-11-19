@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import WhatsAppSupport from './WhatsAppSupport'
 import GymLogo from './GymLogo'
@@ -7,6 +7,7 @@ import LanguageToggle from './LanguageToggle'
 import { GYM_IMAGES } from '../lib/assets'
 import { lookupMemberPortal, normalizePhone } from '../lib/memberPortal'
 import { verifyGymConnectionCode, submitMemberJoinRequest } from '../lib/memberAuth'
+import { validateEmailAddress } from '../lib/emailValidation'
 
 export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initialPhone = '' }) {
   // Primary Role Selection: 'owner' (Option A) vs 'member' (Option B)
@@ -42,6 +43,24 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
   const [verifyingCode, setVerifyingCode] = useState(false)
   const [codeError, setCodeError] = useState('')
 
+  // In-App Email OTP Verification State (blocks fake & unverified emails)
+  const [otpStep, setOtpStep] = useState(false)
+  const [otpEmail, setOtpEmail] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [verifyingOtp, setVerifyingOtp] = useState(false)
+  const [resendingOtp, setResendingOtp] = useState(false)
+  const [otpTimer, setOtpTimer] = useState(0)
+  const [pendingMemberData, setPendingMemberData] = useState(null)
+
+  // Resend OTP Countdown Timer
+  useEffect(() => {
+    if (otpTimer <= 0) return
+    const interval = setInterval(() => {
+      setOtpTimer((prev) => prev - 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [otpTimer])
+
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -72,13 +91,72 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     }
   }
 
+  // Verify 6-digit Email Confirmation Code
+  const handleVerifyOtp = async (e) => {
+    if (e && e.preventDefault) e.preventDefault()
+    if (!otpCode || otpCode.trim().length < 6) {
+      setError('Please enter the 6-digit verification code sent to your email.')
+      return
+    }
+    setError('')
+    setInfo('')
+    setVerifyingOtp(true)
+    try {
+      const { data: vData, error: vErr } = await supabase.auth.verifyOtp({
+        email: otpEmail.trim(),
+        token: otpCode.trim(),
+        type: 'signup',
+      })
+
+      if (vErr) {
+        setError(friendly(vErr.message) || 'Invalid or expired verification code. Please check your Gmail.')
+      } else if (vData.session) {
+        if (pendingMemberData) {
+          await submitMemberJoinRequest({
+            gymCode: pendingMemberData.gymCode,
+            fullName: pendingMemberData.fullName,
+            phone: pendingMemberData.phone,
+          })
+        }
+        setInfo('Email verified successfully! Logging you in…')
+      }
+    } catch (err) {
+      setError(err.message || 'Verification failed. Please try again.')
+    } finally {
+      setVerifyingOtp(false)
+    }
+  }
+
+  // Resend Verification Code
+  const handleResendOtp = async () => {
+    if (otpTimer > 0) return
+    setError('')
+    setInfo('')
+    setResendingOtp(true)
+    try {
+      const { error: resendErr } = await supabase.auth.resend({
+        type: 'signup',
+        email: otpEmail.trim(),
+      })
+      if (resendErr) {
+        setError(friendly(resendErr.message))
+      } else {
+        setInfo(`Verification code resent to ${otpEmail}! Please check your inbox and spam folder.`)
+        setOtpTimer(60)
+      }
+    } finally {
+      setResendingOtp(false)
+    }
+  }
+
   const friendly = (msg) => {
     if (!msg) return ''
     if (msg === 'Invalid login credentials') return 'Incorrect email or password'
-    if (/email not confirmed/i.test(msg)) return 'Your email is not confirmed yet. Please contact the admin.'
+    if (/email not confirmed/i.test(msg)) return 'Aapka email abhi verify nahi hua hai. Kripya apna Gmail check karein aur verification link/code confirm karein.'
     if (/rate limit/i.test(msg)) return 'Too many attempts. Please wait a while and try again.'
     if (/already registered/i.test(msg)) return 'An account with this email already exists. Please login.'
     if (/user not found/i.test(msg)) return 'No account found with this email address.'
+    if (/token has expired or is invalid/i.test(msg)) return 'Invalid or expired verification code. Please check your Gmail.'
     return msg
   }
 
@@ -171,8 +249,16 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
         return
       }
 
+      // Pre-flight strict email verification & domain MX existence check
+      const emailCheck = await validateEmailAddress(form.email)
+      if (!emailCheck.valid) {
+        setError(emailCheck.error)
+        setLoading(false)
+        return
+      }
+
       const { data, error: signupErr } = await supabase.auth.signUp({
-        email: form.email.trim(),
+        email: emailCheck.email,
         password: form.password,
         options: {
           data: {
@@ -192,7 +278,11 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
       } else if (data.user?.identities?.length === 0) {
         setError(friendly('already registered'))
       } else if (!data.session) {
-        setInfo('Gym Owner account created! Please check your email to confirm your account.')
+        // Email verification required by Supabase
+        setOtpEmail(emailCheck.email)
+        setOtpStep(true)
+        setOtpTimer(60)
+        setInfo(`Verification code sent to ${emailCheck.email}! Please enter the 6-digit code below.`)
       }
       setLoading(false)
       return
@@ -222,6 +312,14 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
         return
       }
 
+      // Pre-flight strict email verification & domain MX existence check
+      const emailCheck = await validateEmailAddress(form.email)
+      if (!emailCheck.valid) {
+        setError(emailCheck.error)
+        setLoading(false)
+        return
+      }
+
       // Verify code first before signing up
       const checkRes = await verifyGymConnectionCode(cleanCode)
       if (!checkRes.valid) {
@@ -231,7 +329,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
       }
 
       const { data, error: signupErr } = await supabase.auth.signUp({
-        email: form.email.trim(),
+        email: emailCheck.email,
         password: form.password,
         options: {
           data: {
@@ -266,7 +364,16 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
           setError(reqRes.error || 'Account created but failed to link gym. Please contact your gym owner.')
         }
       } else {
-        setInfo('Member account created! Please confirm your email, then log in to view your membership.')
+        // Email verification required by Supabase
+        setOtpEmail(emailCheck.email)
+        setOtpStep(true)
+        setOtpTimer(60)
+        setPendingMemberData({
+          gymCode: cleanCode,
+          fullName: form.full_name,
+          phone: form.phone,
+        })
+        setInfo(`Verification code sent to ${emailCheck.email}! Please enter the 6-digit code below.`)
       }
       setLoading(false)
     }
@@ -301,14 +408,18 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
           {/* Brand Header */}
           <div style={{ textAlign: 'center', marginBottom: '2px' }}>
             <h1 style={{ fontSize: '21px', margin: '0 0 4px', fontWeight: 800 }}>
-              {isForgotMode
+              {otpStep
+                ? 'Email Verification'
+                : isForgotMode
                 ? 'Reset Password'
                 : role === 'owner'
                 ? 'Gym Manager · Owner'
                 : 'Gym Manager · Member'}
             </h1>
             <p className="muted small" style={{ margin: 0 }}>
-              {isForgotMode
+              {otpStep
+                ? 'Confirm your genuine email address to activate your gym account'
+                : isForgotMode
                 ? 'Enter your registered email to receive a password reset link'
                 : role === 'owner'
                 ? 'Smart management portal for gym owners'
@@ -316,6 +427,92 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
             </p>
           </div>
 
+          {/* ==============================================================
+              OTP VERIFICATION SCREEN (When email verification is active)
+          ============================================================== */}
+          {otpStep ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '10px 0' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', marginBottom: '6px' }}>✉️</div>
+                <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 6px', color: 'var(--text)' }}>
+                  Verify Your Email Address
+                </h2>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                  Humne aapke email <b style={{ color: 'var(--text)' }}>{otpEmail}</b> par 6-digit verification code bheja hai. Kripya apna real Gmail inbox check karein aur code enter karein.
+                </p>
+              </div>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>6-Digit Verification Code *</span>
+                <input
+                  type="text"
+                  maxLength={6}
+                  autoFocus
+                  placeholder="123456"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 800,
+                    textAlign: 'center',
+                    letterSpacing: '8px',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: '2px solid var(--primary)',
+                    background: 'var(--card)',
+                    color: 'var(--text)',
+                  }}
+                />
+                <span className="muted small" style={{ textAlign: 'center', display: 'block', marginTop: '2px' }}>
+                  Code Gmail ke Inbox ya Spam folder me aaya hoga.
+                </span>
+              </label>
+
+              {error && <div className="alert error small">{error}</div>}
+              {info && <div className="alert info small">{info}</div>}
+
+              <button
+                type="button"
+                className="btn primary full"
+                onClick={handleVerifyOtp}
+                disabled={verifyingOtp || otpCode.length < 6}
+                style={{ padding: '12px', fontWeight: 700, fontSize: '14px', borderRadius: '10px' }}
+              >
+                {verifyingOtp ? 'Verifying Code…' : 'Verify Email & Complete Signup'}
+              </button>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  className="link"
+                  onClick={() => {
+                    setOtpStep(false)
+                    setOtpCode('')
+                    setError('')
+                    setInfo('')
+                  }}
+                  style={{ color: 'var(--text-secondary)', fontSize: '12.5px' }}
+                >
+                  ← Change Email
+                </button>
+
+                <button
+                  type="button"
+                  className="link"
+                  onClick={handleResendOtp}
+                  disabled={otpTimer > 0 || resendingOtp}
+                  style={{
+                    color: otpTimer > 0 ? 'var(--text-secondary)' : 'var(--primary)',
+                    fontWeight: 700,
+                    fontSize: '12.5px',
+                  }}
+                >
+                  {resendingOtp ? 'Resending…' : otpTimer > 0 ? `Resend Code (${otpTimer}s)` : 'Resend Code'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
         {/* APK Download Button if applicable */}
         {!isInstalled && onDownloadApp && !isForgotMode && (
           <div style={{ textAlign: 'center', margin: '2px 0 8px' }}>
@@ -711,6 +908,8 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
             Your connection request will be sent to the gym owner for approval.
           </p>
         )}
+            </>
+          )}
 
           <div className="auth-support" style={{ marginTop: '14px', textAlign: 'center' }}>
             <WhatsAppSupport variant="link" label="Need assistance? WhatsApp Support" />

@@ -3,7 +3,22 @@ import { fetchRegisteredCityGyms, POPULAR_CITIES } from '../lib/ranking'
 import { fetchGymReviews } from '../lib/reviews'
 import { getGymCoverImage } from '../lib/assets'
 import Modal from './Modal'
-import { Trophy, Star, Search, MapPin, Sparkles, Building2 } from 'lucide-react'
+import {
+  Trophy,
+  Star,
+  Search,
+  MapPin,
+  Sparkles,
+  Building2,
+  Phone,
+  MessageSquare,
+  Clock,
+  ShieldCheck,
+  Dumbbell,
+  Share2,
+  Check,
+  ChevronRight,
+} from 'lucide-react'
 
 export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
   const defaultCity = gym?.city || 'Udaipur'
@@ -20,37 +35,50 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
     ranked_gyms: [],
   })
 
-  // Selected Gym for viewing member reviews modal
-  const [reviewModalGym, setReviewModalGym] = useState(null)
+  // Selected Gym for viewing the Minimal Profile Modal
+  const [selectedProfileGym, setSelectedProfileGym] = useState(null)
   const [gymReviews, setGymReviews] = useState(null)
   const [loadingReviews, setLoadingReviews] = useState(false)
+  const [copiedShare, setCopiedShare] = useState(false)
 
   // Load real registered gyms in selected city
   const loadRankings = useCallback(async (cityToLoad) => {
     setLoading(true)
     try {
-      const res = await fetchRegisteredCityGyms(cityToLoad, gym?.id)
+      const res = await fetchRegisteredCityGyms(cityToLoad, gym?.id, gym)
       if (res && res.success) {
         setRankingData(res)
       }
     } finally {
       setLoading(false)
     }
-  }, [gym?.id])
+  }, [gym])
 
   useEffect(() => {
     loadRankings(selectedCity)
   }, [selectedCity, loadRankings])
 
-  // Open member reviews for a specific gym
-  const handleViewReviews = async (targetGym) => {
-    setReviewModalGym(targetGym)
+  // Open Minimal Gym Profile for any gym (clicked from podium or leaderboard)
+  const handleOpenGymProfile = async (targetGym) => {
+    if (!targetGym) return
+    setSelectedProfileGym(targetGym)
     setLoadingReviews(true)
+    setCopiedShare(false)
     try {
       const data = await fetchGymReviews(targetGym.gym_id || targetGym.id)
       setGymReviews(data)
     } finally {
       setLoadingReviews(false)
+    }
+  }
+
+  // Handle Share / Copy Gym details
+  const handleShareGym = (gymToShare) => {
+    const text = `${gymToShare.gym_name} (Rank #${gymToShare.rank || 1} in ${gymToShare.city || selectedCity})\n📍 Location: ${gymToShare.area || 'City Center'}, ${gymToShare.city || selectedCity}\n⭐ Rating: ${gymToShare.has_reviews ? gymToShare.rating.toFixed(1) + '★' : 'New Gym'}\nVerified on Gym Manager`
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text)
+      setCopiedShare(true)
+      setTimeout(() => setCopiedShare(false), 2500)
     }
   }
 
@@ -63,7 +91,8 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
       return (
         (g.gym_name || '').toLowerCase().includes(q) ||
         (g.pincode || '').includes(q) ||
-        (g.area || '').toLowerCase().includes(q)
+        (g.area || '').toLowerCase().includes(q) ||
+        (g.owner_name || '').toLowerCase().includes(q)
       )
     })
     .sort((a, b) => {
@@ -75,16 +104,15 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
         if (b.total_reviews !== a.total_reviews) return b.total_reviews - a.total_reviews
         return b.rating - a.rating
       }
-      // 'all' default: ranked gyms first (by rank), then unranked
-      if (a.is_ranked && !b.is_ranked) return -1
-      if (!a.is_ranked && b.is_ranked) return 1
-      if (a.is_ranked && b.is_ranked) return (a.rank || 999) - (b.rank || 999)
-      return (a.gym_name || '').localeCompare(b.gym_name || '')
+      // 'all' default: sorted by rank
+      return (a.rank || 999) - (b.rank || 999)
     })
 
   // Logged-in Owner's Gym Resolution
   const myGym = allGyms.find((g) => g.is_my_gym) || {
     gym_name: gym?.gym_name || 'My Gym',
+    owner_name: gym?.owner_name || '',
+    phone: gym?.phone || '',
     city: gym?.city || defaultCity,
     state: gym?.state || 'Rajasthan',
     pincode: gym?.pincode || '',
@@ -93,12 +121,12 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
     total_reviews: Number(gym?.total_reviews) || 0,
     is_my_gym: true,
     is_ranked: Boolean(rankingData.my_rank),
-    rank: rankingData.my_rank,
-    rank_display: rankingData.my_rank_display || 'Not Ranked Yet',
+    rank: rankingData.my_rank || 1,
+    rank_display: rankingData.my_rank_display || '#1',
   }
 
   const myHasReviews = (myGym.total_reviews || 0) > 0
-  const topRanked = (rankingData.ranked_gyms || []).slice(0, 3)
+  const topRanked = allGyms.slice(0, 3)
   const firstPlace = topRanked[0]
   const secondPlace = topRanked[1]
   const thirdPlace = topRanked[2]
@@ -122,9 +150,9 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
+                width: '38px',
+                height: '38px',
+                borderRadius: '12px',
                 background: 'rgba(20, 92, 67, 0.1)',
                 color: '#145C43',
                 display: 'flex',
@@ -132,15 +160,17 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 justifyContent: 'center',
               }}
             >
-              <Trophy size={20} strokeWidth={2.2} />
+              <Trophy size={22} strokeWidth={2.2} />
             </div>
-            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.4px' }}>
-              Gym Rankings
-            </h1>
+            <div>
+              <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.4px' }}>
+                Gym Rankings Leaderboard
+              </h1>
+              <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                Compare all registered fitness centers in {selectedCity}. Click any gym to view its profile & reviews.
+              </p>
+            </div>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: '13.5px', color: 'var(--text-secondary)' }}>
-            Discover and compare registered gyms in your city.
-          </p>
         </div>
 
         {/* City Selector Pill */}
@@ -188,7 +218,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
         className="rankings-layout-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.8fr) minmax(300px, 1fr)',
+          gridTemplateColumns: 'minmax(0, 1.8fr) minmax(310px, 1fr)',
           gap: '24px',
           alignItems: 'start',
         }}
@@ -197,7 +227,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             LEFT COLUMN: TOP PODIUM + LEADERBOARD LIST
         ============================================================ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* A. Top 3 Podium Visual Card (Inspired by Reference Screenshot) */}
+          {/* A. Top 3 Podium Visual Card (Interactive: Click any podium spot) */}
           {topRanked.length > 0 ? (
             <div
               className="card podium-card"
@@ -224,15 +254,15 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 }}
               />
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Sparkles size={16} color="#D6B46A" />
                   <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#D6B46A' }}>
-                    Top Rated Gyms in {selectedCity}
+                    Top Gyms in {selectedCity}
                   </span>
                 </div>
                 <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.12)', padding: '2px 8px', borderRadius: '6px' }}>
-                  Verified Reviews
+                  Click to inspect profile ↗
                 </span>
               </div>
 
@@ -243,13 +273,16 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   justifyContent: 'center',
                   alignItems: 'flex-end',
                   gap: '14px',
-                  minHeight: '200px',
+                  minHeight: '210px',
                   paddingTop: '10px',
                 }}
               >
                 {/* 2nd Place Pillar (Left) */}
                 {secondPlace ? (
                   <div
+                    onClick={() => handleOpenGymProfile(secondPlace)}
+                    role="button"
+                    tabIndex={0}
                     style={{
                       flex: '1',
                       maxWidth: '135px',
@@ -257,14 +290,18 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       flexDirection: 'column',
                       alignItems: 'center',
                       textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'transform 0.18s ease',
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
                   >
                     <img
                       src={getGymCoverImage(secondPlace.gym_id || secondPlace.gym_name)}
                       alt={secondPlace.gym_name}
                       style={{
-                        width: '46px',
-                        height: '46px',
+                        width: '48px',
+                        height: '48px',
                         borderRadius: '50%',
                         objectFit: 'cover',
                         border: '2.5px solid #E2E8F0',
@@ -276,12 +313,12 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       {secondPlace.gym_name}
                     </b>
                     <span style={{ fontSize: '11px', color: '#CBD5E1', margin: '2px 0 8px' }}>
-                      ★ {secondPlace.rating.toFixed(1)} ({secondPlace.total_reviews})
+                      {secondPlace.has_reviews ? `★ ${secondPlace.rating.toFixed(1)} (${secondPlace.total_reviews})` : 'New Gym'}
                     </span>
                     <div
                       style={{
                         width: '100%',
-                        height: '85px',
+                        height: '90px',
                         borderRadius: '12px 12px 4px 4px',
                         background: 'linear-gradient(180deg, #F472B6 0%, #DB2777 100%)',
                         display: 'flex',
@@ -293,7 +330,9 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       }}
                     >
                       <span style={{ fontSize: '20px', fontWeight: 900 }}>2nd</span>
-                      <span style={{ fontSize: '10px', opacity: 0.85 }}>{secondPlace.total_reviews} reviews</span>
+                      <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                        {secondPlace.has_reviews ? `${secondPlace.total_reviews} reviews` : 'Top Rank'}
+                      </span>
                     </div>
                   </div>
                 ) : (
@@ -303,6 +342,9 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 {/* 1st Place Pillar (Center, Tallest) */}
                 {firstPlace && (
                   <div
+                    onClick={() => handleOpenGymProfile(firstPlace)}
+                    role="button"
+                    tabIndex={0}
                     style={{
                       flex: '1',
                       maxWidth: '145px',
@@ -311,13 +353,17 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       alignItems: 'center',
                       textAlign: 'center',
                       zIndex: 2,
+                      cursor: 'pointer',
+                      transition: 'transform 0.18s ease',
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
                   >
                     <div style={{ position: 'relative', marginBottom: '8px' }}>
                       <span
                         style={{
                           position: 'absolute',
-                          top: '-14px',
+                          top: '-15px',
                           left: '50%',
                           transform: 'translateX(-50%)',
                           fontSize: '18px',
@@ -329,8 +375,8 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                         src={getGymCoverImage(firstPlace.gym_id || firstPlace.gym_name)}
                         alt={firstPlace.gym_name}
                         style={{
-                          width: '56px',
-                          height: '56px',
+                          width: '58px',
+                          height: '58px',
                           borderRadius: '50%',
                           objectFit: 'cover',
                           border: '3px solid #D6B46A',
@@ -342,12 +388,12 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       {firstPlace.gym_name}
                     </b>
                     <span style={{ fontSize: '11px', color: '#FDE047', fontWeight: 700, margin: '2px 0 8px' }}>
-                      ★ {firstPlace.rating.toFixed(1)} ({firstPlace.total_reviews})
+                      {firstPlace.has_reviews ? `★ ${firstPlace.rating.toFixed(1)} (${firstPlace.total_reviews})` : '1st in City'}
                     </span>
                     <div
                       style={{
                         width: '100%',
-                        height: '115px',
+                        height: '125px',
                         borderRadius: '14px 14px 4px 4px',
                         background: 'linear-gradient(180deg, #FACC15 0%, #D6B46A 100%)',
                         display: 'flex',
@@ -358,8 +404,10 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                         boxShadow: '0 6px 20px rgba(214, 180, 106, 0.4)',
                       }}
                     >
-                      <span style={{ fontSize: '24px', fontWeight: 900 }}>1st</span>
-                      <span style={{ fontSize: '11px', fontWeight: 700 }}>{firstPlace.total_reviews} reviews</span>
+                      <span style={{ fontSize: '26px', fontWeight: 900 }}>1st</span>
+                      <span style={{ fontSize: '11px', fontWeight: 700 }}>
+                        {firstPlace.has_reviews ? `${firstPlace.total_reviews} reviews` : 'Champion'}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -367,6 +415,9 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 {/* 3rd Place Pillar (Right) */}
                 {thirdPlace ? (
                   <div
+                    onClick={() => handleOpenGymProfile(thirdPlace)}
+                    role="button"
+                    tabIndex={0}
                     style={{
                       flex: '1',
                       maxWidth: '135px',
@@ -374,14 +425,18 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       flexDirection: 'column',
                       alignItems: 'center',
                       textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'transform 0.18s ease',
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
                   >
                     <img
                       src={getGymCoverImage(thirdPlace.gym_id || thirdPlace.gym_name)}
                       alt={thirdPlace.gym_name}
                       style={{
-                        width: '46px',
-                        height: '46px',
+                        width: '48px',
+                        height: '48px',
                         borderRadius: '50%',
                         objectFit: 'cover',
                         border: '2.5px solid #C084FC',
@@ -393,12 +448,12 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       {thirdPlace.gym_name}
                     </b>
                     <span style={{ fontSize: '11px', color: '#CBD5E1', margin: '2px 0 8px' }}>
-                      ★ {thirdPlace.rating.toFixed(1)} ({thirdPlace.total_reviews})
+                      {thirdPlace.has_reviews ? `★ ${thirdPlace.rating.toFixed(1)} (${thirdPlace.total_reviews})` : 'New Gym'}
                     </span>
                     <div
                       style={{
                         width: '100%',
-                        height: '70px',
+                        height: '75px',
                         borderRadius: '12px 12px 4px 4px',
                         background: 'linear-gradient(180deg, #A855F7 0%, #7E22CE 100%)',
                         display: 'flex',
@@ -410,7 +465,9 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       }}
                     >
                       <span style={{ fontSize: '18px', fontWeight: 900 }}>3rd</span>
-                      <span style={{ fontSize: '10px', opacity: 0.85 }}>{thirdPlace.total_reviews} reviews</span>
+                      <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                        {thirdPlace.has_reviews ? `${thirdPlace.total_reviews} reviews` : 'Bronze'}
+                      </span>
                     </div>
                   </div>
                 ) : (
@@ -419,7 +476,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
               </div>
             </div>
           ) : (
-            /* Clean Motivation Card when no reviews yet in city */
+            /* Clean Motivation Card when no gyms registered yet in selected city */
             <div
               className="card"
               style={{
@@ -450,23 +507,17 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
               </div>
               <div>
                 <b style={{ fontSize: '15px', color: 'var(--text)', display: 'block', marginBottom: '3px' }}>
-                  City Podium Awaiting First Verified Member Reviews
+                  City Podium Awaiting Registered Gyms in {selectedCity}
                 </b>
                 <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                  Gyms in {selectedCity} are ranked based on verified member reviews. Have your members rate your gym to claim the <b>#1 Podium Spot</b>!
+                  Gyms in {selectedCity} are ranked based on verified member reviews and active presence. Be the first to claim the <b>#1 Podium Spot</b>!
                 </p>
               </div>
             </div>
           )}
 
           {/* B. Search & Filter Bar */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div
               style={{
                 display: 'flex',
@@ -490,7 +541,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 />
                 <input
                   type="text"
-                  placeholder={`Search by gym name, area, or PIN code…`}
+                  placeholder={`Search by gym name, area, owner, or PIN code…`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
@@ -572,7 +623,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             </div>
           </div>
 
-          {/* C. City Leaderboard List */}
+          {/* C. City Leaderboard List (All gyms show their rank; clicking opens Minimal Profile) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {loading ? (
               <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
@@ -580,7 +631,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 <span>Loading registered gyms in {selectedCity}…</span>
               </div>
             ) : filteredGyms.length === 0 ? (
-              /* Clean Empty State as requested */
+              /* Clean Empty State */
               <div
                 className="card"
                 style={{
@@ -610,7 +661,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   Your City Leaderboard Is Just Getting Started
                 </h3>
                 <p style={{ maxWidth: '440px', margin: '0 auto 20px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  More gyms will appear here as gym owners join Gym Manager.
+                  More gyms will appear here as gym owners join Gym Manager in {selectedCity}.
                 </p>
                 {selectedCity !== defaultCity && (
                   <button
@@ -626,8 +677,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             ) : (
               filteredGyms.map((g) => {
                 const isMine = g.is_my_gym
-                const isRanked = g.is_ranked
-                const rankNum = g.rank
+                const rankNum = g.rank || 1
 
                 let rankBadgeBg = 'var(--card-subtle)'
                 let rankBadgeColor = 'var(--text)'
@@ -649,10 +699,13 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   <div
                     key={g.gym_id || g.id || rankNum}
                     className="card leaderboard-row"
+                    onClick={() => handleOpenGymProfile(g)}
+                    role="button"
+                    tabIndex={0}
                     style={{
                       padding: '14px 18px',
                       borderRadius: '16px',
-                      background: isMine ? 'rgba(20, 92, 67, 0.03)' : 'var(--card)',
+                      background: isMine ? 'rgba(20, 92, 67, 0.04)' : 'var(--card)',
                       border: isMine ? '2px solid #145C43' : '1px solid var(--border)',
                       boxShadow: isMine ? '0 4px 16px rgba(20, 92, 67, 0.08)' : '0 2px 6px rgba(0,0,0,0.02)',
                       display: 'flex',
@@ -660,30 +713,40 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       alignItems: 'center',
                       flexWrap: 'wrap',
                       gap: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.16s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.borderColor = '#145C43'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.borderColor = isMine ? '#145C43' : 'var(--border)'
                     }}
                   >
-                    {/* Left: Rank + Image + Gym Info */}
+                    {/* Left: Rank Badge + Gym Photo Thumbnail + Name + Location */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '220px' }}>
                       {/* Rank Indicator */}
                       <div
                         style={{
-                          minWidth: '38px',
-                          height: '38px',
+                          minWidth: '40px',
+                          height: '40px',
                           padding: '0 8px',
                           borderRadius: '10px',
-                          background: isRanked ? rankBadgeBg : 'var(--card-subtle)',
-                          color: isRanked ? rankBadgeColor : 'var(--text-secondary)',
-                          border: isRanked ? rankBorder : '1px dashed var(--border)',
+                          background: rankBadgeBg,
+                          color: rankBadgeColor,
+                          border: rankBorder,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: 800,
-                          fontSize: isRanked ? '14px' : '11px',
+                          fontSize: '14px',
                           flexShrink: 0,
                           textAlign: 'center',
                         }}
                       >
-                        {isRanked ? `#${rankNum}` : '—'}
+                        #{rankNum}
                       </div>
 
                       {/* Gym Thumbnail */}
@@ -691,8 +754,8 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                         src={getGymCoverImage(g.gym_id || g.gym_name)}
                         alt={g.gym_name}
                         style={{
-                          width: '44px',
-                          height: '44px',
+                          width: '46px',
+                          height: '46px',
                           borderRadius: '10px',
                           objectFit: 'cover',
                           border: '1px solid var(--border)',
@@ -727,11 +790,16 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                             📍 {g.area ? `${g.area}, ` : ''}{g.city} {g.pincode ? `(${g.pincode})` : ''}
                           </span>
+                          {g.owner_name && (
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.85 }}>
+                              • {g.owner_name}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: Rating & View Button */}
+                    {/* Right: Rating & View Profile Button */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                       <div style={{ textAlign: 'right' }}>
                         {g.has_reviews ? (
@@ -746,27 +814,34 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                           </div>
                         ) : (
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                            No reviews yet
+                            New Gym (0 reviews)
                           </span>
                         )}
                         <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block', marginTop: '1px' }}>
-                          {g.has_reviews ? 'Verified Score' : 'Unranked'}
+                          {g.has_reviews ? 'Verified Score' : 'Awaiting Reviews'}
                         </span>
                       </div>
 
                       <button
                         type="button"
                         className="btn sm"
-                        onClick={() => handleViewReviews(g)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenGymProfile(g)
+                        }}
                         style={{
                           padding: '6px 12px',
                           fontSize: '12px',
                           fontWeight: 600,
                           borderRadius: '8px',
                           whiteSpace: 'nowrap',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
                         }}
                       >
-                        View Profile
+                        <span>View Profile</span>
+                        <ChevronRight size={14} />
                       </button>
                     </div>
                   </div>
@@ -809,10 +884,10 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
 
               <span
                 style={{
-                  background: myGym.is_ranked ? 'rgba(214, 180, 106, 0.15)' : 'var(--card-subtle)',
-                  color: myGym.is_ranked ? '#92400E' : 'var(--text-secondary)',
-                  border: myGym.is_ranked ? '1px solid #D6B46A' : '1px solid var(--border)',
-                  fontSize: '11px',
+                  background: 'rgba(214, 180, 106, 0.15)',
+                  color: '#92400E',
+                  border: '1px solid #D6B46A',
+                  fontSize: '11.5px',
                   fontWeight: 800,
                   padding: '4px 10px',
                   borderRadius: '999px',
@@ -821,7 +896,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   gap: '4px',
                 }}
               >
-                {myGym.is_ranked ? `🏆 #${myGym.rank}` : 'Not Ranked Yet'}
+                🏆 #{myGym.rank || 1} in {selectedCity}
               </span>
             </div>
 
@@ -847,11 +922,11 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   </div>
                 ) : (
                   <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginTop: '6px' }}>
-                    No reviews yet
+                    New Gym
                   </div>
                 )}
                 <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', opacity: 0.8, display: 'block', marginTop: '2px' }}>
-                  {myHasReviews ? 'Out of 5.0' : '0 submissions'}
+                  {myHasReviews ? 'Out of 5.0' : '0 reviews yet'}
                 </span>
               </div>
 
@@ -875,7 +950,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
               </div>
             </div>
 
-            {/* Explanatory Ranking Status Badge */}
+            {/* Status Note */}
             {!myHasReviews ? (
               <div
                 style={{
@@ -888,9 +963,9 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   lineHeight: 1.45,
                 }}
               >
-                <b>📌 Why Not Ranked Yet?</b>
+                <b>📌 Claim the #1 Spot:</b>
                 <p style={{ margin: '4px 0 0', opacity: 0.9 }}>
-                  Gym Manager calculates rankings strictly from <b>verified member reviews</b>. Ask your active members to review your gym on the member app to claim your city rank!
+                  Gym Manager calculates rankings based on <b>verified member reviews</b>. Ask your active members to review your gym on the member app to rise to the top!
                 </p>
               </div>
             ) : (
@@ -907,16 +982,16 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
               >
                 <b>✓ Active City Ranking</b>
                 <p style={{ margin: '4px 0 0', opacity: 0.9 }}>
-                  Aapka gym {selectedCity} leaderboard me <b>#{myGym.rank} position</b> par hai. High star ratings rank ko top position par maintain karti hain.
+                  Aapka gym {selectedCity} leaderboard me <b>#{myGym.rank} position</b> par hai. High ratings rank ko maintain karti hain.
                 </p>
               </div>
             )}
 
-            {/* View My Reviews Button */}
+            {/* View My Gym Profile Button */}
             <button
               type="button"
               className="btn full"
-              onClick={() => handleViewReviews(myGym)}
+              onClick={() => handleOpenGymProfile(myGym)}
               style={{
                 background: '#145C43',
                 color: '#FFFFFF',
@@ -925,9 +1000,13 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 fontSize: '13px',
                 padding: '10px',
                 borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
               }}
             >
-              ⭐ View My Member Reviews
+              <span>⭐ View My Gym Profile</span>
             </button>
           </div>
 
@@ -946,13 +1025,13 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             </h4>
             <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12.5px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: 1.45 }}>
               <li>
-                <b>100% Genuine Reviews:</b> Only authenticated members connected through your 6-digit Gym Code can review.
+                <b>All Gyms Ranked:</b> Every registered gym in {selectedCity} has a transparent rank on the leaderboard.
               </li>
               <li>
-                <b>Zero Artificial Ranks:</b> Gyms without review data are clearly marked as <i>"Not Ranked Yet"</i>.
+                <b>100% Genuine Reviews:</b> Only authenticated members connected through your unique 6-digit Gym Code can review.
               </li>
               <li>
-                <b>Equal Standards:</b> All gym owners in {selectedCity} view the exact same verified city leaderboard.
+                <b>Minimal Profile:</b> Click any gym on the podium or list to inspect its facilities, batch hours, location, and verified reviews.
               </li>
             </ul>
           </div>
@@ -960,107 +1039,394 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
       </div>
 
       {/* ==============================================================
-          3. GYM REVIEWS MODAL
+          3. COMPREHENSIVE MINIMAL GYM PROFILE MODAL
+          Opens on clicking ANY gym (podium or leaderboard row)
       ============================================================== */}
-      {reviewModalGym && (
+      {selectedProfileGym && (
         <Modal
-          title={`⭐ Reviews: ${reviewModalGym.gym_name}`}
+          title={`Gym Profile • ${selectedProfileGym.gym_name}`}
           onClose={() => {
-            setReviewModalGym(null)
+            setSelectedProfileGym(null)
             setGymReviews(null)
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Header summary */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', maxWidth: '520px', margin: '0 auto' }}>
+            {/* A. Hero Banner with Image & Rank Badge */}
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '14px 18px',
-                borderRadius: '14px',
-                background: 'var(--card-hover)',
+                position: 'relative',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                height: '160px',
+                background: '#16241D',
               }}
             >
+              <img
+                src={getGymCoverImage(selectedProfileGym.gym_id || selectedProfileGym.gym_name)}
+                alt={selectedProfileGym.gym_name}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: 0.85,
+                }}
+              />
               <div
                 style={{
-                  fontSize: '28px',
-                  fontWeight: 900,
-                  color: '#F59E0B',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(15,26,20,0.92) 100%)',
                 }}
-              >
-                <span>★</span>
-                <span>
-                  {(gymReviews?.total_reviews || reviewModalGym.total_reviews) > 0
-                    ? Number(gymReviews?.average_rating || reviewModalGym.rating || 0).toFixed(1)
-                    : '—'}
+              />
+
+              {/* Rank Pill over Cover */}
+              <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', gap: '6px' }}>
+                <span
+                  style={{
+                    background: selectedProfileGym.rank === 1
+                      ? 'linear-gradient(135deg, #FACC15, #D6B46A)'
+                      : selectedProfileGym.rank === 2
+                      ? 'linear-gradient(135deg, #E2E8F0, #94A3B8)'
+                      : selectedProfileGym.rank === 3
+                      ? 'linear-gradient(135deg, #F472B6, #DB2777)'
+                      : '#145C43',
+                    color: selectedProfileGym.rank === 1 ? '#18231E' : '#FFFFFF',
+                    fontWeight: 800,
+                    fontSize: '11.5px',
+                    padding: '4px 10px',
+                    borderRadius: '999px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  🏆 Rank #{selectedProfileGym.rank || 1} in {selectedProfileGym.city || selectedCity}
                 </span>
+
+                {selectedProfileGym.is_my_gym && (
+                  <span
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.25)',
+                      backdropFilter: 'blur(4px)',
+                      color: '#FFFFFF',
+                      fontWeight: 700,
+                      fontSize: '11px',
+                      padding: '4px 8px',
+                      borderRadius: '999px',
+                    }}
+                  >
+                    Your Gym
+                  </span>
+                )}
               </div>
-              <div>
-                <b style={{ fontSize: '14px', display: 'block' }}>
-                  {gymReviews?.total_reviews || reviewModalGym.total_reviews || 0} Verified Member Reviews
-                </b>
-                <span className="muted small">
-                  📍 {reviewModalGym.area || 'City Center'}, {reviewModalGym.city} {reviewModalGym.pincode ? `(${reviewModalGym.pincode})` : ''}
+
+              {/* Gym Name & Verified Platform Badge */}
+              <div style={{ position: 'absolute', bottom: '14px', left: '14px', right: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.3px' }}>
+                    {selectedProfileGym.gym_name}
+                  </h2>
+                  <ShieldCheck size={18} color="#35B982" />
+                </div>
+                <span style={{ fontSize: '11.5px', color: '#E2E8F0', opacity: 0.9 }}>
+                  Verified Fitness Partner on Gym Manager
                 </span>
               </div>
             </div>
 
-            {/* Reviews List */}
-            {loadingReviews ? (
-              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>
-                Loading verified member reviews…
-              </div>
-            ) : gymReviews?.reviews && gymReviews.reviews.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '380px', overflowY: 'auto' }}>
-                {gymReviews.reviews.map((r, i) => (
-                  <div
-                    key={r.id || i}
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      background: 'var(--card)',
-                      border: '1px solid var(--border)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <b style={{ fontSize: '13px' }}>{r.reviewer_name || 'Verified Member'}</b>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: '#F59E0B', fontSize: '12px' }}>
-                        {'★'.repeat(r.rating || 5)}
-                        {'☆'.repeat(5 - (r.rating || 5))}
-                      </div>
-                    </div>
-                    {r.review_text && (
-                      <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--text)', lineHeight: 1.4 }}>
-                        &ldquo;{r.review_text}&rdquo;
-                      </p>
-                    )}
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                      <span>🏋️ Equip: {r.aspect_equipment || 5}★</span>
-                      <span>🧼 Clean: {r.aspect_cleanliness || 5}★</span>
-                      <span>🧑‍🏫 Trainer: {r.aspect_trainer || 5}★</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)', fontSize: '13px' }}>
-                Abhi is gym ke liye koi text review submit nahi hua hai. Members jab app se review denge, yahan live show honge.
-              </div>
-            )}
-
-            <button
-              type="button"
-              className="btn block"
-              onClick={() => {
-                setReviewModalGym(null)
-                setGymReviews(null)
+            {/* B. Location & Management Bar */}
+            <div
+              style={{
+                padding: '14px 16px',
+                borderRadius: '14px',
+                background: 'var(--card-subtle)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
               }}
             >
-              Close
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <MapPin size={17} color="#145C43" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.4 }}>
+                  <b>Location:</b> {selectedProfileGym.area || 'City Center'}, {selectedProfileGym.city || selectedCity}, {selectedProfileGym.state || 'Rajasthan'} {selectedProfileGym.pincode ? `(${selectedProfileGym.pincode})` : ''}
+                </div>
+              </div>
+
+              {selectedProfileGym.owner_name && (
+                <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', paddingLeft: '25px' }}>
+                  <b>Owner / Manager:</b> {selectedProfileGym.owner_name}
+                </div>
+              )}
+            </div>
+
+            {/* C. Key Stats Row (Rank, Rating, Verified Reviews) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+              <div
+                style={{
+                  padding: '12px 8px',
+                  borderRadius: '12px',
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  textAlign: 'center',
+                }}
+              >
+                <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block' }}>City Rank</span>
+                <b style={{ fontSize: '18px', color: '#145C43' }}>#{selectedProfileGym.rank || 1}</b>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block' }}>in {selectedProfileGym.city || selectedCity}</span>
+              </div>
+
+              <div
+                style={{
+                  padding: '12px 8px',
+                  borderRadius: '12px',
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  textAlign: 'center',
+                }}
+              >
+                <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block' }}>Member Rating</span>
+                <b style={{ fontSize: '18px', color: '#F59E0B' }}>
+                  {selectedProfileGym.has_reviews ? `★ ${Number(selectedProfileGym.rating).toFixed(1)}` : '★ New'}
+                </b>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block' }}>
+                  {selectedProfileGym.has_reviews ? 'out of 5.0' : '0 reviews'}
+                </span>
+              </div>
+
+              <div
+                style={{
+                  padding: '12px 8px',
+                  borderRadius: '12px',
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  textAlign: 'center',
+                }}
+              >
+                <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block' }}>Verified Reviews</span>
+                <b style={{ fontSize: '18px', color: 'var(--text)' }}>
+                  {selectedProfileGym.total_reviews || 0}
+                </b>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block' }}>real members</span>
+              </div>
+            </div>
+
+            {/* D. Action Buttons: Direct Call & WhatsApp Contact & Share */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {selectedProfileGym.phone && (
+                <>
+                  <a
+                    href={`tel:${selectedProfileGym.phone}`}
+                    className="btn sm"
+                    style={{
+                      flex: '1',
+                      minWidth: '120px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      background: 'var(--card)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      padding: '8px 12px',
+                      borderRadius: '10px',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <Phone size={14} color="#145C43" />
+                    <span>Call: {selectedProfileGym.phone}</span>
+                  </a>
+
+                  <a
+                    href={`https://wa.me/91${selectedProfileGym.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi! I saw ${selectedProfileGym.gym_name} on Gym Manager.`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn sm"
+                    style={{
+                      flex: '1',
+                      minWidth: '130px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      background: '#25D366',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '8px 12px',
+                      borderRadius: '10px',
+                      fontSize: '12.5px',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <MessageSquare size={14} />
+                    <span>WhatsApp Inquiry</span>
+                  </a>
+                </>
+              )}
+
+              <button
+                type="button"
+                className="btn sm"
+                onClick={() => handleShareGym(selectedProfileGym)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'var(--card)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                }}
+              >
+                {copiedShare ? <Check size={14} color="#35B982" /> : <Share2 size={14} />}
+                <span>{copiedShare ? 'Copied!' : 'Share'}</span>
+              </button>
+            </div>
+
+            {/* E. Facilities Checklist */}
+            <div
+              style={{
+                padding: '14px 16px',
+                borderRadius: '14px',
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                <Dumbbell size={16} color="#145C43" />
+                <b style={{ fontSize: '13px', color: 'var(--text)' }}>Available Facilities & Training</b>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {(selectedProfileGym.facilities && selectedProfileGym.facilities.length > 0
+                  ? selectedProfileGym.facilities
+                  : [
+                      'Cardio Zone (Treadmill, Cycles)',
+                      'Strength & Heavy Free Weights',
+                      'Personal Training Coaches',
+                      'CrossFit & Functional Rig',
+                      'Steam Bath & Lockers',
+                    ]
+                ).map((fac, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      background: 'var(--card-subtle)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text)',
+                      fontSize: '11.5px',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    ✓ {fac}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* F. Batch Timings */}
+            <div
+              style={{
+                padding: '12px 16px',
+                borderRadius: '14px',
+                background: 'var(--card-subtle)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}
+            >
+              <Clock size={18} color="#145C43" />
+              <div style={{ fontSize: '12px', color: 'var(--text)', lineHeight: 1.4 }}>
+                <b>Standard Batch Hours:</b> Morning 06:00 AM – 11:30 AM &nbsp;|&nbsp; Evening 04:00 PM – 10:00 PM (Mon–Sat)
+              </div>
+            </div>
+
+            {/* G. Verified Member Reviews Section */}
+            <div
+              style={{
+                padding: '16px',
+                borderRadius: '16px',
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <b style={{ fontSize: '13.5px', color: 'var(--text)' }}>
+                  ⭐ Genuine Member Reviews ({gymReviews?.total_reviews || selectedProfileGym.total_reviews || 0})
+                </b>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  Verified Active Members
+                </span>
+              </div>
+
+              {loadingReviews ? (
+                <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-secondary)', fontSize: '12.5px' }}>
+                  Loading genuine reviews…
+                </div>
+              ) : gymReviews?.reviews && gymReviews.reviews.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto' }}>
+                  {gymReviews.reviews.map((r, i) => (
+                    <div
+                      key={r.id || i}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        background: 'var(--card-subtle)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                        <b style={{ fontSize: '12.5px' }}>{r.reviewer_name || 'Verified Member'}</b>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: '#F59E0B', fontSize: '12px' }}>
+                          {'★'.repeat(r.rating || 5)}
+                          {'☆'.repeat(5 - (r.rating || 5))}
+                        </div>
+                      </div>
+                      {r.review_text && (
+                        <p style={{ margin: '3px 0 0', fontSize: '12px', color: 'var(--text)', lineHeight: 1.4 }}>
+                          &ldquo;{r.review_text}&rdquo;
+                        </p>
+                      )}
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '10.5px', color: 'var(--text-secondary)' }}>
+                        <span>🏋️ Equip: {r.aspect_equipment || 5}★</span>
+                        <span>🧼 Clean: {r.aspect_cleanliness || 5}★</span>
+                        <span>🧑‍🏫 Trainer: {r.aspect_trainer || 5}★</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-secondary)', fontSize: '12.5px' }}>
+                  Abhi is gym ke liye koi text review submit nahi hua hai. Members apne app se review dekar ranking badha sakte hain.
+                </div>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <button
+              type="button"
+              className="btn full"
+              onClick={() => {
+                setSelectedProfileGym(null)
+                setGymReviews(null)
+              }}
+              style={{
+                padding: '10px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 600,
+              }}
+            >
+              Close Profile
             </button>
           </div>
         </Modal>
