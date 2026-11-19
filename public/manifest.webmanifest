@@ -7,9 +7,16 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#14243A",
-  "theme_color": "#14243A",
+  "background_color": "#0E1411",
+  "theme_color": "#145C43",
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",

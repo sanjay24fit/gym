@@ -475,8 +475,8 @@ export default function GymProfile({
         {!isInstalled && onDownloadApp && (
           <div className="card settings-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <b>Download Mobile App</b>
-              <span className="small muted block">Install Gym Manager directly onto your phone for fast offline-ready access</span>
+              <b>Install Mobile App (iOS / Android)</b>
+              <span className="small muted block">Install Gym Manager directly onto your iPhone or Android phone for fast full-screen access</span>
             </div>
             <button
               type="button"
@@ -489,7 +489,7 @@ export default function GymProfile({
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              <span>Download App</span>
+              <span>Install App</span>
             </button>
           </div>
         )}
