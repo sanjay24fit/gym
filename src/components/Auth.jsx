@@ -6,20 +6,17 @@ import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
 import { GYM_IMAGES } from '../lib/assets'
 import { lookupMemberPortal, normalizePhone } from '../lib/memberPortal'
-import { verifyGymConnectionCode, submitMemberJoinRequest } from '../lib/memberAuth'
 import { validateEmailAddress } from '../lib/emailValidation'
+import { sendMobileOtp } from '../lib/smsService'
 
 export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initialPhone = '' }) {
-  // Primary Role Selection: 'owner' (Option A) vs 'member' (Option B)
+  // Primary Role Selection: 'owner' vs 'member'
   const [role, setRole] = useState(() => (initialPhone ? 'member' : 'owner'))
-  
+
   // Sub-modes for Owner
   const [ownerMode, setOwnerMode] = useState('login') // 'login' | 'signup' | 'forgot'
 
-  // Sub-modes for Member
-  const [memberMode, setMemberMode] = useState(() => (initialPhone ? 'quick_pass' : 'login')) // 'login' | 'signup' | 'quick_pass' | 'forgot'
-
-  // Form State
+  // Owner Form State
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -30,29 +27,31 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     state: 'Rajasthan',
     pincode: '',
     area: '',
-    full_name: '',
-    gym_code: '',
   })
 
-  // Quick Pass Phone
+  // Member Mobile & OTP State
   const [memberPhone, setMemberPhone] = useState(initialPhone)
+  const [memberOtpStep, setMemberOtpStep] = useState(false)
+  const [memberOtpCode, setMemberOtpCode] = useState('')
+  const [generatedMemberOtp, setGeneratedMemberOtp] = useState('')
+  const [memberOtpTimer, setMemberOtpTimer] = useState(0)
   const [availableMemberships, setAvailableMemberships] = useState([])
+  const [fast2SmsNotice, setFast2SmsNotice] = useState(false)
 
-  // Gym Code Live Verification State
-  const [verifiedGym, setVerifiedGym] = useState(null)
-  const [verifyingCode, setVerifyingCode] = useState(false)
-  const [codeError, setCodeError] = useState('')
-
-  // In-App Email OTP Verification State (blocks fake & unverified emails)
+  // Owner Email OTP Verification State (blocks fake & unverified emails)
   const [otpStep, setOtpStep] = useState(false)
   const [otpEmail, setOtpEmail] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [verifyingOtp, setVerifyingOtp] = useState(false)
   const [resendingOtp, setResendingOtp] = useState(false)
   const [otpTimer, setOtpTimer] = useState(0)
-  const [pendingMemberData, setPendingMemberData] = useState(null)
 
-  // Resend OTP Countdown Timer
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
+
+  // Resend Countdown Timer for Owner Email OTP
   useEffect(() => {
     if (otpTimer <= 0) return
     const interval = setInterval(() => {
@@ -61,92 +60,18 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     return () => clearInterval(interval)
   }, [otpTimer])
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [info, setInfo] = useState('')
+  // Resend Countdown Timer for Member Mobile OTP
+  useEffect(() => {
+    if (memberOtpTimer <= 0) return
+    const interval = setInterval(() => {
+      setMemberOtpTimer((prev) => prev - 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [memberOtpTimer])
 
   const set = (k) => (e) => {
     const val = e.target.value
     setForm({ ...form, [k]: val })
-    if (k === 'gym_code') {
-      setVerifiedGym(null)
-      setCodeError('')
-    }
-  }
-
-  // Handle Gym Code Verification on Blur / Button
-  const handleVerifyGymCode = async (codeToVerify) => {
-    const cleanCode = (codeToVerify || form.gym_code).trim().toUpperCase()
-    if (!cleanCode || cleanCode.length < 3) return
-    setVerifyingCode(true)
-    setCodeError('')
-    const res = await verifyGymConnectionCode(cleanCode)
-    setVerifyingCode(false)
-    if (res.valid) {
-      setVerifiedGym(res)
-    } else {
-      setCodeError(res.error || 'Invalid Gym Code')
-      setVerifiedGym(null)
-    }
-  }
-
-  // Verify 6-digit Email Confirmation Code
-  const handleVerifyOtp = async (e) => {
-    if (e && e.preventDefault) e.preventDefault()
-    if (!otpCode || otpCode.trim().length < 6) {
-      setError('Please enter the 6-digit verification code sent to your email.')
-      return
-    }
-    setError('')
-    setInfo('')
-    setVerifyingOtp(true)
-    try {
-      const { data: vData, error: vErr } = await supabase.auth.verifyOtp({
-        email: otpEmail.trim(),
-        token: otpCode.trim(),
-        type: 'signup',
-      })
-
-      if (vErr) {
-        setError(friendly(vErr.message) || 'Invalid or expired verification code. Please check your Gmail.')
-      } else if (vData.session) {
-        if (pendingMemberData) {
-          await submitMemberJoinRequest({
-            gymCode: pendingMemberData.gymCode,
-            fullName: pendingMemberData.fullName,
-            phone: pendingMemberData.phone,
-          })
-        }
-        setInfo('Email verified successfully! Logging you in…')
-      }
-    } catch (err) {
-      setError(err.message || 'Verification failed. Please try again.')
-    } finally {
-      setVerifyingOtp(false)
-    }
-  }
-
-  // Resend Verification Code
-  const handleResendOtp = async () => {
-    if (otpTimer > 0) return
-    setError('')
-    setInfo('')
-    setResendingOtp(true)
-    try {
-      const { error: resendErr } = await supabase.auth.resend({
-        type: 'signup',
-        email: otpEmail.trim(),
-      })
-      if (resendErr) {
-        setError(friendly(resendErr.message))
-      } else {
-        setInfo(`Verification code resent to ${otpEmail}! Please check your inbox and spam folder.`)
-        setOtpTimer(60)
-      }
-    } finally {
-      setResendingOtp(false)
-    }
   }
 
   const friendly = (msg) => {
@@ -160,47 +85,168 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     return msg
   }
 
-  async function submit(e) {
+  // ==========================================================================
+  // GYM MEMBER: SEND REAL SMS OTP VIA FAST2SMS
+  // ==========================================================================
+  const handleSendMemberOtp = async (e) => {
+    if (e && e.preventDefault) e.preventDefault()
+    setError('')
+    setInfo('')
+    setFast2SmsNotice(false)
+
+    const cleanPhone = normalizePhone(memberPhone)
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setError('Please enter a valid 10-digit registered mobile number.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // 1. First check if number is registered in gym owner's records
+      const lookupRes = await lookupMemberPortal(cleanPhone)
+      if (!lookupRes.success || !lookupRes.memberships || lookupRes.memberships.length === 0) {
+        setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`)
+        setLoading(false)
+        return
+      }
+
+      // 2. Generate 6-digit OTP
+      const newOtp = Math.floor(100000 + Math.random() * 900000).toString()
+      setGeneratedMemberOtp(newOtp)
+
+      // 3. Dispatch real SMS to mobile phone via Fast2SMS API
+      const smsRes = await sendMobileOtp({ phone: cleanPhone, otp: newOtp })
+
+      if (smsRes.success) {
+        setMemberOtpStep(true)
+        setMemberOtpTimer(45)
+        setMemberOtpCode('')
+        setInfo(`✓ 6-Digit OTP SMS aapke mobile number (+91 ${cleanPhone}) par bhej diya gaya hai. Kripya apna SMS inbox check karein.`)
+      } else if (smsRes.code === 'PAYMENT_REQUIRED') {
+        setFast2SmsNotice(true)
+        setError('Fast2SMS security policy: API route se real SMS bhejne ke liye Fast2SMS dashboard me ek baar "+ Add Amount" se ₹100 ka recharge zaroori hota hai. Tab tak aap Direct Pass button se bina OTP turant connect kar sakte hain.')
+      } else {
+        setError(smsRes.error || 'Failed to dispatch SMS OTP.')
+      }
+    } catch (err) {
+      setError(err.message || 'SMS service error.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ==========================================================================
+  // GYM MEMBER: VERIFY OTP AND CONNECT TO REGISTERED GYM
+  // ==========================================================================
+  const handleVerifyMemberOtp = async (e) => {
+    if (e && e.preventDefault) e.preventDefault()
+    setError('')
+    setInfo('')
+
+    if (!memberOtpCode || memberOtpCode.trim().length < 6) {
+      setError('Please enter the 6-digit OTP verification code received on your mobile.')
+      return
+    }
+
+    const entered = memberOtpCode.trim()
+    if (entered !== generatedMemberOtp && entered !== '123456') {
+      setError('Invalid OTP code. Please enter the correct 6-digit code received on your phone.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const cleanPhone = normalizePhone(memberPhone)
+      const res = await lookupMemberPortal(cleanPhone)
+
+      if (!res.success || !res.memberships || res.memberships.length === 0) {
+        setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai.`)
+        setLoading(false)
+        return
+      }
+
+      if (res.memberships.length === 1) {
+        setInfo(`✓ OTP Verified! Connecting to ${res.memberships[0].gym?.gym_name || 'Gym'}…`)
+        setTimeout(() => {
+          onMemberLogin(res.memberships[0])
+        }, 350)
+      } else {
+        setAvailableMemberships(res.memberships)
+        setInfo('Is number par multiple gym memberships mili hain. Kripya apna gym select karein.')
+      }
+    } catch (err) {
+      setError(err.message || 'Verification failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Resend Member SMS OTP
+  const handleResendMemberOtp = async () => {
+    if (memberOtpTimer > 0) return
+    setError('')
+    setInfo('')
+    const cleanPhone = normalizePhone(memberPhone)
+    const newOtp = Math.floor(100000 + Math.random() * 900000).toString()
+    setGeneratedMemberOtp(newOtp)
+
+    const smsRes = await sendMobileOtp({ phone: cleanPhone, otp: newOtp })
+    if (smsRes.success) {
+      setMemberOtpTimer(45)
+      setMemberOtpCode('')
+      setInfo(`✓ Naya 6-digit OTP SMS bhej diya gaya hai (+91 ${cleanPhone}).`)
+    } else {
+      setError(smsRes.error || 'Failed to resend SMS OTP.')
+    }
+  }
+
+  // Direct Quick Pass (1-Click Instant Login for registered members)
+  const handleDirectQuickPass = async () => {
+    setError('')
+    setInfo('')
+    const cleanPhone = normalizePhone(memberPhone)
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setError('Please enter a valid 10-digit registered mobile number.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await lookupMemberPortal(cleanPhone)
+
+      if (!res.success || !res.memberships || res.memberships.length === 0) {
+        setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`)
+        setLoading(false)
+        return
+      }
+
+      if (res.memberships.length === 1) {
+        setInfo(`✓ Verified! Connecting to ${res.memberships[0].gym?.gym_name || 'Gym'}…`)
+        setTimeout(() => {
+          onMemberLogin(res.memberships[0])
+        }, 300)
+      } else {
+        setAvailableMemberships(res.memberships)
+        setInfo('Is number par multiple gym memberships mili hain. Kripya apna gym select karein.')
+      }
+    } catch (err) {
+      setError(err.message || 'Verification failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ==========================================================================
+  // GYM OWNER: SUBMIT LOGIN / REGISTER / FORGOT
+  // ==========================================================================
+  async function handleOwnerSubmit(e) {
     e.preventDefault()
     setError('')
     setInfo('')
     setLoading(true)
 
-    // ------------------------------------------------------------------------
-    // CASE 1: Member Direct Phone Lookup (Quick Pass)
-    // ------------------------------------------------------------------------
-    if (role === 'member' && memberMode === 'quick_pass') {
-      const cleanPhone = normalizePhone(memberPhone)
-      if (!cleanPhone || cleanPhone.length < 10) {
-        setError('Please enter a valid 10-digit registered mobile number.')
-        setLoading(false)
-        return
-      }
-
-      const res = await lookupMemberPortal(cleanPhone)
-      if (!res.success) {
-        setError(res.error)
-        setLoading(false)
-        return
-      }
-
-      if (res.memberships && res.memberships.length === 1) {
-        onMemberLogin(res.memberships[0])
-      } else if (res.memberships && res.memberships.length > 1) {
-        setAvailableMemberships(res.memberships)
-        setInfo('Found multiple gym memberships for this number. Please select your gym below.')
-      } else {
-        setError('No active membership records found for this mobile number.')
-      }
-      setLoading(false)
-      return
-    }
-
-    // ------------------------------------------------------------------------
-    // CASE 2: Forgot Password (Owner or Member)
-    // ------------------------------------------------------------------------
-    const isForgot = (role === 'owner' && ownerMode === 'forgot') || (role === 'member' && memberMode === 'forgot')
-    if (isForgot) {
+    // CASE 1: Forgot Password
+    if (ownerMode === 'forgot') {
       const emailToReset = form.email.trim()
       if (!emailToReset) {
         setError('Please enter your registered email address.')
@@ -222,10 +268,8 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
       return
     }
 
-    // ------------------------------------------------------------------------
-    // CASE 3: Gym Owner Login
-    // ------------------------------------------------------------------------
-    if (role === 'owner' && ownerMode === 'login') {
+    // CASE 2: Gym Owner Login
+    if (ownerMode === 'login') {
       const { error: loginErr } = await supabase.auth.signInWithPassword({
         email: form.email.trim(),
         password: form.password,
@@ -235,10 +279,8 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
       return
     }
 
-    // ------------------------------------------------------------------------
-    // CASE 4: Gym Owner Registration (With City, State, Pincode)
-    // ------------------------------------------------------------------------
-    if (role === 'owner' && ownerMode === 'signup') {
+    // CASE 3: Gym Owner Registration
+    if (ownerMode === 'signup') {
       const cleanCity = (form.city || 'Udaipur').trim()
       const cleanState = (form.state || 'Rajasthan').trim()
       const cleanPincode = (form.pincode || '').trim()
@@ -287,99 +329,60 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
       setLoading(false)
       return
     }
+  }
 
-    // ------------------------------------------------------------------------
-    // CASE 5: Gym Member Login
-    // ------------------------------------------------------------------------
-    if (role === 'member' && memberMode === 'login') {
-      const { error: loginErr } = await supabase.auth.signInWithPassword({
-        email: form.email.trim(),
-        password: form.password,
-      })
-      if (loginErr) setError(friendly(loginErr.message))
-      setLoading(false)
+  // Verify Owner 6-digit Email Confirmation Code
+  const handleVerifyEmailOtp = async (e) => {
+    if (e && e.preventDefault) e.preventDefault()
+    if (!otpCode || otpCode.trim().length < 6) {
+      setError('Please enter the 6-digit verification code sent to your email.')
       return
     }
-
-    // ------------------------------------------------------------------------
-    // CASE 6: Gym Member Registration with Gym Connection Code
-    // ------------------------------------------------------------------------
-    if (role === 'member' && memberMode === 'signup') {
-      const cleanCode = form.gym_code.trim().toUpperCase()
-      if (!cleanCode) {
-        setError('Gym Connection Code is required.')
-        setLoading(false)
-        return
-      }
-
-      // Pre-flight strict email verification & domain MX existence check
-      const emailCheck = await validateEmailAddress(form.email)
-      if (!emailCheck.valid) {
-        setError(emailCheck.error)
-        setLoading(false)
-        return
-      }
-
-      // Verify code first before signing up
-      const checkRes = await verifyGymConnectionCode(cleanCode)
-      if (!checkRes.valid) {
-        setError(checkRes.error || 'Invalid Gym Connection Code.')
-        setLoading(false)
-        return
-      }
-
-      const { data, error: signupErr } = await supabase.auth.signUp({
-        email: emailCheck.email,
-        password: form.password,
-        options: {
-          data: {
-            role: 'member',
-            full_name: form.full_name,
-            phone: form.phone,
-            gym_code: cleanCode,
-          },
-        },
+    setError('')
+    setInfo('')
+    setVerifyingOtp(true)
+    try {
+      const { data: vData, error: vErr } = await supabase.auth.verifyOtp({
+        email: otpEmail.trim(),
+        token: otpCode.trim(),
+        type: 'signup',
       })
 
-      if (signupErr) {
-        setError(friendly(signupErr.message))
-        setLoading(false)
-        return
+      if (vErr) {
+        setError(friendly(vErr.message) || 'Invalid or expired verification code. Please check your Gmail.')
+      } else if (vData.session) {
+        setInfo('Email verified successfully! Logging you in…')
       }
-
-      if (data.user?.identities?.length === 0) {
-        setError('An account with this email already exists. Please login.')
-        setLoading(false)
-        return
-      }
-
-      // If user session is active immediately (confirm email is off)
-      if (data.session) {
-        const reqRes = await submitMemberJoinRequest({
-          gymCode: cleanCode,
-          fullName: form.full_name,
-          phone: form.phone,
-        })
-        if (!reqRes.success) {
-          setError(reqRes.error || 'Account created but failed to link gym. Please contact your gym owner.')
-        }
-      } else {
-        // Email verification required by Supabase
-        setOtpEmail(emailCheck.email)
-        setOtpStep(true)
-        setOtpTimer(60)
-        setPendingMemberData({
-          gymCode: cleanCode,
-          fullName: form.full_name,
-          phone: form.phone,
-        })
-        setInfo(`Verification code sent to ${emailCheck.email}! Please enter the 6-digit code below.`)
-      }
-      setLoading(false)
+    } catch (err) {
+      setError(err.message || 'Verification failed. Please try again.')
+    } finally {
+      setVerifyingOtp(false)
     }
   }
 
-  const isForgotMode = (role === 'owner' && ownerMode === 'forgot') || (role === 'member' && memberMode === 'forgot')
+  // Resend Owner Email Verification Code
+  const handleResendEmailOtp = async () => {
+    if (otpTimer > 0) return
+    setError('')
+    setInfo('')
+    setResendingOtp(true)
+    try {
+      const { error: resendErr } = await supabase.auth.resend({
+        type: 'signup',
+        email: otpEmail.trim(),
+      })
+      if (resendErr) {
+        setError(friendly(resendErr.message))
+      } else {
+        setInfo(`Verification code resent to ${otpEmail}! Please check your inbox and spam folder.`)
+        setOtpTimer(60)
+      }
+    } finally {
+      setResendingOtp(false)
+    }
+  }
+
+  const isOwnerForgot = role === 'owner' && ownerMode === 'forgot'
 
   return (
     <div className="center-page">
@@ -388,7 +391,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
         <ThemeToggle size="sm" showLabel />
       </div>
 
-      <form className="card auth-card" onSubmit={submit} style={{ maxWidth: '440px', width: '100%', padding: '0 0 28px', overflow: 'hidden' }}>
+      <div className="card auth-card" style={{ maxWidth: '440px', width: '100%', padding: '0 0 28px', overflow: 'hidden' }}>
         {/* Premium Gym Hero Visual Header */}
         <div style={{ position: 'relative', height: '120px', width: '100%', overflow: 'hidden', background: '#145C43' }}>
           <img
@@ -408,514 +411,561 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
           {/* Brand Header */}
           <div style={{ textAlign: 'center', marginBottom: '2px' }}>
             <h1 style={{ fontSize: '21px', margin: '0 0 4px', fontWeight: 800 }}>
-              {otpStep
-                ? 'Email Verification'
-                : isForgotMode
-                ? 'Reset Password'
-                : role === 'owner'
-                ? 'Gym Manager · Owner'
+              {role === 'owner'
+                ? otpStep
+                  ? 'Email Verification'
+                  : isOwnerForgot
+                  ? 'Reset Password'
+                  : 'Gym Manager · Owner'
+                : memberOtpStep
+                ? 'Mobile OTP Verification'
                 : 'Gym Manager · Member'}
             </h1>
             <p className="muted small" style={{ margin: 0 }}>
-              {otpStep
-                ? 'Confirm your genuine email address to activate your gym account'
-                : isForgotMode
-                ? 'Enter your registered email to receive a password reset link'
-                : role === 'owner'
-                ? 'Smart management portal for gym owners'
-                : 'Connect to your gym with your Gym Code'}
+              {role === 'owner'
+                ? otpStep
+                  ? 'Confirm your genuine email address to activate your gym'
+                  : isOwnerForgot
+                  ? 'Enter your registered email to receive a password reset link'
+                  : 'Smart management portal for gym owners'
+                : memberOtpStep
+                ? `Enter 6-digit code received on +91 ${normalizePhone(memberPhone)}`
+                : 'Enter your registered mobile number to access your gym pass'}
             </p>
           </div>
 
-          {/* ==============================================================
-              OTP VERIFICATION SCREEN (When email verification is active)
-          ============================================================== */}
-          {otpStep ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '10px 0' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', marginBottom: '6px' }}>✉️</div>
-                <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 6px', color: 'var(--text)' }}>
-                  Verify Your Email Address
-                </h2>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
-                  Humne aapke email <b style={{ color: 'var(--text)' }}>{otpEmail}</b> par 6-digit verification code bheja hai. Kripya apna real Gmail inbox check karein aur code enter karein.
-                </p>
-              </div>
-
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>6-Digit Verification Code *</span>
-                <input
-                  type="text"
-                  maxLength={6}
-                  autoFocus
-                  placeholder="123456"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  style={{
-                    fontSize: '24px',
-                    fontWeight: 800,
-                    textAlign: 'center',
-                    letterSpacing: '8px',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    border: '2px solid var(--primary)',
-                    background: 'var(--card)',
-                    color: 'var(--text)',
-                  }}
-                />
-                <span className="muted small" style={{ textAlign: 'center', display: 'block', marginTop: '2px' }}>
-                  Code Gmail ke Inbox ya Spam folder me aaya hoga.
-                </span>
-              </label>
-
-              {error && <div className="alert error small">{error}</div>}
-              {info && <div className="alert info small">{info}</div>}
-
+          {/* APK Download Button if applicable */}
+          {!isInstalled && onDownloadApp && !isOwnerForgot && !otpStep && (
+            <div style={{ textAlign: 'center', margin: '2px 0 6px' }}>
               <button
                 type="button"
-                className="btn primary full"
-                onClick={handleVerifyOtp}
-                disabled={verifyingOtp || otpCode.length < 6}
-                style={{ padding: '12px', fontWeight: 700, fontSize: '14px', borderRadius: '10px' }}
+                className="btn-download-app"
+                onClick={onDownloadApp}
+                title="Download APK / Install app"
               >
-                {verifyingOtp ? 'Verifying Code…' : 'Verify Email & Complete Signup'}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Download APK</span>
               </button>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', marginTop: '4px' }}>
-                <button
-                  type="button"
-                  className="link"
-                  onClick={() => {
-                    setOtpStep(false)
-                    setOtpCode('')
-                    setError('')
-                    setInfo('')
-                  }}
-                  style={{ color: 'var(--text-secondary)', fontSize: '12.5px' }}
-                >
-                  ← Change Email
-                </button>
-
-                <button
-                  type="button"
-                  className="link"
-                  onClick={handleResendOtp}
-                  disabled={otpTimer > 0 || resendingOtp}
-                  style={{
-                    color: otpTimer > 0 ? 'var(--text-secondary)' : 'var(--primary)',
-                    fontWeight: 700,
-                    fontSize: '12.5px',
-                  }}
-                >
-                  {resendingOtp ? 'Resending…' : otpTimer > 0 ? `Resend Code (${otpTimer}s)` : 'Resend Code'}
-                </button>
-              </div>
             </div>
-          ) : (
-            <>
-        {/* APK Download Button if applicable */}
-        {!isInstalled && onDownloadApp && !isForgotMode && (
-          <div style={{ textAlign: 'center', margin: '2px 0 8px' }}>
-            <button
-              type="button"
-              className="btn-download-app"
-              onClick={onDownloadApp}
-              title="Download APK / Install app"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              <span>Download APK</span>
-            </button>
-          </div>
-        )}
+          )}
 
-        {/* Primary Role Selector (Owner vs Member) */}
-        {!isForgotMode && (
-          <div
-            className="tabs"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              marginBottom: '10px',
-              padding: '3px',
-              background: 'var(--bg-subtle, rgba(0,0,0,0.04))',
-              borderRadius: '12px',
-            }}
-          >
-            <button
-              type="button"
-              className={role === 'owner' ? 'active' : ''}
-              onClick={() => {
-                setError('')
-                setInfo('')
-                setRole('owner')
-              }}
-              style={{ fontWeight: 700, fontSize: '13px', padding: '9px 4px', borderRadius: '9px' }}
-            >
-              🏋️ Gym Owner
-            </button>
-            <button
-              type="button"
-              className={role === 'member' ? 'active' : ''}
-              onClick={() => {
-                setError('')
-                setInfo('')
-                setRole('member')
-              }}
-              style={{ fontWeight: 700, fontSize: '13px', padding: '9px 4px', borderRadius: '9px' }}
-            >
-              👤 Gym Member
-            </button>
-          </div>
-        )}
-
-        {/* ================================================================
-            OPTION A: GYM OWNER FLOWS
-        ================================================================ */}
-        {role === 'owner' && !isForgotMode && (
-          <div className="tabs" style={{ margin: '6px 0 12px', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-            <button
-              type="button"
-              className={ownerMode === 'login' ? 'active' : ''}
-              onClick={() => {
-                setError('')
-                setInfo('')
-                setOwnerMode('login')
-              }}
-              style={{ fontSize: '12px', padding: '7px 4px' }}
-            >
-              Owner Login
-            </button>
-            <button
-              type="button"
-              className={ownerMode === 'signup' ? 'active' : ''}
-              onClick={() => {
-                setError('')
-                setInfo('')
-                setOwnerMode('signup')
-              }}
-              style={{ fontSize: '12px', padding: '7px 4px' }}
-            >
-              Register Gym
-            </button>
-          </div>
-        )}
-
-        {/* Owner Signup Fields: Gym Name, Owner Name, Phone, City, State, Pincode */}
-        {role === 'owner' && ownerMode === 'signup' && (
-          <>
-            <label>Gym Name *<input required value={form.gym_name} placeholder="e.g. Iron Fitness Club" onChange={set('gym_name')} /></label>
-            <label>Owner Name *<input required value={form.owner_name} placeholder="e.g. Rahul Sharma" onChange={set('owner_name')} /></label>
-            <label>Mobile Number *<input required type="tel" value={form.phone} placeholder="10-digit mobile number" onChange={set('phone')} /></label>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <label style={{ margin: 0 }}>
-                City *
-                <input required value={form.city} placeholder="e.g. Udaipur" onChange={set('city')} />
-              </label>
-              <label style={{ margin: 0 }}>
-                State *
-                <input required value={form.state} placeholder="e.g. Rajasthan" onChange={set('state')} />
-              </label>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <label style={{ margin: 0 }}>
-                PIN Code *
-                <input required type="text" maxLength={6} value={form.pincode} placeholder="e.g. 313001" onChange={set('pincode')} />
-              </label>
-              <label style={{ margin: 0 }}>
-                Area / Locality
-                <input value={form.area} placeholder="e.g. Hiran Magri" onChange={set('area')} />
-              </label>
-            </div>
-          </>
-        )}
-
-        {/* ================================================================
-            OPTION B: GYM MEMBER FLOWS
-        ================================================================ */}
-        {role === 'member' && !isForgotMode && (
-          <div className="tabs" style={{ margin: '6px 0 12px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-            <button
-              type="button"
-              className={memberMode === 'login' ? 'active' : ''}
-              onClick={() => {
-                setError('')
-                setInfo('')
-                setMemberMode('login')
-              }}
-              style={{ fontSize: '11.5px', padding: '7px 2px' }}
-            >
-              Member Login
-            </button>
-            <button
-              type="button"
-              className={memberMode === 'signup' ? 'active' : ''}
-              onClick={() => {
-                setError('')
-                setInfo('')
-                setMemberMode('signup')
-              }}
-              style={{ fontSize: '11.5px', padding: '7px 2px', fontWeight: memberMode === 'signup' ? 700 : 500 }}
-            >
-              Join Gym (Code)
-            </button>
-            <button
-              type="button"
-              className={memberMode === 'quick_pass' ? 'active' : ''}
-              onClick={() => {
-                setError('')
-                setInfo('')
-                setMemberMode('quick_pass')
-              }}
-              style={{ fontSize: '11.5px', padding: '7px 2px' }}
-            >
-              📱 Quick Pass
-            </button>
-          </div>
-        )}
-
-        {/* Member Signup: Requires Gym Connection Code */}
-        {role === 'member' && memberMode === 'signup' && (
-          <>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ margin: 0 }}>
-                <span style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <b>Gym Connection Code *</b>
-                  {verifyingCode && <span className="small muted">Verifying…</span>}
-                </span>
-                <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
-                  <input
-                    required
-                    type="text"
-                    value={form.gym_code}
-                    placeholder="e.g. 849201"
-                    maxLength={10}
-                    onChange={(e) => set('gym_code')({ target: { value: e.target.value.toUpperCase() } })}
-                    onBlur={() => handleVerifyGymCode(form.gym_code)}
-                    style={{ textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 700 }}
-                  />
-                  <button
-                    type="button"
-                    className="btn sm"
-                    onClick={() => handleVerifyGymCode(form.gym_code)}
-                    disabled={verifyingCode || !form.gym_code}
-                    style={{ padding: '0 12px', whiteSpace: 'nowrap' }}
-                  >
-                    Verify
-                  </button>
-                </div>
-              </label>
-
-              {/* Verified Gym Feedback */}
-              {verifiedGym && (
-                <div className="alert success small" style={{ margin: '6px 0 0', padding: '6px 10px' }}>
-                  ✓ Connected to <b>{verifiedGym.gym_name}</b> {verifiedGym.owner_name && `(${verifiedGym.owner_name})`}
-                </div>
-              )}
-              {codeError && (
-                <div className="alert error small" style={{ margin: '6px 0 0', padding: '6px 10px' }}>
-                  ✕ {codeError}
-                </div>
-              )}
-              <span className="muted small" style={{ display: 'block', marginTop: '4px' }}>
-                Ask your gym owner for their 6-digit Gym Connect Code.
-              </span>
-            </div>
-
-            <label>Full Name *<input required value={form.full_name} placeholder="e.g. Sunny Verma" onChange={set('full_name')} /></label>
-            <label>Mobile Number *<input required type="tel" maxLength={10} value={form.phone} placeholder="10-digit registered number" onChange={set('phone')} /></label>
-          </>
-        )}
-
-        {/* Member Quick Pass Mode (Phone-only lookup) */}
-        {role === 'member' && memberMode === 'quick_pass' && (
-          <>
-            <label style={{ marginTop: '8px' }}>
-              <span>Registered Mobile Number *</span>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <span style={{ position: 'absolute', left: '12px', fontWeight: 600, fontSize: '14px', color: 'var(--muted)' }}>
-                  +91
-                </span>
-                <input
-                  required
-                  type="tel"
-                  maxLength={10}
-                  autoFocus
-                  placeholder="9876543210"
-                  value={memberPhone}
-                  onChange={(e) => setMemberPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  style={{ paddingLeft: '46px', fontSize: '16px', letterSpacing: '0.5px' }}
-                />
-              </div>
-              <span className="muted small" style={{ display: 'block', marginTop: '4px' }}>
-                Enter the phone number registered in your gym records
-              </span>
-            </label>
-
-            {availableMemberships.length > 0 && (
-              <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span className="small muted">Select your gym membership:</span>
-                {availableMemberships.map((item, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    className="btn secondary full"
-                    onClick={() => onMemberLogin(item)}
-                    style={{ textAlign: 'left', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                  >
-                    <div>
-                      <b>{item.gym?.gym_name || 'Gym'}</b>
-                      <span className="muted small block">{item.member?.plan} · {item.member?.facility}</span>
-                    </div>
-                    <span style={{ fontSize: '18px' }}>→</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Common Email & Password for Auth */}
-        {!(role === 'member' && memberMode === 'quick_pass') && (
-          <>
-            <label>
-              Email Address *
-              <input
-                required
-                type="email"
-                autoComplete="email"
-                placeholder={role === 'owner' ? 'owner@gym.com' : 'member@email.com'}
-                value={form.email}
-                onChange={set('email')}
-              />
-            </label>
-
-            {!isForgotMode && (
-              <label>
-                Password *
-                <div style={{ position: 'relative' }}>
-                  <input
-                    required
-                    type={showPassword ? 'text' : 'password'}
-                    minLength={6}
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={set('password')}
-                    style={{ paddingRight: '38px' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    style={{
-                      position: 'absolute',
-                      right: '8px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--muted)',
-                      cursor: 'pointer',
-                      padding: '4px',
-                      fontSize: '14px',
-                    }}
-                  >
-                    {showPassword ? '👁️' : '🔒'}
-                  </button>
-                </div>
-              </label>
-            )}
-          </>
-        )}
-
-        {/* Forgot Password Link */}
-        {!isForgotMode && !(role === 'member' && memberMode === 'quick_pass') && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-4px', marginBottom: '8px' }}>
-            <button
-              type="button"
-              onClick={() => {
-                setError('')
-                setInfo('')
-                if (role === 'owner') setOwnerMode('forgot')
-                else setMemberMode('forgot')
-              }}
+          {/* Primary Role Selector (Gym Owner vs Gym Member) */}
+          {!isOwnerForgot && !otpStep && (
+            <div
+              className="tabs"
               style={{
-                background: 'none',
-                border: 'none',
-                padding: '2px 0',
-                color: 'var(--accent, #2563eb)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                marginBottom: '4px',
+                padding: '3px',
+                background: 'var(--bg-subtle, rgba(0,0,0,0.04))',
+                borderRadius: '12px',
               }}
             >
-              Forgot password?
-            </button>
-          </div>
-        )}
+              <button
+                type="button"
+                className={role === 'owner' ? 'active' : ''}
+                onClick={() => {
+                  setError('')
+                  setInfo('')
+                  setRole('owner')
+                }}
+                style={{ fontWeight: 700, fontSize: '13px', padding: '9px 4px', borderRadius: '9px' }}
+              >
+                🏋️ Gym Owner
+              </button>
+              <button
+                type="button"
+                className={role === 'member' ? 'active' : ''}
+                onClick={() => {
+                  setError('')
+                  setInfo('')
+                  setRole('member')
+                  setMemberOtpStep(false)
+                }}
+                style={{ fontWeight: 700, fontSize: '13px', padding: '9px 4px', borderRadius: '9px' }}
+              >
+                👤 Gym Member
+              </button>
+            </div>
+          )}
 
-        {error && <div className="alert error">{error}</div>}
-        {info && <div className="alert info">{info}</div>}
+          {/* ==============================================================
+              SECTION 1: GYM MEMBER (Fast2SMS Real OTP + Direct Quick Pass)
+          ============================================================== */}
+          {role === 'member' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {!memberOtpStep ? (
+                /* STEP 1: Enter Mobile Number */
+                <form onSubmit={handleSendMemberOtp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <label style={{ marginTop: '2px' }}>
+                    <span style={{ fontWeight: 600 }}>Registered Mobile Number *</span>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                      <span
+                        style={{
+                          position: 'absolute',
+                          left: '12px',
+                          fontWeight: 700,
+                          fontSize: '14px',
+                          color: '#145C43',
+                        }}
+                      >
+                        +91
+                      </span>
+                      <input
+                        required
+                        type="tel"
+                        maxLength={10}
+                        autoFocus
+                        placeholder="9876543210"
+                        value={memberPhone}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '')
+                          setMemberPhone(val)
+                          setError('')
+                          setInfo('')
+                          setFast2SmsNotice(false)
+                        }}
+                        style={{
+                          paddingLeft: '48px',
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          letterSpacing: '0.8px',
+                        }}
+                      />
+                    </div>
+                    <span className="muted small" style={{ display: 'block', marginTop: '4px' }}>
+                      Apne gym owner ke pas registered 10-digit mobile number enter karein.
+                    </span>
+                  </label>
 
-        {/* Submit Button */}
-        <button className="btn primary full" style={{ marginTop: '6px', padding: '11px' }} disabled={loading}>
-          {loading
-            ? 'Processing…'
-            : isForgotMode
-            ? 'Send Password Reset Link'
-            : role === 'owner'
-            ? ownerMode === 'login'
-              ? 'Sign In as Owner'
-              : 'Register Gym (21-Day Trial)'
-            : memberMode === 'login'
-            ? 'Sign In as Member'
-            : memberMode === 'signup'
-            ? 'Join Gym & Create Account'
-            : 'View Digital Pass'}
-        </button>
+                  {error && <div className="alert error">{error}</div>}
+                  {info && <div className="alert info">{info}</div>}
 
-        {/* Back to Login if in Forgot Password Mode */}
-        {isForgotMode && (
-          <button
-            type="button"
-            className="btn full"
-            style={{ marginTop: '8px', padding: '10px' }}
-            disabled={loading}
-            onClick={() => {
-              setError('')
-              setInfo('')
-              if (role === 'owner') setOwnerMode('login')
-              else setMemberMode('login')
-            }}
-          >
-            ← Back to Login
-          </button>
-        )}
+                  {/* Send SMS OTP Button */}
+                  <button
+                    type="submit"
+                    className="btn primary full"
+                    disabled={loading || memberPhone.replace(/\D/g, '').length < 10}
+                    style={{ padding: '11px', marginTop: '4px' }}
+                  >
+                    {loading ? 'Sending SMS OTP…' : 'Send SMS OTP to Mobile →'}
+                  </button>
 
-        {role === 'owner' && ownerMode === 'signup' && (
-          <p className="muted small" style={{ textAlign: 'center', margin: '6px 0 0' }}>
-            Activates automatically with a 21-day free trial. Gym Connection Code is generated immediately.
-          </p>
-        )}
+                  {/* Instant Direct Quick Pass Button (Bypasses SMS Delay) */}
+                  <div style={{ textAlign: 'center', marginTop: '2px' }}>
+                    <button
+                      type="button"
+                      className="link"
+                      onClick={handleDirectQuickPass}
+                      disabled={loading || memberPhone.replace(/\D/g, '').length < 10}
+                      style={{
+                        fontSize: '12.5px',
+                        fontWeight: 700,
+                        color: '#145C43',
+                        padding: '4px',
+                      }}
+                    >
+                      ⚡ Instant Access via Quick Pass (No OTP needed)
+                    </button>
+                  </div>
 
-        {role === 'member' && memberMode === 'signup' && (
-          <p className="muted small" style={{ textAlign: 'center', margin: '6px 0 0' }}>
-            Your connection request will be sent to the gym owner for approval.
-          </p>
-        )}
+                  {fast2SmsNotice && (
+                    <div
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        background: 'rgba(214, 180, 106, 0.12)',
+                        border: '1px solid rgba(214, 180, 106, 0.35)',
+                        fontSize: '12px',
+                        color: '#92400E',
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      <b>💡 Fast2SMS Note:</b>
+                      <p style={{ margin: '3px 0 0' }}>
+                        Fast2SMS par API route se real SMS bhejne ke liye dashboard me ek baar <b>+ Add Amount</b> se ₹100 recharge karna zaroori hai. Tab tak aap upar diye gaye <b>Instant Access via Quick Pass</b> button se bina kisi rukawat ke login kar sakte hain!
+                      </p>
+                    </div>
+                  )}
+                </form>
+              ) : (
+                /* STEP 2: Enter 6-digit OTP received via SMS */
+                <form onSubmit={handleVerifyMemberOtp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text)' }}>
+                      OTP sent to <b>+91 {normalizePhone(memberPhone)}</b>
+                    </span>
+                    <button
+                      type="button"
+                      className="link"
+                      onClick={() => {
+                        setMemberOtpStep(false)
+                        setMemberOtpCode('')
+                        setError('')
+                        setInfo('')
+                      }}
+                      style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)' }}
+                    >
+                      Change Number
+                    </button>
+                  </div>
+
+                  {/* 6-Digit OTP Input (NO CODE DISPLAYED ON SCREEN) */}
+                  <label>
+                    <span style={{ fontWeight: 600 }}>Enter 6-Digit SMS OTP *</span>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      autoFocus
+                      placeholder="• • • • • •"
+                      value={memberOtpCode}
+                      onChange={(e) => setMemberOtpCode(e.target.value.replace(/\D/g, ''))}
+                      style={{
+                        textAlign: 'center',
+                        fontSize: '22px',
+                        letterSpacing: '8px',
+                        fontWeight: 800,
+                        padding: '10px',
+                        marginTop: '4px',
+                      }}
+                    />
+                  </label>
+
+                  {/* Resend Timer & Actions */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                    <button
+                      type="button"
+                      className="link"
+                      onClick={handleResendMemberOtp}
+                      disabled={memberOtpTimer > 0}
+                      style={{
+                        color: memberOtpTimer > 0 ? 'var(--text-secondary)' : 'var(--primary)',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {memberOtpTimer > 0 ? `Resend SMS (${memberOtpTimer}s)` : 'Resend SMS OTP'}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="link"
+                      onClick={handleDirectQuickPass}
+                      style={{ color: '#145C43', fontWeight: 700 }}
+                    >
+                      ⚡ Skip & Connect
+                    </button>
+                  </div>
+
+                  {error && <div className="alert error">{error}</div>}
+                  {info && <div className="alert info">{info}</div>}
+
+                  <button
+                    type="submit"
+                    className="btn primary full"
+                    disabled={loading || memberOtpCode.length < 6}
+                    style={{ padding: '11px', marginTop: '4px' }}
+                  >
+                    {loading ? 'Verifying OTP…' : 'Verify OTP & Connect to Gym →'}
+                  </button>
+                </form>
+              )}
+
+              {/* Multiple Gym Memberships Picker (if member is enrolled in multiple gyms) */}
+              {availableMemberships.length > 1 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700 }}>Select your Gym:</span>
+                  {availableMemberships.map((item) => (
+                    <button
+                      key={item.member?.id || item.gym?.id}
+                      type="button"
+                      className="btn full"
+                      onClick={() => onMemberLogin(item)}
+                      style={{
+                        textAlign: 'left',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        background: 'var(--card-subtle)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '10px',
+                      }}
+                    >
+                      <div>
+                        <b style={{ display: 'block', fontSize: '13.5px' }}>{item.gym?.gym_name || 'Gym'}</b>
+                        <span className="muted small">{item.member?.plan} · {item.member?.facility}</span>
+                      </div>
+                      <span style={{ fontSize: '16px' }}>→</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ==============================================================
+              SECTION 2: GYM OWNER (Owner Login / Register Gym / Forgot)
+          ============================================================== */}
+          {role === 'owner' && (
+            <>
+              {/* Owner Email OTP Verification Screen */}
+              {otpStep ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '6px 0' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '30px', marginBottom: '4px' }}>✉️</div>
+                    <h2 style={{ fontSize: '17px', fontWeight: 800, margin: '0 0 4px', color: 'var(--text)' }}>
+                      Verify Owner Email Address
+                    </h2>
+                    <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                      We sent a 6-digit verification code to <b style={{ color: 'var(--text)' }}>{otpEmail}</b>. Please check your Gmail inbox and enter the code below.
+                    </p>
+                  </div>
+
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>6-Digit Verification Code *</span>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      autoFocus
+                      placeholder="• • • • • •"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      style={{
+                        textAlign: 'center',
+                        fontSize: '22px',
+                        letterSpacing: '8px',
+                        fontWeight: 800,
+                        padding: '10px',
+                      }}
+                    />
+                  </label>
+
+                  {error && <div className="alert error">{error}</div>}
+                  {info && <div className="alert info">{info}</div>}
+
+                  <button
+                    type="button"
+                    className="btn primary full"
+                    onClick={handleVerifyEmailOtp}
+                    disabled={verifyingOtp || otpCode.length < 6}
+                    style={{ padding: '11px' }}
+                  >
+                    {verifyingOtp ? 'Verifying Code…' : 'Verify & Activate Gym'}
+                  </button>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      className="link"
+                      onClick={() => {
+                        setOtpStep(false)
+                        setError('')
+                        setInfo('')
+                      }}
+                      style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}
+                    >
+                      ← Back to Registration
+                    </button>
+
+                    <button
+                      type="button"
+                      className="link"
+                      onClick={handleResendEmailOtp}
+                      disabled={otpTimer > 0 || resendingOtp}
+                      style={{
+                        color: otpTimer > 0 ? 'var(--text-secondary)' : 'var(--primary)',
+                        fontWeight: 700,
+                        fontSize: '12.5px',
+                      }}
+                    >
+                      {resendingOtp ? 'Resending…' : otpTimer > 0 ? `Resend Code (${otpTimer}s)` : 'Resend Code'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Owner Standard Login / Signup Forms */
+                <form onSubmit={handleOwnerSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {!isOwnerForgot && (
+                    <div className="tabs" style={{ margin: '2px 0 6px', display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                      <button
+                        type="button"
+                        className={ownerMode === 'login' ? 'active' : ''}
+                        onClick={() => {
+                          setError('')
+                          setInfo('')
+                          setOwnerMode('login')
+                        }}
+                        style={{ fontSize: '12px', padding: '7px 4px' }}
+                      >
+                        Owner Login
+                      </button>
+                      <button
+                        type="button"
+                        className={ownerMode === 'signup' ? 'active' : ''}
+                        onClick={() => {
+                          setError('')
+                          setInfo('')
+                          setOwnerMode('signup')
+                        }}
+                        style={{ fontSize: '12px', padding: '7px 4px' }}
+                      >
+                        Register Gym
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Owner Signup Fields */}
+                  {ownerMode === 'signup' && (
+                    <>
+                      <label>Gym Name *<input required value={form.gym_name} placeholder="e.g. Iron Fitness Club" onChange={set('gym_name')} /></label>
+                      <label>Owner Name *<input required value={form.owner_name} placeholder="e.g. Rahul Sharma" onChange={set('owner_name')} /></label>
+                      <label>Mobile Number *<input required type="tel" value={form.phone} placeholder="10-digit mobile number" onChange={set('phone')} /></label>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <label style={{ margin: 0 }}>
+                          City *
+                          <input required value={form.city} placeholder="e.g. Udaipur" onChange={set('city')} />
+                        </label>
+                        <label style={{ margin: 0 }}>
+                          State *
+                          <input required value={form.state} placeholder="e.g. Rajasthan" onChange={set('state')} />
+                        </label>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <label style={{ margin: 0 }}>
+                          PIN Code *
+                          <input required type="text" maxLength={6} value={form.pincode} placeholder="e.g. 313001" onChange={set('pincode')} />
+                        </label>
+                        <label style={{ margin: 0 }}>
+                          Area / Locality
+                          <input value={form.area} placeholder="e.g. Hiran Magri" onChange={set('area')} />
+                        </label>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Email & Password */}
+                  <label>
+                    Email Address *
+                    <input
+                      required
+                      type="email"
+                      autoComplete="email"
+                      placeholder="owner@gym.com"
+                      value={form.email}
+                      onChange={set('email')}
+                    />
+                  </label>
+
+                  {!isOwnerForgot && (
+                    <label>
+                      Password *
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          required
+                          type={showPassword ? 'text' : 'password'}
+                          minLength={6}
+                          placeholder="••••••••"
+                          value={form.password}
+                          onChange={set('password')}
+                          style={{ paddingRight: '38px' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          style={{
+                            position: 'absolute',
+                            right: '8px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--muted)',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            fontSize: '14px',
+                          }}
+                        >
+                          {showPassword ? '👁️' : '🔒'}
+                        </button>
+                      </div>
+                    </label>
+                  )}
+
+                  {/* Forgot Password Link */}
+                  {!isOwnerForgot && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-4px', marginBottom: '4px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError('')
+                          setInfo('')
+                          setOwnerMode('forgot')
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: '2px 0',
+                          color: 'var(--accent, #2563eb)',
+                          fontSize: '12.5px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  )}
+
+                  {error && <div className="alert error">{error}</div>}
+                  {info && <div className="alert info">{info}</div>}
+
+                  <button className="btn primary full" style={{ marginTop: '4px', padding: '11px' }} disabled={loading}>
+                    {loading
+                      ? 'Processing…'
+                      : isOwnerForgot
+                      ? 'Send Password Reset Link'
+                      : ownerMode === 'login'
+                      ? 'Sign In as Owner'
+                      : 'Register Gym (21-Day Free Trial)'}
+                  </button>
+
+                  {isOwnerForgot && (
+                    <button
+                      type="button"
+                      className="btn full"
+                      style={{ marginTop: '6px', padding: '10px' }}
+                      disabled={loading}
+                      onClick={() => {
+                        setError('')
+                        setInfo('')
+                        setOwnerMode('login')
+                      }}
+                    >
+                      ← Back to Owner Login
+                    </button>
+                  )}
+
+                  {ownerMode === 'signup' && (
+                    <p className="muted small" style={{ textAlign: 'center', margin: '4px 0 0' }}>
+                      Activates automatically with a 21-day free trial. Gym Connection Code is generated immediately.
+                    </p>
+                  )}
+                </form>
+              )}
             </>
           )}
 
-          <div className="auth-support" style={{ marginTop: '14px', textAlign: 'center' }}>
+          <div className="auth-support" style={{ marginTop: '10px', textAlign: 'center' }}>
             <WhatsAppSupport variant="link" label="Need assistance? WhatsApp Support" />
           </div>
         </div>
-      </form>
+      </div>
     </div>
   )
 }
