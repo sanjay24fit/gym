@@ -102,11 +102,16 @@ export default function ExpiryWhatsAppModal({
             gap: '10px',
           }}
         >
-          <span style={{ fontSize: '20px' }}>📢</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#b45309' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m3 11 18-5v12L3 14v-3z" />
+              <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+            </svg>
+          </span>
           <div>
-            <b>Aapki membership khatam hone wali hai notification:</b>
+            <b>Membership Expiry Notification:</b>
             <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '2px' }}>
-              Ek-click me member ke registered WhatsApp number par expiry alert bhejein.
+              Send 1-click WhatsApp expiry reminder alerts to members.
             </div>
           </div>
         </div>
@@ -114,8 +119,13 @@ export default function ExpiryWhatsAppModal({
         {/* Member Candidates List */}
         {sorted.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '30px 15px', color: 'var(--muted)' }}>
-            <span style={{ fontSize: '28px', display: 'block', marginBottom: '8px' }}>🎉</span>
-            <b>Filhal koi member {filterMode === '2days' ? '2 din me' : 'agle 2 dino me'} expire nahi ho raha.</b>
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '50%', background: 'var(--hover)', color: 'var(--primary)', margin: '0 auto 8px' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </span>
+            <b>No memberships expiring in the next 2 days.</b>
           </div>
         ) : (
           <div style={{ maxHeight: '340px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '2px' }}>
@@ -169,8 +179,9 @@ export default function ExpiryWhatsAppModal({
                         </span>
                       </div>
 
-                      <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-                        📱 {m.phone || 'No Phone Registered'} · Plan: {m.plan || 'Standard'} · Exp: {formatDate(m.end_date)}
+                      <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                        <span>{m.phone || 'No Phone Registered'} · Plan: {m.plan || 'Standard'} · Exp: {formatDate(m.end_date)}</span>
                       </div>
                     </div>
                   </div>
@@ -193,7 +204,7 @@ export default function ExpiryWhatsAppModal({
                       title={hasPhone ? 'Send WhatsApp Expiry Reminder' : 'No phone number available'}
                     >
                       <WhatsAppIcon size={12} />
-                      <span>{sent ? '✓ Resend' : '💬 Send WhatsApp'}</span>
+                      <span>{sent ? 'Resend' : 'Send WhatsApp'}</span>
                     </button>
                   </div>
                 </div>

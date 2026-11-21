@@ -15,13 +15,8 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
   const [deviceInfo] = useState(() => getDeviceInfo())
 
   // App Language Support
-  let currentLanguage = 'en'
-  try {
-    const langContext = useLanguage()
-    if (langContext?.currentLanguage) currentLanguage = langContext.currentLanguage
-  } catch {
-    currentLanguage = 'en'
-  }
+  const langContext = useLanguage()
+  const currentLanguage = langContext?.currentLanguage || 'en'
   const isHindi = currentLanguage === 'hi'
   const isHinglish = currentLanguage === 'hinglish'
 
@@ -545,9 +540,12 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                   setInfo('')
                   setRole('owner')
                 }}
-                style={{ fontWeight: 700, fontSize: '13px', padding: '9px 4px', borderRadius: '9px' }}
+                style={{ fontWeight: 700, fontSize: '13px', padding: '9px 4px', borderRadius: '9px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
-                🏋️ Gym Owner
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
+                </svg>
+                <span>Gym Owner</span>
               </button>
               <button
                 type="button"
@@ -558,9 +556,13 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                   setRole('member')
                   setMemberOtpStep(false)
                 }}
-                style={{ fontWeight: 700, fontSize: '13px', padding: '9px 4px', borderRadius: '9px' }}
+                style={{ fontWeight: 700, fontSize: '13px', padding: '9px 4px', borderRadius: '9px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
-                👤 Gym Member
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Gym Member</span>
               </button>
             </div>
           )}
@@ -648,8 +650,8 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       }}
                     >
                       {isHindi
-                        ? '⚡ Quick Pass से तुरंत लॉगिन करें (OTP की आवश्यकता नहीं)'
-                        : '⚡ Instant Access via Quick Pass (No OTP needed)'}
+                        ? 'Quick Pass से तुरंत लॉगिन करें (OTP की आवश्यकता नहीं)'
+                        : 'Instant Access via Quick Pass (No OTP needed)'}
                     </button>
                   </div>
 
@@ -665,7 +667,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                         lineHeight: 1.45,
                       }}
                     >
-                      <b>💡 Fast2SMS Note:</b>
+                      <b>Fast2SMS Note:</b>
                       <p style={{ margin: '3px 0 0' }}>
                         {isHindi
                           ? 'SMS सेवा सूचना: बिना OTP के तुरंत लॉगिन करने के लिए ऊपर दिए गए Quick Pass बटन का उपयोग करें।'
@@ -740,7 +742,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       onClick={handleDirectQuickPass}
                       style={{ color: '#145C43', fontWeight: 700 }}
                     >
-                      ⚡ Skip & Connect
+                      Skip & Connect →
                     </button>
                   </div>
 
@@ -798,7 +800,24 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
               {otpStep ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '6px 0' }}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '30px', marginBottom: '4px' }}>✉️</div>
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '16px',
+                        background: 'rgba(20, 92, 67, 0.1)',
+                        color: 'var(--primary, #145C43)',
+                        margin: '0 auto 8px',
+                      }}
+                    >
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                      </svg>
+                    </div>
                     <h2 style={{ fontSize: '17px', fontWeight: 800, margin: '0 0 4px', color: 'var(--text)' }}>
                       Verify Owner Email Address
                     </h2>
@@ -971,10 +990,22 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                             color: 'var(--muted)',
                             cursor: 'pointer',
                             padding: '4px',
-                            fontSize: '14px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                           }}
                         >
-                          {showPassword ? '👁️' : '🔒'}
+                          {showPassword ? (
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                              <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                          ) : (
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          )}
                         </button>
                       </div>
                     </label>

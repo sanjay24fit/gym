@@ -54,10 +54,10 @@ export default function CityLeaderboardModal({
     reputation_score: 30,
   }
 
-  const trophy = isRanked && rankData?.my_rank === 1 ? '🥇' : isRanked && rankData?.my_rank === 2 ? '🥈' : isRanked && rankData?.my_rank === 3 ? '🥉' : '🏆'
+  const trophy = isRanked ? `#${rankData?.my_rank || 1}` : 'Rank'
 
   return (
-    <Modal title={`🏆 ${selectedCity} Gym Leaderboard & Rankings`} onClose={onClose}>
+    <Modal title={`${selectedCity} Gym Leaderboard & Rankings`} onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '640px' }}>
         {/* City Filter Pills */}
         <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
@@ -69,7 +69,7 @@ export default function CityLeaderboardModal({
               onClick={() => setSelectedCity(c)}
               style={{ padding: '4px 12px', fontSize: '11.5px', whiteSpace: 'nowrap' }}
             >
-              📍 {c}
+              {c}
             </button>
           ))}
         </div>
@@ -100,8 +100,9 @@ export default function CityLeaderboardModal({
               <h2 style={{ margin: '2px 0 4px', fontSize: '24px', fontWeight: 800, color: '#FFFFFF' }}>
                 {gym?.gym_name || 'Your Gym'}
               </h2>
-              <span style={{ fontSize: '12.5px', opacity: 0.8 }}>
-                📍 {gym?.area || 'City Center'}, {selectedCity} · ⭐ {avgRating} ({totalReviews} Member Reviews)
+              <span style={{ fontSize: '12.5px', opacity: 0.85, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>{gym?.area || 'City Center'}, {selectedCity} · ★ {avgRating} ({totalReviews} Member Reviews)</span>
               </span>
             </div>
 
@@ -157,7 +158,7 @@ export default function CityLeaderboardModal({
             onClick={() => setActiveTab('leaderboard')}
             style={{ fontSize: '12.5px', padding: '7px 16px', fontWeight: 700 }}
           >
-            🏆 City Leaderboard (200+ Gyms)
+            City Leaderboard (200+ Gyms)
           </button>
           <button
             type="button"
@@ -165,7 +166,7 @@ export default function CityLeaderboardModal({
             onClick={() => setActiveTab('reviews')}
             style={{ fontSize: '12.5px', padding: '7px 16px', fontWeight: 700 }}
           >
-            ⭐ Verified Member Reviews ({totalReviews})
+            Verified Member Reviews ({totalReviews})
           </button>
         </div>
 
@@ -174,7 +175,7 @@ export default function CityLeaderboardModal({
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800 }}>
-                🏆 Top Gyms in {selectedCity}
+                Top Gyms in {selectedCity}
               </h4>
               <span className="small muted">
                 Verified Platform Benchmark
@@ -189,7 +190,7 @@ export default function CityLeaderboardModal({
               <div style={{ maxHeight: '260px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {(rankData?.leaderboard || []).map((item) => {
                   const isMe = item.is_my_gym
-                  const itemTrophy = item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`
+                  const itemTrophy = `#${item.rank}`
 
                   return (
                     <div
@@ -315,10 +316,10 @@ export default function CityLeaderboardModal({
                     )}
 
                     <div style={{ display: 'flex', gap: '10px', fontSize: '11px', color: 'var(--muted)', marginTop: '2px', flexWrap: 'wrap' }}>
-                      <span>🏋️ Machines: {rev.aspect_equipment || 5}★</span>
-                      <span>🧼 Hygiene: {rev.aspect_cleanliness || 5}★</span>
-                      <span>👟 Trainers: {rev.aspect_trainer || 5}★</span>
-                      <span>🔥 Vibe: {rev.aspect_vibe || 5}★</span>
+                      <span>Machines: {rev.aspect_equipment || 5}★</span>
+                      <span>Hygiene: {rev.aspect_cleanliness || 5}★</span>
+                      <span>Trainers: {rev.aspect_trainer || 5}★</span>
+                      <span>Vibe: {rev.aspect_vibe || 5}★</span>
                     </div>
                   </div>
                 ))
@@ -330,7 +331,7 @@ export default function CityLeaderboardModal({
         {/* Tips to Improve Rank */}
         <div style={{ background: 'var(--card-subtle)', borderRadius: '12px', padding: '12px 14px', border: '1px solid var(--border)' }}>
           <b style={{ fontSize: '12.5px', display: 'block', marginBottom: '6px' }}>
-            💡 How to Improve Your Gym Rank with Genuine Reviews:
+            How to Improve Your Gym Rank with Genuine Reviews:
           </b>
           <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: 'var(--muted)', lineHeight: 1.5 }}>
             <li><b>Member Reviews (35 Pts):</b> Encourage members to leave 5-star ratings and reviews to boost your gym's score.</li>
@@ -348,7 +349,7 @@ export default function CityLeaderboardModal({
                 onOpenSettings()
               }}
             >
-              ⚙️ Change City / Location
+              Change City / Location
             </button>
           )}
 

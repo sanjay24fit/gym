@@ -25,13 +25,13 @@ export function buildExpiryReminderText({
   const safeMemberName = memberName ? `${memberName} ji` : 'Member ji'
 
   return (
-    `Namaste ${safeMemberName}! 🏋️‍♂️\n\n` +
+    `Namaste ${safeMemberName}!\n\n` +
     `Aapki *${safeGymName}* ki gym membership ${daysText} (${dateStr}) ko *khatam hone wali hai*.\n\n` +
     `Apni regular workout aur fitness journey ko uninterrupted rakhne ke liye kripya samay par apni membership renew karwayein.\n\n` +
     `Kripya gym counter par visit karein ya online renew karein.\n\n` +
     `Dhanyawad,\n` +
     `*${safeGymName}*` +
-    (ownerPhone ? `\n📞 Helpline: ${ownerPhone}` : '')
+    (ownerPhone ? `\nHelpline: ${ownerPhone}` : '')
   )
 }
 

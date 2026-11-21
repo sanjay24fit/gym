@@ -63,7 +63,7 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
   const handleShare = () => {
     if (!connectCode) return
     const gymTitle = gym?.gym_name || 'Our Gym'
-    const shareText = `🏋️ Connect to *${gymTitle}* on Gym Manager!\n\nUse our 6-digit Gym Connect Code: *${connectCode}*\n\nEnter this 6-digit code in the member signup screen to view your membership pass, attendance, and workout plans.`
+    const shareText = `Connect to *${gymTitle}* on Gym Manager!\n\nUse our 6-digit Gym Connect Code: *${connectCode}*\n\nEnter this 6-digit code in the member signup screen to view your membership pass, attendance, and workout plans.`
 
     if (navigator.share) {
       navigator
@@ -142,10 +142,9 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '15px',
               }}
             >
-              🔑
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 2-2 2m-1.5 1.5L14 9l-1.5-1.5L11 9l-1.5-1.5L8 9l-1.5-1.5L4 10l-2 2a4 4 0 1 0 5.66 5.66l9.84-9.84a2 2 0 0 0 0-2.82L17.5 5 19 3.5 21 2z"/></svg>
             </div>
             <h2
               style={{
@@ -377,10 +376,9 @@ export default function GymConnectCode({ gym, onGymUpdated }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '18px',
                 }}
               >
-                ⚠️
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </div>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>
                 Generate New 6-Digit Code?

@@ -432,8 +432,12 @@ export default function NotebookScanner({ existingMembers = [], onImportSuccess,
               </div>
             )}
 
-            <div className="alert info small" style={{ lineHeight: 1.5 }}>
-              🔒 <b>100% Local & Private:</b> OCR runs entirely on your device browser. No photos or member details are ever uploaded to third-party AI or cloud services.
+            <div className="alert info small" style={{ lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span><b>100% Local & Private:</b> OCR runs entirely on your device browser. No photos or member details are ever uploaded to third-party AI or cloud services.</span>
             </div>
 
             <div className="modal-actions" style={{ marginTop: '16px' }}>
@@ -694,8 +698,13 @@ export default function NotebookScanner({ existingMembers = [], onImportSuccess,
 
                         {/* Duplicate Alert */}
                         {duplicate && (
-                          <div className="alert warning small" style={{ marginBottom: '10px' }}>
-                            ⚠️ <b>Existing member match:</b> "{duplicate.name}" ({duplicate.phone}) already exists in your gym (Plan: {duplicate.plan || 'Custom'}, valid till {formatDate(duplicate.end_date)}).
+                          <div className="alert warning small" style={{ marginBottom: '10px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                              <line x1="12" y1="9" x2="12" y2="13" />
+                              <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            <span><b>Existing member match:</b> "{duplicate.name}" ({duplicate.phone}) already exists in your gym (Plan: {duplicate.plan || 'Custom'}, valid till {formatDate(duplicate.end_date)}).</span>
                           </div>
                         )}
 

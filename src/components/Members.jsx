@@ -299,9 +299,13 @@ export default function Members({
                           className="btn sm"
                           title="View & Share Member Pass"
                           onClick={() => onPreviewMemberPass(m)}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                         >
-                          💳 Pass
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                            <line x1="1" y1="10" x2="23" y2="10" />
+                          </svg>
+                          Pass
                         </button>
                       )}
                       {due > 0 && (

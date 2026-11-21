@@ -135,9 +135,13 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
               {loadingPay ? (
                 'Connecting to Razorpay…'
               ) : (
-                <>
-                  <span>💳 Pay ₹499 via Razorpay / UPI</span>
-                </>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                  </svg>
+                  <span>Pay ₹499 via Razorpay / UPI</span>
+                </span>
               )}
             </button>
 
@@ -155,8 +159,14 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
           </div>
         )}
 
-        <button className="btn full" style={{ marginBottom: '8px' }} onClick={onRefresh}>
-          🔄 Refresh Account Status
+        <button className="btn full" style={{ marginBottom: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }} onClick={onRefresh}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+            <path d="M16 21h5v-5" />
+          </svg>
+          <span>Refresh Account Status</span>
         </button>
         <WhatsAppSupport label="Need Help? Contact Admin via WhatsApp" className="full" />
         <button className="btn secondary full" style={{ marginTop: '8px' }} onClick={() => setShowLogoutModal(true)}>

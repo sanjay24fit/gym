@@ -9,7 +9,7 @@ const MODAL_CONTENT = {
     subtitle: 'Install on your device in 1 tap for fast, full-screen offline access.',
     close: 'Close',
     closeAria: 'Close modal',
-    followBelow: '👇 Follow Steps Below',
+    followBelow: 'Follow Steps Below',
     tabs: {
       ios: 'iPhone / iOS',
       android: 'Android',
@@ -17,12 +17,12 @@ const MODAL_CONTENT = {
     },
     action: {
       installNow: 'Install Now',
-      installed: '✓ App Successfully Installed!',
+      installed: 'App Successfully Installed!',
       installing: 'Installing...',
       unavailable: 'Install Unavailable',
     },
     ios: {
-      buttonSub: 'Follow the 2 simple steps below using Safari\'s Share (📤) button.',
+      buttonSub: 'Follow the 2 simple steps below using Safari\'s Share button.',
       inAppWarningTitle: 'Open in Safari:',
       inAppWarningText: 'Tap the Share icon or menu and choose "Open in Safari" to install.',
       stepsTitle: 'How to Install via Safari:',
@@ -64,7 +64,7 @@ const MODAL_CONTENT = {
     subtitle: 'Apne phone par 1-tap mein install karein. Fast, full-screen aur offline-ready.',
     close: 'Close',
     closeAria: 'Modal band karein',
-    followBelow: '👇 Niche Follow Karein',
+    followBelow: 'Niche Follow Karein',
     tabs: {
       ios: 'iPhone / iOS',
       android: 'Android',
@@ -72,12 +72,12 @@ const MODAL_CONTENT = {
     },
     action: {
       installNow: 'Install Now',
-      installed: '✓ App Successfully Installed!',
+      installed: 'App Successfully Installed!',
       installing: 'Installing...',
       unavailable: 'Install Unavailable',
     },
     ios: {
-      buttonSub: 'Niche Safari Share (📤) button se 2-step mein install karein.',
+      buttonSub: 'Niche Safari Share button se 2-step mein install karein.',
       inAppWarningTitle: 'Safari mein kholein:',
       inAppWarningText: 'Niche Share icon ya 3 dots daba kar "Open in Safari" chunein.',
       stepsTitle: 'Safari Se Install Karne Ka Tarika:',
@@ -119,20 +119,20 @@ const MODAL_CONTENT = {
     subtitle: 'तेज़, फुल-स्क्रीन और ऑफलाइन इस्तेमाल के लिए 1-टैप में इंस्टॉल करें।',
     close: 'बंद करें',
     closeAria: 'मोडल बंद करें',
-    followBelow: '👇 नीचे दिए गए चरण देखें',
+    followBelow: 'नीचे दिए गए चरण देखें',
     tabs: {
       ios: 'iPhone / iOS',
       android: 'Android',
       desktop: 'PC / Mac',
     },
     action: {
-      installNow: 'अभी इंस्टॉल करें',
-      installed: '✓ ऐप सफलतापूर्वक इंस्टॉल हो गया!',
+      installNow: 'Install Now',
+      installed: 'ऐप सफलतापूर्वक इंस्टॉल हो गया!',
       installing: 'इंस्टॉल हो रहा है...',
       unavailable: 'इंस्टॉल अनुपलब्ध',
     },
     ios: {
-      buttonSub: 'सफारी के शेयर (📤) बटन से नीचे 2 आसान चरणों में इंस्टॉल करें।',
+      buttonSub: 'सफारी के शेयर बटन से नीचे 2 आसान चरणों में इंस्टॉल करें।',
       inAppWarningTitle: 'Safari में खोलें:',
       inAppWarningText: 'शेयर या 3 डॉट्स मेनू दबाकर "Open in Safari" चुनें ताकि ऐप इंस्टॉल हो सके।',
       stepsTitle: 'Safari से इंस्टॉल करने का तरीका:',
@@ -179,15 +179,8 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
   const [iosGuidanceActive, setIosGuidanceActive] = useState(false)
 
   // Determine current active language
-  let activeLang = 'en'
-  try {
-    const langContext = useLanguage()
-    if (langContext?.currentLanguage) {
-      activeLang = langContext.currentLanguage
-    }
-  } catch {
-    activeLang = 'en'
-  }
+  const langContext = useLanguage()
+  const activeLang = langContext?.currentLanguage || 'en'
 
   // Fallback to English if chosen language is not 'hi' or 'hinglish' (Google Translate handles English)
   const content = MODAL_CONTENT[activeLang] || MODAL_CONTENT.en
@@ -380,7 +373,6 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
           width: '100%',
           maxWidth: '480px',
           minHeight: '580px',
-          maxHeight: 'calc(100vh - 32px)',
           maxHeight: 'calc(100dvh - 32px)',
           background: 'var(--card, #FFFFFF)',
           color: 'var(--text, #142019)',

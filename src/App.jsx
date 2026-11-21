@@ -351,8 +351,8 @@ export default function App() {
     )
   }
 
-  if (session === undefined && !account) {
-    return <SplashScreen message="Starting Gym Manager…" />
+  if (session === undefined) {
+    return <SplashScreen message={account ? "Opening your gym dashboard…" : "Starting Gym Manager…"} />
   }
 
   if (session && !account) {
@@ -421,7 +421,7 @@ export default function App() {
   }
 
   if (!account.isAdmin && !canUseGym) {
-    return <AccessBlocked gym={gym} userEmail={session.user.email} onLogout={logout} onRefresh={refresh} />
+    return <AccessBlocked gym={gym} userEmail={session?.user?.email || gym?.email || ''} onLogout={logout} onRefresh={refresh} />
   }
 
   const tabs = [
@@ -523,7 +523,7 @@ export default function App() {
             <span className="brand-gym-title">
               {account.isAdmin && tab === 'admin' ? 'Gym Manager – Admin' : gym?.gym_name || 'Gym Manager'}
             </span>
-            <span className="muted small brand-email">{session.user.email}</span>
+            <span className="muted small brand-email">{session?.user?.email || gym?.email || ''}</span>
           </div>
         </div>
 
@@ -607,7 +607,7 @@ export default function App() {
         {tab === 'gym' && canUseGym && (
           <GymProfile
             gym={gym}
-            userEmail={session.user.email}
+            userEmail={session?.user?.email || gym?.email || ''}
             onLogout={logout}
             isInstalled={isInstalled}
             onDownloadApp={handleDownloadApp}

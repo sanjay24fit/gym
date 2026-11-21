@@ -74,7 +74,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
 
   // Handle Share / Copy Gym details
   const handleShareGym = (gymToShare) => {
-    const text = `${gymToShare.gym_name} (Rank #${gymToShare.rank || 1} in ${gymToShare.city || selectedCity})\n📍 Location: ${gymToShare.area || 'City Center'}, ${gymToShare.city || selectedCity}\n⭐ Rating: ${gymToShare.has_reviews ? gymToShare.rating.toFixed(1) + '★' : 'New Gym'}\nVerified on Gym Manager`
+    const text = `${gymToShare.gym_name} (Rank #${gymToShare.rank || 1} in ${gymToShare.city || selectedCity})\nLocation: ${gymToShare.area || 'City Center'}, ${gymToShare.city || selectedCity}\nRating: ${gymToShare.has_reviews ? gymToShare.rating.toFixed(1) + '★' : 'New Gym'}\nVerified on Gym Manager`
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(text)
       setCopiedShare(true)
@@ -363,13 +363,18 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       <span
                         style={{
                           position: 'absolute',
-                          top: '-15px',
+                          top: '-16px',
                           left: '50%',
                           transform: 'translateX(-50%)',
-                          fontSize: '18px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fbbf24',
                         }}
                       >
-                        👑
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
+                          <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 14h14v2H5v-2z" />
+                        </svg>
                       </span>
                       <img
                         src={getGymCoverImage(firstPlace.gym_id || firstPlace.gym_name)}
@@ -788,7 +793,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            📍 {g.area ? `${g.area}, ` : ''}{g.city} {g.pincode ? `(${g.pincode})` : ''}
+                            {g.area ? `${g.area}, ` : ''}{g.city} {g.pincode ? `(${g.pincode})` : ''}
                           </span>
                           {g.owner_name && (
                             <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.85 }}>
@@ -878,7 +883,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   {myGym.gym_name}
                 </h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  📍 {myGym.area || 'City Center'}, {selectedCity}
+                  {myGym.area || 'City Center'}, {selectedCity}
                 </span>
               </div>
 
@@ -896,7 +901,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   gap: '4px',
                 }}
               >
-                🏆 #{myGym.rank || 1} in {selectedCity}
+                #{myGym.rank || 1} in {selectedCity}
               </span>
             </div>
 
@@ -963,7 +968,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   lineHeight: 1.45,
                 }}
               >
-                <b>📌 Claim the #1 Spot:</b>
+                <b>Claim the #1 Spot:</b>
                 <p style={{ margin: '4px 0 0', opacity: 0.9 }}>
                   Gym Manager calculates rankings based on <b>verified member reviews</b>. Ask your active members to review your gym on the member app to rise to the top!
                 </p>
@@ -980,7 +985,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   lineHeight: 1.45,
                 }}
               >
-                <b>✓ Active City Ranking</b>
+                <b>Active City Ranking</b>
                 <p style={{ margin: '4px 0 0', opacity: 0.9 }}>
                   Aapka gym {selectedCity} leaderboard me <b>#{myGym.rank} position</b> par hai. High ratings rank ko maintain karti hain.
                 </p>
@@ -1021,7 +1026,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             }}
           >
             <h4 style={{ margin: '0 0 10px', fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>
-              🏆 How City Rankings Work
+              How City Rankings Work
             </h4>
             <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12.5px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: 1.45 }}>
               <li>
@@ -1098,7 +1103,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
                   }}
                 >
-                  🏆 Rank #{selectedProfileGym.rank || 1} in {selectedProfileGym.city || selectedCity}
+                  Rank #{selectedProfileGym.rank || 1} in {selectedProfileGym.city || selectedCity}
                 </span>
 
                 {selectedProfileGym.is_my_gym && (
@@ -1397,9 +1402,9 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                         </p>
                       )}
                       <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '10.5px', color: 'var(--text-secondary)' }}>
-                        <span>🏋️ Equip: {r.aspect_equipment || 5}★</span>
-                        <span>🧼 Clean: {r.aspect_cleanliness || 5}★</span>
-                        <span>🧑‍🏫 Trainer: {r.aspect_trainer || 5}★</span>
+                        <span>Equip: {r.aspect_equipment || 5}★</span>
+                        <span>Clean: {r.aspect_cleanliness || 5}★</span>
+                        <span>Trainer: {r.aspect_trainer || 5}★</span>
                       </div>
                     </div>
                   ))}

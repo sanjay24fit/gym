@@ -50,25 +50,28 @@ export default function MemberWorkoutTab({ workouts = [], diet = null, member: _
           type="button"
           className={subTab === 'workout' ? 'active' : ''}
           onClick={() => setSubTab('workout')}
-          style={{ fontSize: '13px', padding: '8px', borderRadius: '10px' }}
+          style={{ fontSize: '13px', padding: '8px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
         >
-          🏋️ Workout
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12"/></svg>
+          <span>Workout</span>
         </button>
         <button
           type="button"
           className={subTab === 'diet' ? 'active' : ''}
           onClick={() => setSubTab('diet')}
-          style={{ fontSize: '13px', padding: '8px', borderRadius: '10px' }}
+          style={{ fontSize: '13px', padding: '8px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
         >
-          🥗 Diet Plan
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          <span>Diet Plan</span>
         </button>
         <button
           type="button"
           className={subTab === 'tools' ? 'active' : ''}
           onClick={() => setSubTab('tools')}
-          style={{ fontSize: '13px', padding: '8px', borderRadius: '10px' }}
+          style={{ fontSize: '13px', padding: '8px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
         >
-          ⚡ Fitness Tools
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+          <span>Fitness Tools</span>
         </button>
       </div>
 
@@ -191,7 +194,9 @@ export default function MemberWorkoutTab({ workouts = [], diet = null, member: _
               </div>
             ) : selectedDay === 'Sunday' ? (
               <div className="empty" style={{ padding: '24px 16px', textAlign: 'center' }}>
-                <span style={{ fontSize: '32px' }}>🛌</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '50%', background: 'var(--hover)', color: 'var(--primary)', margin: '0 auto 8px' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </span>
                 <p style={{ margin: '8px 0 2px', fontWeight: 700 }}>Rest & Muscle Recovery</p>
                 <span className="muted small">Hydrate well, eat high protein meals, and allow muscles to recover.</span>
               </div>
@@ -267,7 +272,8 @@ export default function MemberWorkoutTab({ workouts = [], diet = null, member: _
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ padding: '12px', background: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid var(--border)' }}>
                 <b style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>🌅</span> Breakfast (08:00 AM)
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                  <span>Breakfast (08:00 AM)</span>
                 </b>
                 <span className="small block" style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                   {diet?.meals?.breakfast || 'Oats with milk, 3-4 boiled eggs or paneer, and 1 banana.'}
@@ -276,7 +282,8 @@ export default function MemberWorkoutTab({ workouts = [], diet = null, member: _
 
               <div style={{ padding: '12px', background: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid var(--border)' }}>
                 <b style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>☀️</span> Lunch (01:00 PM)
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-14.93 1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2m-14.93 7.07 1.41-1.41m11.32-11.32 1.41-1.41"/></svg>
+                  <span>Lunch (01:00 PM)</span>
                 </b>
                 <span className="small block" style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                   {diet?.meals?.lunch || '2 Roti, brown rice, dal, chicken breast or paneer, green salad and curd.'}
@@ -285,7 +292,8 @@ export default function MemberWorkoutTab({ workouts = [], diet = null, member: _
 
               <div style={{ padding: '12px', background: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid var(--border)' }}>
                 <b style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>☕</span> Pre-Workout / Snack (05:00 PM)
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                  <span>Pre-Workout / Snack (05:00 PM)</span>
                 </b>
                 <span className="small block" style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                   {diet?.meals?.snacks || 'Black coffee, peanut butter toast or 1 apple with almonds.'}
@@ -294,7 +302,8 @@ export default function MemberWorkoutTab({ workouts = [], diet = null, member: _
 
               <div style={{ padding: '12px', background: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid var(--border)' }}>
                 <b style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>🌙</span> Dinner (08:30 PM)
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                  <span>Dinner (08:30 PM)</span>
                 </b>
                 <span className="small block" style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
                   {diet?.meals?.dinner || 'Light meal: 2 Roti, mixed vegetables, grilled chicken/paneer, soup.'}
@@ -351,7 +360,7 @@ export default function MemberWorkoutTab({ workouts = [], diet = null, member: _
               <div style={{ padding: '12px', borderRadius: '10px', background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                 <b>Category: {bmiCategory?.label}</b>
                 <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  💡 {bmiCategory?.tip}
+                  {bmiCategory?.tip}
                 </p>
               </div>
             )}
@@ -383,19 +392,22 @@ export default function MemberWorkoutTab({ workouts = [], diet = null, member: _
                       borderRadius: '10px',
                       border: filled ? '2px solid #0284c7' : '1px dashed var(--border)',
                       background: filled ? 'rgba(2, 132, 199, 0.15)' : 'var(--bg-subtle)',
-                      fontSize: '18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       cursor: 'pointer',
-                      textAlign: 'center',
                     }}
                   >
-                    {filled ? '💧' : '🥛'}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? '#0284c7' : 'none'} stroke={filled ? '#0284c7' : 'var(--muted)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                    </svg>
                   </button>
                 )
               })}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--muted)' }}>
-              <span>{waterGlasses >= 8 ? '🎉 Hydration Goal Complete!' : 'Tap a glass to mark completed'}</span>
+              <span>{waterGlasses >= 8 ? 'Hydration Goal Complete!' : 'Tap a glass to mark completed'}</span>
               {waterGlasses > 0 && (
                 <button
                   type="button"

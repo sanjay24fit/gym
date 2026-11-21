@@ -108,7 +108,16 @@ export default function MemberReviewModal({
             gap: '10px',
           }}
         >
-          <span style={{ fontSize: '20px' }}>🏆</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#b45309' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+              <path d="M4 22h16" />
+              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+            </svg>
+          </span>
           <div>
             <b>Genuine Member Review Impact:</b>
             <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '2px' }}>
@@ -156,7 +165,12 @@ export default function MemberReviewModal({
 
           {/* Aspect 1: Equipment */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span>🏋️ Machinery & Free Weights</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}>
+                <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+              </svg>
+              Machinery & Free Weights
+            </span>
             <div style={{ display: 'flex', gap: '4px' }}>
               {[1, 2, 3, 4, 5].map((s) => (
                 <span
@@ -172,7 +186,12 @@ export default function MemberReviewModal({
 
           {/* Aspect 2: Cleanliness */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span>🧼 Hygiene & Cleanliness</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}>
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+              </svg>
+              Hygiene & Cleanliness
+            </span>
             <div style={{ display: 'flex', gap: '4px' }}>
               {[1, 2, 3, 4, 5].map((s) => (
                 <span
@@ -188,7 +207,14 @@ export default function MemberReviewModal({
 
           {/* Aspect 3: Trainer */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span>👟 Trainer & Coach Guidance</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}>
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <polyline points="16 11 18 13 22 9" />
+              </svg>
+              Trainer & Coach Guidance
+            </span>
             <div style={{ display: 'flex', gap: '4px' }}>
               {[1, 2, 3, 4, 5].map((s) => (
                 <span
@@ -204,7 +230,14 @@ export default function MemberReviewModal({
 
           {/* Aspect 4: Vibe */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
-            <span>🔥 Workout Music & Vibe</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}>
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+              </svg>
+              Workout Music & Vibe
+            </span>
             <div style={{ display: 'flex', gap: '4px' }}>
               {[1, 2, 3, 4, 5].map((s) => (
                 <span
@@ -273,7 +306,7 @@ export default function MemberReviewModal({
           </button>
 
           <button type="submit" className="btn primary" disabled={submitting}>
-            <span>{submitting ? 'Submitting Review…' : 'Submit Genuine Review ★'}</span>
+            <span>{submitting ? 'Submitting Review…' : 'Submit Genuine Review'}</span>
           </button>
         </div>
       </form>

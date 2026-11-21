@@ -46,7 +46,7 @@ export default function MemberHomeTab({
             {greeting},
           </span>
           <h1 style={{ margin: '2px 0 0', fontSize: '24px', fontWeight: 800 }}>
-            {firstName}! 👋
+            {firstName}!
           </h1>
           <span className="muted small block" style={{ marginTop: '2px' }}>
             Welcome back to <b>{gym?.gym_name || 'Fitness Club'}</b>
@@ -69,10 +69,13 @@ export default function MemberHomeTab({
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            fontSize: '18px',
+            color: 'var(--text)',
           }}
         >
-          <span>🔔</span>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
           {notifications.some((n) => !n.is_read) && (
             <span
               style={{
@@ -107,13 +110,19 @@ export default function MemberHomeTab({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>⚠️</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#b45309' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </span>
             <div>
               <b style={{ display: 'block', fontSize: '14px' }}>
-                Aapki gym membership {daysRemaining === 2 ? '2 din me' : daysRemaining === 1 ? 'kal' : 'aaj'} khatam hone wali hai!
+                Your gym membership is expiring {daysRemaining === 2 ? 'in 2 days' : daysRemaining === 1 ? 'tomorrow' : 'today'}!
               </b>
               <span style={{ fontSize: '12px', opacity: 0.9 }}>
-                Apni regular fitness training jari rakhne ke liye kripya samay par renew karwayein ({formatDate(member.end_date)}).
+                Please renew on time to continue your fitness training ({formatDate(member.end_date)}).
               </span>
             </div>
           </div>
@@ -122,9 +131,9 @@ export default function MemberHomeTab({
             type="button"
             className="btn sm btn-whatsapp"
             onClick={() => onWhatsAppContact()}
-            style={{ whiteSpace: 'nowrap' }}
+            style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            <span>💬 Renew on WhatsApp</span>
+            <span>Renew on WhatsApp</span>
           </button>
         </div>
       )}
@@ -198,8 +207,9 @@ export default function MemberHomeTab({
             <div style={{ fontSize: '24px', fontWeight: 800, color: '#FFFFFF', margin: '2px 0 4px' }}>
               {member.name}
             </div>
-            <div style={{ fontSize: '13px', opacity: 0.75, fontFamily: 'monospace' }}>
-              📱 {member.phone || 'No phone'}
+            <div style={{ fontSize: '13px', opacity: 0.85, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              <span>{member.phone || 'No phone'}</span>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
@@ -211,7 +221,7 @@ export default function MemberHomeTab({
               </span>
               {member.personal_trainer && (
                 <span style={{ background: 'rgba(244, 114, 182, 0.25)', border: '1px solid rgba(244, 114, 182, 0.4)', padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>
-                  ⚡ PT: {member.trainer_name || 'Coach'}
+                  PT: {member.trainer_name || 'Coach'}
                 </span>
               )}
             </div>
@@ -358,9 +368,17 @@ export default function MemberHomeTab({
             fontSize: '12px',
             borderRadius: '10px',
             whiteSpace: 'nowrap',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
           }}
         >
-          <span>{memberReview ? '✏️ Edit Review' : '⭐ Give Review'}</span>
+          {memberReview ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          )}
+          <span>{memberReview ? 'Edit Review' : 'Give Review'}</span>
         </button>
       </div>
 
@@ -376,7 +394,12 @@ export default function MemberHomeTab({
             onClick={() => onNavigateTab('attendance')}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 6px', gap: '6px' }}
           >
-            <span style={{ fontSize: '20px' }}>📅</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
             <span style={{ fontSize: '11px', fontWeight: 600 }}>Attendance</span>
           </button>
 
@@ -386,7 +409,9 @@ export default function MemberHomeTab({
             onClick={() => onNavigateTab('workout')}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 6px', gap: '6px' }}
           >
-            <span style={{ fontSize: '20px' }}>🏋️</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+            </svg>
             <span style={{ fontSize: '11px', fontWeight: 600 }}>Workouts</span>
           </button>
 
@@ -396,7 +421,10 @@ export default function MemberHomeTab({
             onClick={() => onNavigateTab('payments')}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 6px', gap: '6px' }}
           >
-            <span style={{ fontSize: '20px' }}>💰</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <line x1="2" y1="10" x2="22" y2="10" />
+            </svg>
             <span style={{ fontSize: '11px', fontWeight: 600 }}>Payments</span>
           </button>
 
@@ -406,7 +434,9 @@ export default function MemberHomeTab({
             onClick={() => onWhatsAppContact()}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 6px', gap: '6px' }}
           >
-            <span style={{ fontSize: '20px' }}>💬</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+            </svg>
             <span style={{ fontSize: '11px', fontWeight: 600 }}>Contact Gym</span>
           </button>
         </div>
@@ -448,7 +478,13 @@ export default function MemberHomeTab({
       {announcements && announcements.length > 0 && (
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>📢 Gym Announcements</h3>
+            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m3 11 18-5v12L3 14v-3z" />
+                <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+              </svg>
+              <span>Gym Announcements</span>
+            </h3>
             <span className="badge blue" style={{ fontSize: '10px' }}>Latest</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

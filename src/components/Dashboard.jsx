@@ -165,15 +165,24 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
               </div>
             )}
             {expiringToday.length > 0 ? (
-              <span style={{ color: 'var(--warning)', fontWeight: 600 }}>
-                ⚠️ {expiringToday.length} membership{expiringToday.length === 1 ? '' : 's'} expiring today!
+              <span style={{ color: 'var(--warning)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <span>{expiringToday.length} membership{expiringToday.length === 1 ? '' : 's'} expiring today!</span>
               </span>
             ) : (
               <span style={{ color: 'var(--muted)' }}>No memberships expiring today.</span>
             )}
             {due.length > 0 && (
-              <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
-                💳 {due.length} members with pending dues ({formatMoney(totalDue)}).
+              <span style={{ color: 'var(--danger)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+                <span>{due.length} members with pending dues ({formatMoney(totalDue)}).</span>
               </span>
             )}
           </div>
@@ -322,7 +331,7 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
         )}
       </div>
 
-      {/* 🏆 City Gym Ranking Widget -> Direct Link to Rankings Tab */}
+      {/* City Gym Ranking Widget -> Direct Link to Rankings Tab */}
       <div
         className="card"
         style={{
@@ -357,7 +366,14 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
               boxShadow: '0 4px 12px rgba(214, 180, 106, 0.35)',
             }}
           >
-            🏆
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D6B46A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+              <path d="M4 22h16" />
+              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+            </svg>
           </div>
 
           <div>
@@ -382,8 +398,9 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
               </span>
             </div>
 
-            <span style={{ fontSize: '12.5px', opacity: 0.9, display: 'block', marginTop: '3px', color: '#E2E8F0' }}>
-              📍 {gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} {gym?.pincode ? `· PIN ${gym.pincode}` : ''} · Live Leaderboard Decided by Member Reviews
+            <span style={{ fontSize: '12.5px', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '3px', color: '#E2E8F0' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>{gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} {gym?.pincode ? `· PIN ${gym.pincode}` : ''} · Live Leaderboard Decided by Member Reviews</span>
             </span>
           </div>
         </div>
@@ -620,7 +637,7 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
         gym={gym || { gym_name: gymName }}
       />
 
-      {/* 🏆 City Gym Rankings & Leaderboard Modal */}
+      {/* City Gym Rankings & Leaderboard Modal */}
       <CityLeaderboardModal
         isOpen={showLeaderboardModal}
         onClose={() => setShowLeaderboardModal(false)}
