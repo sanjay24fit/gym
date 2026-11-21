@@ -1719,6 +1719,25 @@ select option {
   border-bottom: 1px solid var(--border);
 }
 
+/* Custom Thin Scrollbar for Install Modal */
+.gm-modal-scroll-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent, #35B982) transparent;
+}
+.gm-modal-scroll-body::-webkit-scrollbar {
+  width: 5px;
+}
+.gm-modal-scroll-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gm-modal-scroll-body::-webkit-scrollbar-thumb {
+  background: rgba(53, 185, 130, 0.35);
+  border-radius: 99px;
+}
+.gm-modal-scroll-body::-webkit-scrollbar-thumb:hover {
+  background: var(--accent, #35B982);
+}
+
 .modal-head h3 {
   margin: 0;
   font-family: 'Outfit', sans-serif;
