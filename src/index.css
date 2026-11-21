@@ -2735,6 +2735,26 @@ select option {
   to { opacity: 1; }
 }
 
+@keyframes splashPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.94;
+  }
+}
+
+@keyframes splashBar {
+  0% {
+    left: -45%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
 /* Clean Google Translate Integration */
 .goog-te-banner-frame.skiptranslate,
 .goog-te-banner-frame,

@@ -21,10 +21,21 @@ import GymMemberRequests from './components/GymMemberRequests'
 import MemberPendingApproval from './components/MemberPendingApproval'
 import MemberRejected from './components/MemberRejected'
 import CityRankings from './components/CityRankings'
+import SplashScreen from './components/SplashScreen'
+
+function getInitialCachedAccount() {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('gym_cached_account')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
 
 export default function App() {
   const [session, setSession] = useState(undefined)
-  const [loadedAccount, setAccount] = useState(null) // { userId, gym, isAdmin }
+  const [loadedAccount, setAccount] = useState(() => getInitialCachedAccount()) // { userId, gym, isAdmin }
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(() => {
     if (typeof window === 'undefined') return false
     return (
@@ -107,9 +118,23 @@ export default function App() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      if (!data.session) {
+        try {
+          localStorage.removeItem('gym_cached_account')
+        } catch {}
+        setAccount(null)
+      }
+    })
     const { data } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
+      if (event === 'SIGNED_OUT') {
+        try {
+          localStorage.removeItem('gym_cached_account')
+        } catch {}
+        setAccount(null)
+      }
       if (event === 'PASSWORD_RECOVERY') {
         setIsPasswordRecovery(true)
       }
@@ -117,13 +142,16 @@ export default function App() {
     return () => data?.subscription?.unsubscribe()
   }, [])
 
-  const userId = session?.user?.id
-  const account = loadedAccount?.userId === userId ? loadedAccount : null
+  const userId = session?.user?.id || (session === undefined ? loadedAccount?.userId : null)
+  const account = (loadedAccount && (!userId || loadedAccount.userId === userId)) ? loadedAccount : null
 
   useEffect(() => {
     if (!userId) {
       setAccount(null)
       setAuthMemberData(null)
+      try {
+        localStorage.removeItem('gym_cached_account')
+      } catch {}
       return
     }
     let cancelled = false
@@ -169,12 +197,16 @@ export default function App() {
         }
       }
 
-      setAccount({
+      const freshAcc = {
         userId,
         gym: gymData,
         isAdmin,
         role: isAdmin ? 'admin' : (gymData ? 'owner' : (memberRes.data?.success ? 'member' : 'unknown')),
-      })
+      }
+      setAccount(freshAcc)
+      try {
+        localStorage.setItem('gym_cached_account', JSON.stringify(freshAcc))
+      } catch {}
       setTab(isAdmin ? 'admin' : 'dashboard')
     })
     return () => {
@@ -213,6 +245,10 @@ export default function App() {
   const logout = () => {
     setMembers([])
     setLoadError('')
+    try {
+      localStorage.removeItem('gym_cached_account')
+    } catch {}
+    setAccount(null)
     supabase.auth.signOut()
   }
 
@@ -315,8 +351,12 @@ export default function App() {
     )
   }
 
-  if (session === undefined || (session && !account)) {
-    return <div className="center-page muted">Loading…</div>
+  if (session === undefined && !account) {
+    return <SplashScreen message="Starting Gym Manager…" />
+  }
+
+  if (session && !account) {
+    return <SplashScreen message="Opening your gym dashboard…" />
   }
 
   if (!session) {
