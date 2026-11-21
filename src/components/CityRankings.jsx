@@ -1406,7 +1406,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-secondary)', fontSize: '12.5px' }}>
-                  Abhi is gym ke liye koi text review submit nahi hua hai. Members apne app se review dekar ranking badha sakte hain.
+                  No text reviews have been submitted for this gym yet. Members can add reviews from the app to boost rankings.
                 </div>
               )}
             </div>

@@ -226,7 +226,7 @@ export default function MemberReviewModal({
           </label>
           <textarea
             rows={3}
-            placeholder="Kripya apna genuine experience batayein (e.g. gym ka atmosphere kaisa hai, machines achhi hain ya nahi, trainer help karte hain ya nahi)..."
+            placeholder="Please share your genuine experience (e.g. gym atmosphere, equipment quality, trainer guidance)..."
             value={reviewText}
             onChange={(e) => setReviewText(e.target.value)}
             style={{

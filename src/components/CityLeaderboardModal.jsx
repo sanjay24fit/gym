@@ -280,7 +280,7 @@ export default function CityLeaderboardModal({
             <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {(reviewsData?.reviews || []).length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px', color: 'var(--muted)' }}>
-                  Abhi tak koi member review add nahi hua hai. Members apne app se review submit kar sakte hain.
+                  No member reviews added yet. Members can submit reviews directly from the member portal.
                 </div>
               ) : (
                 (reviewsData?.reviews || []).map((rev) => (
@@ -330,11 +330,11 @@ export default function CityLeaderboardModal({
         {/* Tips to Improve Rank */}
         <div style={{ background: 'var(--card-subtle)', borderRadius: '12px', padding: '12px 14px', border: '1px solid var(--border)' }}>
           <b style={{ fontSize: '12.5px', display: 'block', marginBottom: '6px' }}>
-            💡 Genuine Member Reviews se Rank Kaise Badhayein?
+            💡 How to Improve Your Gym Rank with Genuine Reviews:
           </b>
           <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <li><b>Member Reviews (35 Pts):</b> Apne members ko app par review likhne ke liye kahein. High 5-star ratings rank ko top position par le aati hain.</li>
-            <li><b>Active Members & Retention (50 Pts):</b> Samay par renew karwayein aur daily attendance mark karwayein.</li>
+            <li><b>Member Reviews (35 Pts):</b> Encourage members to leave 5-star ratings and reviews to boost your gym's score.</li>
+            <li><b>Active Members & Retention (50 Pts):</b> Ensure timely renewals and maintain regular member attendance.</li>
           </ul>
         </div>
 

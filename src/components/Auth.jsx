@@ -9,9 +9,21 @@ import { lookupMemberPortal, normalizePhone } from '../lib/memberPortal'
 import { validateEmailAddress } from '../lib/emailValidation'
 import { sendMobileOtp } from '../lib/smsService'
 import { getDeviceInfo } from '../lib/deviceDetect'
+import { useLanguage } from '../lib/language'
 
 export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initialPhone = '' }) {
   const [deviceInfo] = useState(() => getDeviceInfo())
+
+  // App Language Support
+  let currentLanguage = 'en'
+  try {
+    const langContext = useLanguage()
+    if (langContext?.currentLanguage) currentLanguage = langContext.currentLanguage
+  } catch {
+    currentLanguage = 'en'
+  }
+  const isHindi = currentLanguage === 'hi'
+  const isHinglish = currentLanguage === 'hinglish'
 
   // Primary Role Selection: 'owner' vs 'member'
   const [role, setRole] = useState(() => (initialPhone ? 'member' : 'owner'))
@@ -80,7 +92,11 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
   const friendly = (msg) => {
     if (!msg) return ''
     if (msg === 'Invalid login credentials') return 'Incorrect email or password'
-    if (/email not confirmed/i.test(msg)) return 'Aapka email abhi verify nahi hua hai. Kripya apna Gmail check karein aur verification link/code confirm karein.'
+    if (/email not confirmed/i.test(msg)) {
+      if (isHindi) return 'आपका ईमेल अभी सत्यापित नहीं हुआ है। कृपया अपना जीमेल चेक करें।'
+      if (isHinglish) return 'Aapka email abhi verify nahi hua hai. Kripya apna Gmail check karein aur verification link/code confirm karein.'
+      return 'Your email address is not verified yet. Please check your Gmail to confirm the verification link.'
+    }
     if (/rate limit/i.test(msg)) return 'Too many attempts. Please wait a while and try again.'
     if (/already registered/i.test(msg)) return 'An account with this email already exists. Please login.'
     if (/user not found/i.test(msg)) return 'No account found with this email address.'
@@ -108,7 +124,13 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
       // 1. First check if number is registered in gym owner's records
       const lookupRes = await lookupMemberPortal(cleanPhone)
       if (!lookupRes.success || !lookupRes.memberships || lookupRes.memberships.length === 0) {
-        setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`)
+        if (isHindi) {
+          setError(`आपका मोबाइल नंबर (+91 ${cleanPhone}) किसी भी जिम के रिकॉर्ड में नहीं मिला। कृपया अपने जिम ओनर से संपर्क करें।`)
+        } else if (isHinglish) {
+          setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`)
+        } else {
+          setError(`This mobile number (+91 ${cleanPhone}) is not registered with any Gym Owner. Please contact your gym owner to add you as a member.`)
+        }
         setLoading(false)
         return
       }
@@ -124,10 +146,22 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
         setMemberOtpStep(true)
         setMemberOtpTimer(45)
         setMemberOtpCode('')
-        setInfo(`✓ 6-Digit OTP SMS aapke mobile number (+91 ${cleanPhone}) par bhej diya gaya hai. Kripya apna SMS inbox check karein.`)
+        if (isHindi) {
+          setInfo(`✓ 6-अंकों का OTP SMS आपके मोबाइल (+91 ${cleanPhone}) पर भेज दिया गया है।`)
+        } else if (isHinglish) {
+          setInfo(`✓ 6-Digit OTP SMS aapke mobile number (+91 ${cleanPhone}) par bhej diya gaya hai. Kripya apna SMS inbox check karein.`)
+        } else {
+          setInfo(`✓ 6-Digit OTP SMS sent to your mobile number (+91 ${cleanPhone}). Please check your SMS inbox.`)
+        }
       } else if (smsRes.code === 'PAYMENT_REQUIRED') {
         setFast2SmsNotice(true)
-        setError('Fast2SMS security policy: API route se real SMS bhejne ke liye Fast2SMS dashboard me ek baar "+ Add Amount" se ₹100 ka recharge zaroori hota hai. Tab tak aap Direct Pass button se bina OTP turant connect kar sakte hain.')
+        if (isHindi) {
+          setError('SMS सेवा: तुरंत लॉगिन करने के लिए नीचे Quick Pass बटन का उपयोग करें।')
+        } else if (isHinglish) {
+          setError('Fast2SMS policy: Quick Pass button se bina OTP turant connect kar sakte hain.')
+        } else {
+          setError('SMS policy notice: You can use the Quick Pass button below to connect instantly without waiting for OTP.')
+        }
       } else {
         setError(smsRes.error || 'Failed to dispatch SMS OTP.')
       }
@@ -163,19 +197,31 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
       const res = await lookupMemberPortal(cleanPhone)
 
       if (!res.success || !res.memberships || res.memberships.length === 0) {
-        setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai.`)
+        if (isHindi) {
+          setError(`आपका मोबाइल नंबर (+91 ${cleanPhone}) किसी भी जिम के रिकॉर्ड में नहीं मिला।`)
+        } else if (isHinglish) {
+          setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai.`)
+        } else {
+          setError(`This mobile number (+91 ${cleanPhone}) is not registered with any Gym Owner.`)
+        }
         setLoading(false)
         return
       }
 
       if (res.memberships.length === 1) {
-        setInfo(`✓ OTP Verified! Connecting to ${res.memberships[0].gym?.gym_name || 'Gym'}…`)
+        setInfo(isHindi ? `✓ सत्यापित! ${res.memberships[0].gym?.gym_name || 'Gym'} से कनेक्ट हो रहा है…` : `✓ OTP Verified! Connecting to ${res.memberships[0].gym?.gym_name || 'Gym'}…`)
         setTimeout(() => {
           onMemberLogin(res.memberships[0])
         }, 350)
       } else {
         setAvailableMemberships(res.memberships)
-        setInfo('Is number par multiple gym memberships mili hain. Kripya apna gym select karein.')
+        if (isHindi) {
+          setInfo('इस नंबर पर कई जिम सदस्यताएं मिली हैं। कृपया अपना जिम चुनें।')
+        } else if (isHinglish) {
+          setInfo('Is number par multiple gym memberships mili hain. Kripya apna gym select karein.')
+        } else {
+          setInfo('Multiple gym memberships found for this number. Please select your gym.')
+        }
       }
     } catch (err) {
       setError(err.message || 'Verification failed. Please try again.')
@@ -197,7 +243,13 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     if (smsRes.success) {
       setMemberOtpTimer(45)
       setMemberOtpCode('')
-      setInfo(`✓ Naya 6-digit OTP SMS bhej diya gaya hai (+91 ${cleanPhone}).`)
+      if (isHindi) {
+        setInfo(`✓ नया 6-अंकों का OTP SMS भेज दिया गया है (+91 ${cleanPhone})।`)
+      } else if (isHinglish) {
+        setInfo(`✓ Naya 6-digit OTP SMS bhej diya gaya hai (+91 ${cleanPhone}).`)
+      } else {
+        setInfo(`✓ A new 6-digit OTP SMS has been sent (+91 ${cleanPhone}).`)
+      }
     } else {
       setError(smsRes.error || 'Failed to resend SMS OTP.')
     }
@@ -218,19 +270,31 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
       const res = await lookupMemberPortal(cleanPhone)
 
       if (!res.success || !res.memberships || res.memberships.length === 0) {
-        setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`)
+        if (isHindi) {
+          setError(`आपका मोबाइल नंबर (+91 ${cleanPhone}) किसी भी जिम के रिकॉर्ड में नहीं मिला। कृपया अपने जिम ओनर से कहें कि वो आपको सदस्य सूची में जोड़ें।`)
+        } else if (isHinglish) {
+          setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`)
+        } else {
+          setError(`This mobile number (+91 ${cleanPhone}) is not registered with any Gym Owner. Please contact your gym owner to add you as a member.`)
+        }
         setLoading(false)
         return
       }
 
       if (res.memberships.length === 1) {
-        setInfo(`✓ Verified! Connecting to ${res.memberships[0].gym?.gym_name || 'Gym'}…`)
+        setInfo(isHindi ? `✓ सत्यापित! ${res.memberships[0].gym?.gym_name || 'Gym'} से कनेक्ट हो रहा है…` : `✓ Verified! Connecting to ${res.memberships[0].gym?.gym_name || 'Gym'}…`)
         setTimeout(() => {
           onMemberLogin(res.memberships[0])
         }, 300)
       } else {
         setAvailableMemberships(res.memberships)
-        setInfo('Is number par multiple gym memberships mili hain. Kripya apna gym select karein.')
+        if (isHindi) {
+          setInfo('इस नंबर पर कई जिम सदस्यताएं मिली हैं। कृपया अपना जिम चुनें।')
+        } else if (isHinglish) {
+          setInfo('Is number par multiple gym memberships mili hain. Kripya apna gym select karein.')
+        } else {
+          setInfo('Multiple gym memberships found for this number. Please select your gym.')
+        }
       }
     } catch (err) {
       setError(err.message || 'Verification failed. Please try again.')
@@ -546,7 +610,11 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       />
                     </div>
                     <span className="muted small" style={{ display: 'block', marginTop: '4px' }}>
-                      Apne gym owner ke pas registered 10-digit mobile number enter karein.
+                      {isHindi
+                        ? 'अपने जिम में पंजीकृत 10 अंकों का मोबाइल नंबर दर्ज करें।'
+                        : isHinglish
+                        ? 'Apne gym owner ke pas registered 10-digit mobile number enter karein.'
+                        : 'Enter the 10-digit mobile number registered with your gym.'}
                     </span>
                   </label>
 
@@ -560,7 +628,9 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                     disabled={loading || memberPhone.replace(/\D/g, '').length < 10}
                     style={{ padding: '11px', marginTop: '4px' }}
                   >
-                    {loading ? 'Sending SMS OTP…' : 'Send SMS OTP to Mobile →'}
+                    {loading
+                      ? (isHindi ? 'SMS OTP भेजा जा रहा है…' : 'Sending SMS OTP…')
+                      : (isHindi ? 'मोबाइल पर SMS OTP भेजें →' : isHinglish ? 'Send SMS OTP to Mobile →' : 'Send SMS OTP to Mobile →')}
                   </button>
 
                   {/* Instant Direct Quick Pass Button (Bypasses SMS Delay) */}
@@ -577,7 +647,9 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                         padding: '4px',
                       }}
                     >
-                      ⚡ Instant Access via Quick Pass (No OTP needed)
+                      {isHindi
+                        ? '⚡ Quick Pass से तुरंत लॉगिन करें (OTP की आवश्यकता नहीं)'
+                        : '⚡ Instant Access via Quick Pass (No OTP needed)'}
                     </button>
                   </div>
 
@@ -595,7 +667,11 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                     >
                       <b>💡 Fast2SMS Note:</b>
                       <p style={{ margin: '3px 0 0' }}>
-                        Fast2SMS par API route se real SMS bhejne ke liye dashboard me ek baar <b>+ Add Amount</b> se ₹100 recharge karna zaroori hai. Tab tak aap upar diye gaye <b>Instant Access via Quick Pass</b> button se bina kisi rukawat ke login kar sakte hain!
+                        {isHindi
+                          ? 'SMS सेवा सूचना: बिना OTP के तुरंत लॉगिन करने के लिए ऊपर दिए गए Quick Pass बटन का उपयोग करें।'
+                          : isHinglish
+                          ? 'Fast2SMS notice: Upar diye gaye Instant Access via Quick Pass button se bina OTP login kar sakte hain.'
+                          : 'SMS Service Notice: You can use the Instant Access via Quick Pass button above to log in immediately without waiting for SMS.'}
                       </p>
                     </div>
                   )}
