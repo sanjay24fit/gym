@@ -7,6 +7,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
   const [installing, setInstalling] = useState(false)
   const [localPrompt, setLocalPrompt] = useState(deferredPrompt)
   const [installedSuccess, setInstalledSuccess] = useState(false)
+  const [iosGuidanceActive, setIosGuidanceActive] = useState(false)
 
   // Track active tab: 'ios' | 'android' | 'desktop'
   const [selectedPlatform, setSelectedPlatform] = useState(() => {
@@ -110,7 +111,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
     }
   }, [isOpen, onClose, selectedPlatform])
 
-  // Handle native 1-Tap installation
+  // Handle native Android / Desktop installation
   const handleNativeInstall = async () => {
     const promptToUse = localPrompt || deferredPrompt
     if (!promptToUse) return
@@ -179,7 +180,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
         position: 'fixed',
         inset: 0,
         zIndex: 99999,
-        background: 'rgba(10, 18, 14, 0.75)',
+        background: 'rgba(10, 18, 14, 0.78)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
@@ -458,13 +459,58 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                 </div>
               )}
 
+              {/* iOS Install Now Action Button (Consistent across all tabs!) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIosGuidanceActive(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '13px 18px',
+                    background: 'var(--primary, #145C43)',
+                    color: '#FFFFFF',
+                    border: '1px solid var(--primary, #145C43)',
+                    borderRadius: '14px',
+                    fontFamily: 'inherit',
+                    fontSize: '14.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(20, 92, 67, 0.22)',
+                    transition: 'all 0.18s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--primary-hover, #0F4935)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--primary, #145C43)'
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  <span>Install Now</span>
+                </button>
+
+                <span style={{ fontSize: '11.5px', textAlign: 'center', color: 'var(--muted, #5B6A61)', lineHeight: 1.4 }}>
+                  Niche Safari Share (📤) button se 2-step mein install karein.
+                </span>
+              </div>
+
               {/* Step by Step Card with Green Number Badges */}
               <div
                 style={{
                   background: 'var(--bg-subtle, #F8FAF8)',
-                  border: '1px solid var(--border, #E5EBE6)',
+                  border: iosGuidanceActive ? '1.5px solid var(--accent, #35B982)' : '1px solid var(--border, #E5EBE6)',
                   borderRadius: '14px',
                   padding: '14px',
+                  boxShadow: iosGuidanceActive ? '0 0 0 3px rgba(53, 185, 130, 0.2)' : 'none',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <div
@@ -477,10 +523,15 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     marginBottom: '12px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
+                    justifyContent: 'space-between',
                   }}
                 >
                   <span>Safari Se Install Karne Ka Tarika:</span>
+                  {iosGuidanceActive && (
+                    <span style={{ fontSize: '11px', color: 'var(--accent, #35B982)', fontWeight: 700 }}>
+                      👇 Niche Follow Karein
+                    </span>
+                  )}
                 </div>
 
                 <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '11px' }}>
@@ -573,7 +624,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                 </div>
               )}
 
-              {/* 1-Tap Direct Install Action Button */}
+              {/* Install Now Action Button (Android) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <button
                   type="button"
@@ -608,15 +659,13 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                       ? '✓ App Successfully Installed!'
                       : installing
                       ? 'Installing...'
-                      : isPromptAvailable
-                      ? '1-Tap Direct Install Now'
-                      : '1-Tap Direct Install Unavailable'}
+                      : 'Install Now'}
                   </span>
                 </button>
 
                 <span style={{ fontSize: '11.5px', textAlign: 'center', color: 'var(--muted, #5B6A61)', lineHeight: 1.4 }}>
                   {isPromptAvailable
-                    ? 'Browser prompt ke zariye 1-tap mein direct install karein.'
+                    ? 'Browser prompt ke zariye direct install karein.'
                     : 'Chrome mein kholein ya app pehle se installed hai.'}
                 </span>
               </div>
@@ -705,6 +754,43 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
           {selectedPlatform === 'desktop' && (
             <div id="panel-desktop" role="tabpanel" aria-labelledby="tab-btn-desktop" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               
+              {/* Install Now Action Button (PC / Mac) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={isPromptAvailable ? handleNativeInstall : () => alert('Chrome ya Edge address bar ke right side mein Install icon par click karein.')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '13px 18px',
+                    background: 'var(--primary, #145C43)',
+                    color: '#FFFFFF',
+                    border: '1px solid var(--primary, #145C43)',
+                    borderRadius: '14px',
+                    fontFamily: 'inherit',
+                    fontSize: '14.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(20, 92, 67, 0.22)',
+                    transition: 'all 0.18s ease',
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  <span>Install Now</span>
+                </button>
+
+                <span style={{ fontSize: '11.5px', textAlign: 'center', color: 'var(--muted, #5B6A61)', lineHeight: 1.4 }}>
+                  Browser address bar ya menu se desktop app install karein.
+                </span>
+              </div>
+
               {/* Step by Step Card */}
               <div
                 style={{
