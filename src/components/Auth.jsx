@@ -152,7 +152,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     }
 
     const entered = memberOtpCode.trim()
-    if (entered !== generatedMemberOtp && entered !== '123456') {
+    if (entered !== generatedMemberOtp) {
       setError('Invalid OTP code. Please enter the correct 6-digit code received on your phone.')
       return
     }

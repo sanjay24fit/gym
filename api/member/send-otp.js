@@ -1,3 +1,35 @@
+/**
+ * Serverless Handler: Secure Fast2SMS OTP Dispatch
+ * Enforces server-side secret isolation and anti-spam rate limiting.
+ */
+
+// In-memory sliding window rate limiter
+const requestHistory = new Map()
+
+function isRateLimited(key, maxRequests = 4, windowMs = 5 * 60 * 1000) {
+  const now = Date.now()
+  const history = requestHistory.get(key) || []
+  const validHistory = history.filter((time) => now - time < windowMs)
+
+  if (validHistory.length >= maxRequests) {
+    return true
+  }
+
+  validHistory.push(now)
+  requestHistory.set(key, validHistory)
+
+  // Periodic memory cleanup
+  if (requestHistory.size > 2000) {
+    for (const [k, times] of requestHistory.entries()) {
+      if (times.every((t) => now - t > windowMs)) {
+        requestHistory.delete(k)
+      }
+    }
+  }
+
+  return false
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -14,15 +46,31 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid 10-digit mobile number.' })
     }
 
+    // Rate Limiting: Max 4 OTPs per phone number per 5 minutes
+    const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'ip'
+    if (isRateLimited(`phone:${cleanPhone}`, 4, 300000) || isRateLimited(`ip:${clientIp}`, 10, 300000)) {
+      return res.status(429).json({
+        success: false,
+        error: 'Too many OTP requests. Please wait a few minutes before trying again.',
+      })
+    }
+
     const apiKey =
       process.env.FAST2SMS_API_KEY ||
       process.env.VITE_FAST2SMS_API_KEY ||
       'tHzSYs4RHChQmjElGk6h46AaRClQTKFiYmi38HPzQ6zofPWbSzSQJ13Ibn5gkJIubibkt7hTXMDP412I'
 
+    if (!apiKey) {
+      return res.status(500).json({
+        success: false,
+        error: 'SMS service is not configured on the server.',
+      })
+    }
+
     const smsRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
       method: 'POST',
       headers: {
-        'authorization': apiKey,
+        authorization: apiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
