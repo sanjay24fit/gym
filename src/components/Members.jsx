@@ -210,134 +210,277 @@ export default function Members({
           {members.length === 0 ? 'No members found yet. Click "+ Add Member" or "Scan Register" to start.' : 'No matching members found.'}
         </div>
       ) : (
-        <div className="table-wrap">
-          <table className="table">
+        <div className="members-card-table-wrap">
+          <table className="members-card-table">
             <thead>
               <tr>
-                <th>Member</th>
-                <th>Plan & Facility</th>
-                <th>Expiry</th>
-                <th>Payment</th>
-                <th></th>
+                <th>
+                  <div className="th-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span>MEMBER</span>
+                  </div>
+                </th>
+                <th>
+                  <div className="th-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                    </svg>
+                    <span>PLAN & FACILITY</span>
+                  </div>
+                </th>
+                <th>
+                  <div className="th-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 22h14" />
+                      <path d="M5 2h14" />
+                      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+                      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+                    </svg>
+                    <span>EXPIRY</span>
+                  </div>
+                </th>
+                <th>
+                  <div className="th-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                      <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                    <span>PAYMENT</span>
+                  </div>
+                </th>
+                <th aria-label="Actions"></th>
               </tr>
             </thead>
             <tbody>
               {list.map((m) => {
-                const [tone, label] = STATUS_BADGE[membershipStatus(m)]
+                const status = membershipStatus(m) // 'active' | 'expiring' | 'expired'
+                const [tone, label] = STATUS_BADGE[status] || ['gray', 'Active']
                 const due = dueAmount(m)
                 const initials = m.name ? m.name.slice(0, 2).toUpperCase() : 'GM'
+                const days = daysLeft(m.end_date)
 
                 return (
-                  <tr key={m.id}>
+                  <tr key={m.id} className={`status-${status}`}>
+                    {/* Column 1: MEMBER */}
                     <td data-label="Member">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div className="avatar-initials" style={{ width: '34px', height: '34px', fontSize: '13px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div
+                          style={{
+                            width: '38px',
+                            height: '38px',
+                            borderRadius: '999px',
+                            background: 'var(--accent-light, #E6F7EF)',
+                            color: 'var(--primary, #0B4D32)',
+                            fontSize: '13.5px',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
                           {initials}
                         </div>
                         <div>
-                          <b>{m.name}</b>
-                          <span className="muted small block">{m.phone || 'No phone'}</span>
+                          <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)', lineHeight: 1.25 }}>
+                            {m.name}
+                          </div>
+                          <span style={{ fontSize: '12.5px', color: 'var(--muted)', marginTop: '2px', display: 'block' }}>
+                            {m.phone || 'No phone'}
+                          </span>
                         </div>
                       </div>
                     </td>
 
+                    {/* Column 2: PLAN & FACILITY */}
                     <td data-label="Plan & Facility">
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 600 }}>{m.plan || 'Standard'}</span>
-                          <span className="badge blue" style={{ fontSize: '10.5px', padding: '1px 7px' }}>
-                            {getMemberFacility(m)}
+                          <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>
+                            {m.plan || 'Standard'}
                           </span>
+
+                          <span className="member-pill-badge facility">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+                            </svg>
+                            <span>{getMemberFacility(m)}</span>
+                          </span>
+
                           {hasPersonalTrainer(m) && (
                             <span
-                              className="badge purple"
-                              style={{ fontSize: '10.5px', padding: '1px 7px' }}
+                              className="member-pill-badge pt"
                               title={getTrainerName(m) ? `Personal Trainer: ${getTrainerName(m)}` : 'Personal Trainer Included'}
                             >
                               PT{getTrainerName(m) ? `: ${getTrainerName(m)}` : ''}
                             </span>
                           )}
                         </div>
-                        <span className="muted small block">Joined {formatDate(m.start_date)}</span>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--muted)' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                          </svg>
+                          <span>Joined {formatDate(m.start_date)}</span>
+                        </div>
                       </div>
                     </td>
 
+                    {/* Column 3: EXPIRY */}
                     <td data-label="Expiry">
-                      <span className={`badge ${tone}`}>{label}</span>
-                      <span className="small block" style={{ marginTop: '2px' }}>
-                        {formatDate(m.end_date)} · {expiryText(m.end_date)}
-                      </span>
-                    </td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <div>
+                          <span className={`member-pill-badge ${status}`}>
+                            {status === 'active' ? (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="m9 12 2 2 4-4" stroke="#ffffff" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            ) : status === 'expiring' ? (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                              </svg>
+                            ) : (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                              </svg>
+                            )}
+                            <span>{label}</span>
+                          </span>
+                        </div>
 
-                    <td data-label="Payment">
-                      {due > 0 ? (
-                        <span className="badge red">{formatMoney(due)} due</span>
-                      ) : (
-                        <span className="badge green">Paid</span>
-                      )}
-                      <span className="muted small block font-mono" style={{ marginTop: '2px', fontSize: '12px' }}>
-                        {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}
-                      </span>
-                    </td>
-
-                    <td className="actions">
-                      {daysLeft(m.end_date) <= 2 && daysLeft(m.end_date) >= 0 && (
-                        <button
-                          type="button"
-                          className="btn sm btn-whatsapp"
-                          title="Send 2-Day Expiry WhatsApp Notification"
-                          onClick={() => handleSendExpiryWhatsApp(m)}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}
-                        >
-                          <WhatsAppIcon size={11} />
-                          <span>Remind</span>
-                        </button>
-                      )}
-                      {onPreviewMemberPass && (
-                        <button
-                          type="button"
-                          className="btn sm"
-                          title="View & Share Member Pass"
-                          onClick={() => onPreviewMemberPass(m)}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                            <line x1="1" y1="10" x2="23" y2="10" />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--muted)' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
                           </svg>
-                          Pass
-                        </button>
-                      )}
-                      {due > 0 && (
+                          <span>{formatDate(m.end_date)} · {expiryText(m.end_date)}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Column 4: PAYMENT */}
+                    <td data-label="Payment">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <div>
+                          {due > 0 ? (
+                            <span className="member-pill-badge due">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                              </svg>
+                              <span>{formatMoney(due)} due</span>
+                            </span>
+                          ) : (
+                            <span className="member-pill-badge paid">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="m9 12 2 2 4-4" stroke="#ffffff" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <span>Paid</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-secondary)', fontFamily: 'monospace, system-ui' }}>
+                          {formatMoney(m.paid_amount)} / {formatMoney(m.total_fee)}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Column 5: ACTIONS */}
+                    <td data-label="Actions" className="actions">
+                      <div className="member-actions-row">
+                        {onPreviewMemberPass && (
+                          <button
+                            type="button"
+                            className="member-action-pill pass"
+                            title="View & Share Member Pass"
+                            onClick={() => onPreviewMemberPass(m)}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                              <line x1="1" y1="10" x2="23" y2="10" />
+                            </svg>
+                            <span>Pass</span>
+                          </button>
+                        )}
+
                         <button
                           type="button"
-                          className="btn sm accent"
-                          onClick={() => setDialog({ type: 'pay', member: m })}
+                          className="member-action-pill renew"
+                          onClick={() => setDialog({ type: 'renew', member: m })}
                         >
-                          Payment
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                          </svg>
+                          <span>Renew</span>
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        className="btn sm"
-                        onClick={() => setDialog({ type: 'renew', member: m })}
-                      >
-                        Renew
-                      </button>
-                      <button
-                        type="button"
-                        className="btn sm"
-                        onClick={() => setDialog({ type: 'edit', member: m })}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="btn sm danger"
-                        onClick={() => promptRemove(m)}
-                      >
-                        Remove
-                      </button>
+
+                        <button
+                          type="button"
+                          className="member-action-pill edit"
+                          onClick={() => setDialog({ type: 'edit', member: m })}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                          </svg>
+                          <span>Edit</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="member-action-pill remove"
+                          onClick={() => promptRemove(m)}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                          <span>Remove</span>
+                        </button>
+
+                        {due > 0 && (
+                          <button
+                            type="button"
+                            className="member-action-pill pay"
+                            onClick={() => setDialog({ type: 'pay', member: m })}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="2" y="5" width="20" height="14" rx="2" />
+                              <line x1="2" y1="10" x2="22" y2="10" />
+                            </svg>
+                            <span>Pay</span>
+                          </button>
+                        )}
+
+                        {days <= 2 && days >= 0 && (
+                          <button
+                            type="button"
+                            className="member-action-pill whatsapp"
+                            title="Send 2-Day Expiry WhatsApp Notification"
+                            onClick={() => handleSendExpiryWhatsApp(m)}
+                          >
+                            <WhatsAppIcon size={12} />
+                            <span>Remind</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )
