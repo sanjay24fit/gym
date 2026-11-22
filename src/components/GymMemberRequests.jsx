@@ -62,7 +62,13 @@ export function formatGymDisplayCode(gym) {
   }
 }
 
-export default function GymMemberRequests({ gym, existingMembers = [], reloadGym, reloadMembers }) {
+export default function GymMemberRequests({
+  gym,
+  existingMembers = [],
+  reloadGym,
+  reloadMembers,
+  onPendingCountChange,
+}) {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [actionId, setActionId] = useState(null)
@@ -87,53 +93,21 @@ export default function GymMemberRequests({ gym, existingMembers = [], reloadGym
   const appBaseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://gymmanager.app'
   const inviteUrl = `${appBaseUrl}/?join=${encodeURIComponent(displayCodes.primaryCode)}`
 
-  // Default demo requests if database has zero requests yet
-  const demoRequests = [
-    {
-      id: 'demo-req-1',
-      full_name: 'Aman Sharma',
-      phone: '9876543210',
-      gym_code_used: displayCodes.primaryCode,
-      device: 'Member App (Android)',
-      status: 'pending',
-      created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'demo-req-2',
-      full_name: 'Priya Patel',
-      phone: '9812345678',
-      gym_code_used: displayCodes.primaryCode,
-      device: 'Member App (Android)',
-      status: 'pending',
-      created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'demo-req-3',
-      full_name: 'Vikram Singh',
-      phone: '9765432109',
-      gym_code_used: displayCodes.primaryCode,
-      device: 'iOS App',
-      status: 'pending',
-      created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-    },
-  ]
-
   const loadRequests = useCallback(async () => {
     if (!gym?.id) {
-      setRequests(demoRequests)
+      setRequests([])
       setLoading(false)
+      onPendingCountChange?.(0)
       return
     }
     setLoading(true)
     const list = await fetchGymMemberRequests(gym.id)
-    if (list && list.length > 0) {
-      setRequests(list)
-    } else {
-      // Use demo requests so gym owner can immediately inspect UI and test approve/decline
-      setRequests(demoRequests)
-    }
+    const actualList = list || []
+    setRequests(actualList)
+    const pending = actualList.filter((r) => r.status === 'pending').length
+    onPendingCountChange?.(pending)
     setLoading(false)
-  }, [gym?.id, displayCodes.primaryCode])
+  }, [gym?.id, onPendingCountChange])
 
   useEffect(() => {
     loadRequests()
@@ -197,39 +171,6 @@ export default function GymMemberRequests({ gym, existingMembers = [], reloadGym
     const req = reviewDialog
     setActionId(req.id)
 
-    // If it's a demo request (simulated)
-    if (req.id.startsWith('demo-req-')) {
-      // Add member to existing members if possible
-      if (gym?.id) {
-        try {
-          const todayIso = new Date().toISOString().slice(0, 10)
-          const endIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-          await supabase.from('members').insert({
-            gym_id: gym.id,
-            name: req.full_name,
-            phone: req.phone,
-            plan: selectedPlan,
-            start_date: todayIso,
-            end_date: endIso,
-            total_fee: Number(memberFee || 2000),
-            paid_amount: Number(memberPaid || 2000),
-            facility: selectedFacility,
-            notes: `[Facility: ${selectedFacility}] Joined via Connection Code ${displayCodes.primaryCode}`,
-          })
-        } catch (err) {
-          console.warn('Demo member insert error:', err)
-        }
-      }
-
-      setRequests((prev) =>
-        prev.map((r) => (r.id === req.id ? { ...r, status: 'approved' } : r))
-      )
-      setActionId(null)
-      setReviewDialog(null)
-      if (reloadMembers) reloadMembers()
-      return
-    }
-
     // Real Supabase request approval
     const res = await approveMemberJoinRequest(req.id)
     setActionId(null)
@@ -248,16 +189,6 @@ export default function GymMemberRequests({ gym, existingMembers = [], reloadGym
     if (!rejectDialog) return
     const req = rejectDialog
     setActionId(req.id)
-
-    if (req.id.startsWith('demo-req-')) {
-      setRequests((prev) =>
-        prev.map((r) => (r.id === req.id ? { ...r, status: 'rejected' } : r))
-      )
-      setActionId(null)
-      setRejectDialog(null)
-      setRejectReason('')
-      return
-    }
 
     const res = await rejectMemberJoinRequest(req.id, rejectReason)
     setActionId(null)
@@ -434,9 +365,21 @@ export default function GymMemberRequests({ gym, existingMembers = [], reloadGym
             Loading member connection requests…
           </div>
         ) : filteredList.length === 0 ? (
-          <div className="gym-empty-requests">
-            <p>No {filter} connection requests found.</p>
-            <span>Share your unique Gym Code <b>{displayCodes.primaryCode}</b> with members to connect their mobile app.</span>
+          <div className="gym-empty-requests" style={{ padding: '48px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <line x1="19" y1="8" x2="19" y2="14" />
+                <line x1="22" y1="11" x2="16" y2="11" />
+              </svg>
+            </div>
+            <p style={{ margin: '0 0 6px', fontWeight: 700, fontSize: '15px', color: 'var(--text)' }}>
+              No {filter === 'all' ? '' : filter} connection requests
+            </p>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '440px', lineHeight: 1.5 }}>
+              Share your unique Gym Code <b>{displayCodes.primaryCode}</b> with members. Jab koi member is code ka use karega, to unki request yahan approval ke liye show hogi.
+            </span>
           </div>
         ) : (
           <div className="table-wrap">

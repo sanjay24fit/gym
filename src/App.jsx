@@ -55,6 +55,7 @@ export default function App() {
   const [memberSession, setMemberSession] = useState(() => getStoredMemberSession())
   const [memberPreview, setMemberPreview] = useState(null)
   const [authMemberData, setAuthMemberData] = useState(null)
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [urlPhone] = useState(() => {
     if (typeof window === 'undefined') return ''
     return new URLSearchParams(window.location.search).get('phone') || ''
@@ -97,6 +98,27 @@ export default function App() {
       })
     }
   }, [urlPhone, memberSession, session])
+
+  // Load real pending member requests count for gym
+  useEffect(() => {
+    if (!gym?.id) {
+      setPendingRequestsCount(0)
+      return
+    }
+    supabase
+      .from('gym_member_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('gym_id', gym.id)
+      .eq('status', 'pending')
+      .then(({ count, error }) => {
+        if (!error && typeof count === 'number') {
+          setPendingRequestsCount(count)
+        } else {
+          setPendingRequestsCount(0)
+        }
+      })
+      .catch(() => setPendingRequestsCount(0))
+  }, [gym?.id])
 
   const handleDownloadApp = async () => {
     if (deferredPrompt) {
@@ -500,7 +522,7 @@ export default function App() {
         {
           key: 'requests',
           label: 'Requests',
-          badge: '3 pending',
+          badge: pendingRequestsCount > 0 ? `${pendingRequestsCount} pending` : null,
           icon: (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -650,6 +672,7 @@ export default function App() {
             existingMembers={members}
             reloadGym={refresh}
             reloadMembers={loadMembers}
+            onPendingCountChange={setPendingRequestsCount}
           />
         )}
 
