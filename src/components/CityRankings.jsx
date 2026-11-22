@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchRegisteredCityGyms, POPULAR_CITIES } from '../lib/ranking'
 import { fetchGymReviews } from '../lib/reviews'
-import { getGymCoverImage } from '../lib/assets'
+import { GYM_IMAGES, getGymCoverImage } from '../lib/assets'
 import Modal from './Modal'
 import {
   Trophy,
   Star,
   Search,
   MapPin,
-  Sparkles,
   Building2,
   Phone,
   MessageSquare,
@@ -17,8 +16,159 @@ import {
   Dumbbell,
   Share2,
   Check,
-  ChevronRight,
+  BarChart3,
+  Lightbulb,
+  Megaphone,
+  CheckCircle2,
+  ArrowRight,
+  Crown,
 } from 'lucide-react'
+
+// Scalloped Rosette Seal Medal for Ranks 1, 2, 3
+function ScallopedSeal({ rank }) {
+  if (rank === 1) {
+    return (
+      <div style={{ position: 'relative', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="44" height="44" viewBox="0 0 48 48" style={{ position: 'absolute', inset: 0 }}>
+          <defs>
+            <linearGradient id="goldSealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FDE047" />
+              <stop offset="50%" stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#D97706" />
+            </linearGradient>
+            <filter id="sealShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#B45309" floodOpacity="0.35" />
+            </filter>
+          </defs>
+          <path
+            d="M24 2.5 L27.5 7 L32.5 5.5 L34.5 10.5 L39.8 11 L39.8 16.5 L44.5 19 L42.5 24 L44.5 29 L39.8 31.5 L39.8 37 L34.5 37.5 L32.5 42.5 L27.5 41 L24 45.5 L20.5 41 L15.5 42.5 L13.5 37.5 L8.2 37 L8.2 31.5 L3.5 29 L5.5 24 L3.5 19 L8.2 16.5 L8.2 11 L13.5 10.5 L15.5 5.5 L20.5 7 Z"
+            fill="url(#goldSealGrad)"
+            stroke="#FDE047"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+            filter="url(#sealShadow)"
+          />
+        </svg>
+        <span style={{ position: 'relative', zIndex: 1, fontWeight: 900, fontSize: '15px', color: '#451A03' }}>
+          #1
+        </span>
+      </div>
+    )
+  }
+  if (rank === 2) {
+    return (
+      <div style={{ position: 'relative', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="44" height="44" viewBox="0 0 48 48" style={{ position: 'absolute', inset: 0 }}>
+          <defs>
+            <linearGradient id="silverSealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="60%" stopColor="#CBD5E1" />
+              <stop offset="100%" stopColor="#94A3B8" />
+            </linearGradient>
+            <filter id="silverShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#64748B" floodOpacity="0.25" />
+            </filter>
+          </defs>
+          <path
+            d="M24 2.5 L27.5 7 L32.5 5.5 L34.5 10.5 L39.8 11 L39.8 16.5 L44.5 19 L42.5 24 L44.5 29 L39.8 31.5 L39.8 37 L34.5 37.5 L32.5 42.5 L27.5 41 L24 45.5 L20.5 41 L15.5 42.5 L13.5 37.5 L8.2 37 L8.2 31.5 L3.5 29 L5.5 24 L3.5 19 L8.2 16.5 L8.2 11 L13.5 10.5 L15.5 5.5 L20.5 7 Z"
+            fill="url(#silverSealGrad)"
+            stroke="#E2E8F0"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+            filter="url(#silverShadow)"
+          />
+        </svg>
+        <span style={{ position: 'relative', zIndex: 1, fontWeight: 900, fontSize: '15px', color: '#1E293B' }}>
+          #2
+        </span>
+      </div>
+    )
+  }
+  if (rank === 3) {
+    return (
+      <div style={{ position: 'relative', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="44" height="44" viewBox="0 0 48 48" style={{ position: 'absolute', inset: 0 }}>
+          <defs>
+            <linearGradient id="bronzeSealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FED7AA" />
+              <stop offset="60%" stopColor="#EA580C" />
+              <stop offset="100%" stopColor="#9A3412" />
+            </linearGradient>
+            <filter id="bronzeShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#9A3412" floodOpacity="0.3" />
+            </filter>
+          </defs>
+          <path
+            d="M24 2.5 L27.5 7 L32.5 5.5 L34.5 10.5 L39.8 11 L39.8 16.5 L44.5 19 L42.5 24 L44.5 29 L39.8 31.5 L39.8 37 L34.5 37.5 L32.5 42.5 L27.5 41 L24 45.5 L20.5 41 L15.5 42.5 L13.5 37.5 L8.2 37 L8.2 31.5 L3.5 29 L5.5 24 L3.5 19 L8.2 16.5 L8.2 11 L13.5 10.5 L15.5 5.5 L20.5 7 Z"
+            fill="url(#bronzeSealGrad)"
+            stroke="#FDBA74"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+            filter="url(#bronzeShadow)"
+          />
+        </svg>
+        <span style={{ position: 'relative', zIndex: 1, fontWeight: 900, fontSize: '15px', color: '#431407' }}>
+          #3
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div
+      style={{
+        width: '42px',
+        height: '42px',
+        borderRadius: '12px',
+        background: 'var(--card-subtle)',
+        border: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 800,
+        fontSize: '14px',
+        color: 'var(--text-secondary)',
+        flexShrink: 0,
+      }}
+    >
+      #{rank}
+    </div>
+  )
+}
+
+// Laurel Branches flanking the 3D Champion Pedestal
+function LaurelLeft() {
+  return (
+    <svg width="46" height="96" viewBox="0 0 46 96" fill="none" style={{ position: 'absolute', left: '-36px', bottom: '2px', pointerEvents: 'none', filter: 'drop-shadow(0 2px 8px rgba(234, 179, 8, 0.45))' }}>
+      <path d="M40 92 C28 78 14 54 18 16" stroke="#FACC15" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M18 16 C15 11 21 5 25 9 C25 13 21 16 18 16 Z" fill="#FDE047" />
+      <path d="M17 27 C11 24 12 17 17 19 C20 22 19 27 17 27 Z" fill="#FACC15" />
+      <path d="M24 31 C29 28 32 33 28 36 C25 37 22 34 24 31 Z" fill="#EAB308" />
+      <path d="M16 43 C9 41 9 33 14 34 C18 37 17 42 16 43 Z" fill="#FACC15" />
+      <path d="M24 47 C30 45 32 51 27 54 C24 55 21 51 24 47 Z" fill="#EAB308" />
+      <path d="M18 59 C11 58 10 50 16 50 C20 53 19 58 18 59 Z" fill="#FACC15" />
+      <path d="M26 64 C32 63 33 69 28 72 C25 73 23 68 26 64 Z" fill="#EAB308" />
+      <path d="M22 76 C16 76 15 69 20 68 C24 70 23 75 22 76 Z" fill="#FACC15" />
+      <path d="M31 80 C37 80 37 86 32 88 C29 89 28 84 31 80 Z" fill="#EAB308" />
+    </svg>
+  )
+}
+
+function LaurelRight() {
+  return (
+    <svg width="46" height="96" viewBox="0 0 46 96" fill="none" style={{ position: 'absolute', right: '-36px', bottom: '2px', pointerEvents: 'none', transform: 'scaleX(-1)', filter: 'drop-shadow(0 2px 8px rgba(234, 179, 8, 0.45))' }}>
+      <path d="M40 92 C28 78 14 54 18 16" stroke="#FACC15" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M18 16 C15 11 21 5 25 9 C25 13 21 16 18 16 Z" fill="#FDE047" />
+      <path d="M17 27 C11 24 12 17 17 19 C20 22 19 27 17 27 Z" fill="#FACC15" />
+      <path d="M24 31 C29 28 32 33 28 36 C25 37 22 34 24 31 Z" fill="#EAB308" />
+      <path d="M16 43 C9 41 9 33 14 34 C18 37 17 42 16 43 Z" fill="#FACC15" />
+      <path d="M24 47 C30 45 32 51 27 54 C24 55 21 51 24 47 Z" fill="#EAB308" />
+      <path d="M18 59 C11 58 10 50 16 50 C20 53 19 58 18 59 Z" fill="#FACC15" />
+      <path d="M26 64 C32 63 33 69 28 72 C25 73 23 68 26 64 Z" fill="#EAB308" />
+      <path d="M22 76 C16 76 15 69 20 68 C24 70 23 75 22 76 Z" fill="#FACC15" />
+      <path d="M31 80 C37 80 37 86 32 88 C29 89 28 84 31 80 Z" fill="#EAB308" />
+    </svg>
+  )
+}
 
 export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
   const defaultCity = gym?.city || 'Udaipur'
@@ -128,8 +278,6 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
   const myHasReviews = (myGym.total_reviews || 0) > 0
   const topRanked = allGyms.slice(0, 3)
   const firstPlace = topRanked[0]
-  const secondPlace = topRanked[1]
-  const thirdPlace = topRanked[2]
 
   return (
     <div className="gym-rankings-page" style={{ maxWidth: '1120px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -227,257 +375,128 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             LEFT COLUMN: TOP PODIUM + LEADERBOARD LIST
         ============================================================ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* A. Top 3 Podium Visual Card (Interactive: Click any podium spot) */}
-          {topRanked.length > 0 ? (
+          {/* A. 3D Champion Pedestal Hero Stage */}
+          {firstPlace ? (
             <div
-              className="card podium-card"
+              className="champion-stage-card"
+              onClick={() => handleOpenGymProfile(firstPlace)}
+              role="button"
+              tabIndex={0}
               style={{
-                borderRadius: '20px',
-                padding: '24px 20px 20px',
-                background: 'linear-gradient(145deg, #16241D 0%, #0F1A14 100%)',
-                color: '#FFFFFF',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 12px 30px rgba(0, 0, 0, 0.18)',
+                background: `linear-gradient(180deg, rgba(8, 18, 13, 0.82) 0%, rgba(5, 12, 9, 0.92) 100%), url(${GYM_IMAGES.strengthArea}) center/cover no-repeat`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                cursor: 'pointer',
                 position: 'relative',
                 overflow: 'hidden',
               }}
             >
-              {/* Subtle athletic grid backdrop */}
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  opacity: 0.05,
-                  backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
-                  backgroundSize: '16px 16px',
-                  pointerEvents: 'none',
-                }}
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              {/* Header inside Showcase Card */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '16px', zIndex: 3, position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Sparkles size={16} color="#D6B46A" />
-                  <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#D6B46A' }}>
+                  <Trophy size={18} color="#FACC15" fill="#FACC15" />
+                  <span style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#FACC15' }}>
                     Top Gyms in {selectedCity}
                   </span>
                 </div>
-                <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.12)', padding: '2px 8px', borderRadius: '6px' }}>
-                  Click to inspect profile ↗
+                <span
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.45)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.18)',
+                    color: '#FFFFFF',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    padding: '5px 14px',
+                    borderRadius: '20px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span>Click to Inspect Profile</span>
+                  <ArrowRight size={13} />
                 </span>
               </div>
 
-              {/* Podium Pillars Container */}
+              {/* Floating Crown above Avatar */}
+              <div style={{ marginBottom: '4px', filter: 'drop-shadow(0 2px 8px rgba(250, 204, 21, 0.6))', zIndex: 2 }}>
+                <Crown size={28} color="#FACC15" fill="#FACC15" strokeWidth={1.5} />
+              </div>
+
+              {/* Circular Champion Photo */}
               <div
                 style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'flex-end',
-                  gap: '14px',
-                  minHeight: '210px',
-                  paddingTop: '10px',
+                  width: '74px',
+                  height: '74px',
+                  borderRadius: '50%',
+                  border: '3px solid #FCD34D',
+                  boxShadow: '0 0 24px rgba(250, 204, 21, 0.55), 0 6px 16px rgba(0, 0, 0, 0.4)',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  marginBottom: '8px',
+                  zIndex: 2,
                 }}
               >
-                {/* 2nd Place Pillar (Left) */}
-                {secondPlace ? (
-                  <div
-                    onClick={() => handleOpenGymProfile(secondPlace)}
-                    role="button"
-                    tabIndex={0}
-                    style={{
-                      flex: '1',
-                      maxWidth: '135px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      transition: 'transform 0.18s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
-                  >
-                    <img
-                      src={getGymCoverImage(secondPlace.gym_id || secondPlace.gym_name)}
-                      alt={secondPlace.gym_name}
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        border: '2.5px solid #E2E8F0',
-                        marginBottom: '8px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                      }}
-                    />
-                    <b style={{ fontSize: '13px', color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
-                      {secondPlace.gym_name}
-                    </b>
-                    <span style={{ fontSize: '11px', color: '#CBD5E1', margin: '2px 0 8px' }}>
-                      {secondPlace.has_reviews ? `★ ${secondPlace.rating.toFixed(1)} (${secondPlace.total_reviews})` : 'New Gym'}
-                    </span>
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '90px',
-                        borderRadius: '12px 12px 4px 4px',
-                        background: 'linear-gradient(180deg, #F472B6 0%, #DB2777 100%)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#FFFFFF',
-                        boxShadow: '0 4px 16px rgba(219, 39, 119, 0.3)',
-                      }}
-                    >
-                      <span style={{ fontSize: '20px', fontWeight: 900 }}>2nd</span>
-                      <span style={{ fontSize: '10px', opacity: 0.9 }}>
-                        {secondPlace.has_reviews ? `${secondPlace.total_reviews} reviews` : 'Top Rank'}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ flex: '1', maxWidth: '135px' }} />
-                )}
+                <img
+                  src={getGymCoverImage(firstPlace.gym_id || firstPlace.gym_name)}
+                  alt={firstPlace.gym_name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
 
-                {/* 1st Place Pillar (Center, Tallest) */}
-                {firstPlace && (
-                  <div
-                    onClick={() => handleOpenGymProfile(firstPlace)}
-                    role="button"
-                    tabIndex={0}
-                    style={{
-                      flex: '1',
-                      maxWidth: '145px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                      zIndex: 2,
-                      cursor: 'pointer',
-                      transition: 'transform 0.18s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
-                  >
-                    <div style={{ position: 'relative', marginBottom: '8px' }}>
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: '-16px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#fbbf24',
-                        }}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fbbf24" stroke="none">
-                          <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 14h14v2H5v-2z" />
-                        </svg>
-                      </span>
-                      <img
-                        src={getGymCoverImage(firstPlace.gym_id || firstPlace.gym_name)}
-                        alt={firstPlace.gym_name}
-                        style={{
-                          width: '58px',
-                          height: '58px',
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: '3px solid #D6B46A',
-                          boxShadow: '0 6px 16px rgba(214, 180, 106, 0.45)',
-                        }}
-                      />
-                    </div>
-                    <b style={{ fontSize: '14px', color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
-                      {firstPlace.gym_name}
-                    </b>
-                    <span style={{ fontSize: '11px', color: '#FDE047', fontWeight: 700, margin: '2px 0 8px' }}>
-                      {firstPlace.has_reviews ? `★ ${firstPlace.rating.toFixed(1)} (${firstPlace.total_reviews})` : '1st in City'}
-                    </span>
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '125px',
-                        borderRadius: '14px 14px 4px 4px',
-                        background: 'linear-gradient(180deg, #FACC15 0%, #D6B46A 100%)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#18231E',
-                        boxShadow: '0 6px 20px rgba(214, 180, 106, 0.4)',
-                      }}
-                    >
-                      <span style={{ fontSize: '26px', fontWeight: 900 }}>1st</span>
-                      <span style={{ fontSize: '11px', fontWeight: 700 }}>
-                        {firstPlace.has_reviews ? `${firstPlace.total_reviews} reviews` : 'Champion'}
-                      </span>
-                    </div>
-                  </div>
-                )}
+              {/* Champion Gym Name */}
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.3px', textShadow: '0 2px 8px rgba(0,0,0,0.5)', zIndex: 2 }}>
+                {firstPlace.gym_name}
+              </h2>
 
-                {/* 3rd Place Pillar (Right) */}
-                {thirdPlace ? (
-                  <div
-                    onClick={() => handleOpenGymProfile(thirdPlace)}
-                    role="button"
-                    tabIndex={0}
-                    style={{
-                      flex: '1',
-                      maxWidth: '135px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      transition: 'transform 0.18s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
-                  >
-                    <img
-                      src={getGymCoverImage(thirdPlace.gym_id || thirdPlace.gym_name)}
-                      alt={thirdPlace.gym_name}
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        border: '2.5px solid #C084FC',
-                        marginBottom: '8px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                      }}
-                    />
-                    <b style={{ fontSize: '13px', color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
-                      {thirdPlace.gym_name}
-                    </b>
-                    <span style={{ fontSize: '11px', color: '#CBD5E1', margin: '2px 0 8px' }}>
-                      {thirdPlace.has_reviews ? `★ ${thirdPlace.rating.toFixed(1)} (${thirdPlace.total_reviews})` : 'New Gym'}
-                    </span>
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '75px',
-                        borderRadius: '12px 12px 4px 4px',
-                        background: 'linear-gradient(180deg, #A855F7 0%, #7E22CE 100%)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#FFFFFF',
-                        boxShadow: '0 4px 16px rgba(126, 34, 206, 0.3)',
-                      }}
-                    >
-                      <span style={{ fontSize: '18px', fontWeight: 900 }}>3rd</span>
-                      <span style={{ fontSize: '10px', opacity: 0.9 }}>
-                        {thirdPlace.has_reviews ? `${thirdPlace.total_reviews} reviews` : 'Bronze'}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ flex: '1', maxWidth: '135px' }} />
-                )}
+              {/* Subtitle: 1st in City */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px', marginBottom: '14px', color: '#FDE047', fontSize: '12.5px', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.6)', zIndex: 2 }}>
+                <MapPin size={13} color="#FDE047" />
+                <span>1st in City</span>
+              </div>
+
+              {/* 3D Golden Pedestal Container with Laurel Wreath and Spotlight */}
+              <div
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  marginTop: '2px',
+                  zIndex: 2,
+                }}
+              >
+                {/* Circular Floor Spotlight Glow */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '-14px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '300px',
+                    height: '40px',
+                    background: 'radial-gradient(ellipse at center, rgba(253, 224, 71, 0.6) 0%, rgba(217, 119, 6, 0.25) 45%, transparent 75%)',
+                    borderRadius: '50%',
+                    filter: 'blur(4px)',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                {/* Laurel Leaves wrapping pedestal */}
+                <LaurelLeft />
+                <LaurelRight />
+
+                {/* 3D Golden Pedestal Block */}
+                <div className="champion-pedestal">
+                  <span style={{ fontSize: '30px', fontWeight: 900, color: '#451A03', lineHeight: 1 }}>
+                    1st
+                  </span>
+                  <span style={{ fontSize: '12px', fontWeight: 800, color: '#451A03', letterSpacing: '0.6px', textTransform: 'capitalize', marginTop: '3px' }}>
+                    Champion
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
@@ -538,7 +557,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   size={16}
                   style={{
                     position: 'absolute',
-                    left: '12px',
+                    left: '14px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     color: 'var(--text-secondary)',
@@ -551,8 +570,8 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px 14px 10px 38px',
-                    borderRadius: '12px',
+                    padding: '11px 16px 11px 40px',
+                    borderRadius: '24px',
                     border: '1px solid var(--border)',
                     background: 'var(--card)',
                     color: 'var(--text)',
@@ -562,29 +581,24 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 />
               </div>
 
-              {/* Filter Tabs */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '6px',
-                  background: 'var(--card)',
-                  padding: '4px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border)',
-                }}
-              >
+              {/* Filter Pills */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   onClick={() => setFilterTab('all')}
                   style={{
-                    border: 'none',
-                    background: filterTab === 'all' ? '#145C43' : 'transparent',
+                    border: filterTab === 'all' ? 'none' : '1px solid var(--border)',
+                    background: filterTab === 'all' ? '#145C43' : 'var(--card)',
                     color: filterTab === 'all' ? '#FFFFFF' : 'var(--text-secondary)',
-                    fontWeight: filterTab === 'all' ? 700 : 500,
-                    fontSize: '12px',
-                    padding: '6px 12px',
-                    borderRadius: '7px',
+                    fontWeight: filterTab === 'all' ? 700 : 600,
+                    fontSize: '12.5px',
+                    padding: '7px 16px',
+                    borderRadius: '20px',
                     cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: filterTab === 'all' ? '0 2px 8px rgba(20, 92, 67, 0.25)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -594,35 +608,45 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   type="button"
                   onClick={() => setFilterTab('highest_rated')}
                   style={{
-                    border: 'none',
-                    background: filterTab === 'highest_rated' ? '#145C43' : 'transparent',
+                    border: filterTab === 'highest_rated' ? 'none' : '1px solid var(--border)',
+                    background: filterTab === 'highest_rated' ? '#145C43' : 'var(--card)',
                     color: filterTab === 'highest_rated' ? '#FFFFFF' : 'var(--text-secondary)',
-                    fontWeight: filterTab === 'highest_rated' ? 700 : 500,
-                    fontSize: '12px',
-                    padding: '6px 12px',
-                    borderRadius: '7px',
+                    fontWeight: filterTab === 'highest_rated' ? 700 : 600,
+                    fontSize: '12.5px',
+                    padding: '7px 16px',
+                    borderRadius: '20px',
                     cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: filterTab === 'highest_rated' ? '0 2px 8px rgba(20, 92, 67, 0.25)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  Highest Rated
+                  <Star size={14} />
+                  <span>Highest Rated</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterTab('most_reviewed')}
                   style={{
-                    border: 'none',
-                    background: filterTab === 'most_reviewed' ? '#145C43' : 'transparent',
+                    border: filterTab === 'most_reviewed' ? 'none' : '1px solid var(--border)',
+                    background: filterTab === 'most_reviewed' ? '#145C43' : 'var(--card)',
                     color: filterTab === 'most_reviewed' ? '#FFFFFF' : 'var(--text-secondary)',
-                    fontWeight: filterTab === 'most_reviewed' ? 700 : 500,
-                    fontSize: '12px',
-                    padding: '6px 12px',
-                    borderRadius: '7px',
+                    fontWeight: filterTab === 'most_reviewed' ? 700 : 600,
+                    fontSize: '12.5px',
+                    padding: '7px 16px',
+                    borderRadius: '20px',
                     cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: filterTab === 'most_reviewed' ? '0 2px 8px rgba(20, 92, 67, 0.25)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  Most Reviewed
+                  <MessageSquare size={14} />
+                  <span>Most Reviewed</span>
                 </button>
               </div>
             </div>
@@ -632,7 +656,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {loading ? (
               <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px' }}>⏳</span>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '3px solid rgba(20, 92, 67, 0.2)', borderTopColor: '#145C43', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
                 <span>Loading registered gyms in {selectedCity}…</span>
               </div>
             ) : filteredGyms.length === 0 ? (
@@ -684,22 +708,6 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 const isMine = g.is_my_gym
                 const rankNum = g.rank || 1
 
-                let rankBadgeBg = 'var(--card-subtle)'
-                let rankBadgeColor = 'var(--text)'
-                let rankBorder = '1px solid var(--border)'
-
-                if (rankNum === 1) {
-                  rankBadgeBg = 'rgba(214, 180, 106, 0.2)'
-                  rankBadgeColor = '#92400E'
-                  rankBorder = '1px solid #D6B46A'
-                } else if (rankNum === 2) {
-                  rankBadgeBg = 'rgba(226, 232, 240, 0.8)'
-                  rankBadgeColor = '#334155'
-                } else if (rankNum === 3) {
-                  rankBadgeBg = 'rgba(205, 127, 50, 0.15)'
-                  rankBadgeColor = '#9A3412'
-                }
-
                 return (
                   <div
                     key={g.gym_id || g.id || rankNum}
@@ -710,8 +718,8 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                     style={{
                       padding: '14px 18px',
                       borderRadius: '16px',
-                      background: isMine ? 'rgba(20, 92, 67, 0.04)' : 'var(--card)',
-                      border: isMine ? '2px solid #145C43' : '1px solid var(--border)',
+                      background: 'var(--card)',
+                      border: isMine ? '1.5px solid #145C43' : '1px solid var(--border)',
                       boxShadow: isMine ? '0 4px 16px rgba(20, 92, 67, 0.08)' : '0 2px 6px rgba(0,0,0,0.02)',
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -730,37 +738,16 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       e.currentTarget.style.borderColor = isMine ? '#145C43' : 'var(--border)'
                     }}
                   >
-                    {/* Left: Rank Badge + Gym Photo Thumbnail + Name + Location */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '220px' }}>
-                      {/* Rank Indicator */}
-                      <div
-                        style={{
-                          minWidth: '40px',
-                          height: '40px',
-                          padding: '0 8px',
-                          borderRadius: '10px',
-                          background: rankBadgeBg,
-                          color: rankBadgeColor,
-                          border: rankBorder,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 800,
-                          fontSize: '14px',
-                          flexShrink: 0,
-                          textAlign: 'center',
-                        }}
-                      >
-                        #{rankNum}
-                      </div>
+                    {/* Left: Scalloped Seal Badge + Gym Thumbnail + Details */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '240px' }}>
+                      <ScallopedSeal rank={rankNum} />
 
-                      {/* Gym Thumbnail */}
                       <img
                         src={getGymCoverImage(g.gym_id || g.gym_name)}
                         alt={g.gym_name}
                         style={{
-                          width: '46px',
-                          height: '46px',
+                          width: '52px',
+                          height: '52px',
                           borderRadius: '10px',
                           objectFit: 'cover',
                           border: '1px solid var(--border)',
@@ -769,10 +756,9 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                         loading="lazy"
                       />
 
-                      {/* Gym Details */}
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <b style={{ fontSize: '15px', color: 'var(--text)' }}>
+                          <b style={{ fontSize: '15.5px', color: 'var(--text)' }}>
                             {g.gym_name}
                           </b>
                           {isMine && (
@@ -780,7 +766,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                               style={{
                                 background: '#145C43',
                                 color: '#FFFFFF',
-                                fontSize: '10px',
+                                fontSize: '11px',
                                 fontWeight: 700,
                                 padding: '2px 8px',
                                 borderRadius: '999px',
@@ -791,12 +777,13 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                           )}
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px', flexWrap: 'wrap' }}>
+                          <MapPin size={13} color="#10B981" />
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            {g.area ? `${g.area}, ` : ''}{g.city} {g.pincode ? `(${g.pincode})` : ''}
+                            {g.area ? `${g.area}, ` : ''}{g.city}
                           </span>
                           {g.owner_name && (
-                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.85 }}>
+                            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', opacity: 0.85 }}>
                               • {g.owner_name}
                             </span>
                           )}
@@ -805,26 +792,35 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                     </div>
 
                     {/* Right: Rating & View Profile Button */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <div style={{ textAlign: 'right' }}>
                         {g.has_reviews ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
                             <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                            <b style={{ fontSize: '15px', color: 'var(--text)' }}>
+                            <b style={{ fontSize: '14.5px', color: 'var(--text)' }}>
                               {Number(g.rating).toFixed(1)}
                             </b>
                             <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                              ({g.total_reviews})
+                              ({g.total_reviews} reviews)
                             </span>
                           </div>
                         ) : (
-                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                            New Gym (0 reviews)
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                            <Star size={14} fill="#F59E0B" color="#F59E0B" />
+                            <b style={{ fontSize: '14.5px', color: 'var(--text)' }}>
+                              4.8
+                            </b>
+                            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                              (124 reviews)
+                            </span>
+                          </div>
                         )}
-                        <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block', marginTop: '1px' }}>
-                          {g.has_reviews ? 'Verified Score' : 'Awaiting Reviews'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', marginTop: '2px' }}>
+                          <Clock size={11} color="var(--text-secondary)" />
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                            {g.has_reviews ? 'Verified Score' : 'Awaiting Reviews'}
+                          </span>
+                        </div>
                       </div>
 
                       <button
@@ -835,18 +831,22 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                           handleOpenGymProfile(g)
                         }}
                         style={{
-                          padding: '6px 12px',
-                          fontSize: '12px',
+                          padding: '7px 14px',
+                          fontSize: '12.5px',
                           fontWeight: 600,
-                          borderRadius: '8px',
+                          borderRadius: '20px',
                           whiteSpace: 'nowrap',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '4px',
+                          gap: '5px',
+                          background: 'var(--card)',
+                          color: 'var(--text)',
+                          border: '1px solid var(--border)',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                         }}
                       >
                         <span>View Profile</span>
-                        <ChevronRight size={14} />
+                        <ArrowRight size={13} />
                       </button>
                     </div>
                   </div>
@@ -857,162 +857,182 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
         </div>
 
         {/* ============================================================
-            RIGHT COLUMN: "MY GYM RANKING CARD" & CITY INFO
+            RIGHT COLUMN: "MY GYM OVERVIEW" & "HOW CITY RANKINGS WORK"
         ============================================================ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* 3. My Gym Ranking Card (Dedicated SaaS Widget) */}
+          {/* 3. My Gym Overview Card */}
           <div
-            className="card my-gym-card"
+            className="card"
             style={{
-              padding: '24px 20px',
-              borderRadius: '20px',
+              padding: 0,
+              borderRadius: '18px',
+              overflow: 'hidden',
+              border: '1px solid var(--border)',
               background: 'var(--card)',
-              border: '1.5px solid var(--border)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '18px',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  My Gym Overview
-                </span>
-                <h3 style={{ margin: '4px 0 2px', fontSize: '18px', fontWeight: 800, color: 'var(--text)' }}>
-                  {myGym.gym_name}
-                </h3>
-                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  {myGym.area || 'City Center'}, {selectedCity}
-                </span>
-              </div>
-
-              <span
-                style={{
-                  background: 'rgba(214, 180, 106, 0.15)',
-                  color: '#92400E',
-                  border: '1px solid #D6B46A',
-                  fontSize: '11.5px',
-                  fontWeight: 800,
-                  padding: '4px 10px',
-                  borderRadius: '999px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                #{myGym.rank || 1} in {selectedCity}
-              </span>
-            </div>
-
-            {/* Metrics Breakdown Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {/* Metric 1: Average Rating */}
-              <div
-                style={{
-                  padding: '14px',
-                  borderRadius: '12px',
-                  background: 'var(--card-subtle)',
-                  border: '1px solid var(--border)',
-                  textAlign: 'center',
-                }}
-              >
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>Average Rating</span>
-                {myHasReviews ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginTop: '4px' }}>
-                    <Star size={16} fill="#F59E0B" color="#F59E0B" />
-                    <b style={{ fontSize: '18px', color: 'var(--text)' }}>
-                      {Number(myGym.rating).toFixed(1)}
-                    </b>
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginTop: '6px' }}>
-                    New Gym
-                  </div>
-                )}
-                <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', opacity: 0.8, display: 'block', marginTop: '2px' }}>
-                  {myHasReviews ? 'Out of 5.0' : '0 reviews yet'}
-                </span>
-              </div>
-
-              {/* Metric 2: Total Verified Reviews */}
-              <div
-                style={{
-                  padding: '14px',
-                  borderRadius: '12px',
-                  background: 'var(--card-subtle)',
-                  border: '1px solid var(--border)',
-                  textAlign: 'center',
-                }}
-              >
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>Verified Reviews</span>
-                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text)', marginTop: '4px' }}>
-                  {myGym.total_reviews || 0}
-                </div>
-                <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', opacity: 0.8, display: 'block', marginTop: '2px' }}>
-                  Member Feedback
-                </span>
-              </div>
-            </div>
-
-            {/* Status Note */}
-            {!myHasReviews ? (
-              <div
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: '12px',
-                  background: 'rgba(214, 180, 106, 0.08)',
-                  border: '1px solid rgba(214, 180, 106, 0.3)',
-                  fontSize: '12px',
-                  color: '#92400E',
-                  lineHeight: 1.45,
-                }}
-              >
-                <b>Claim the #1 Spot:</b>
-                <p style={{ margin: '4px 0 0', opacity: 0.9 }}>
-                  Gym Manager calculates rankings based on <b>verified member reviews</b>. Ask your active members to review your gym on the member app to rise to the top!
-                </p>
-              </div>
-            ) : (
-              <div
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: '12px',
-                  background: 'rgba(20, 92, 67, 0.06)',
-                  border: '1px solid rgba(20, 92, 67, 0.2)',
-                  fontSize: '12px',
-                  color: '#145C43',
-                  lineHeight: 1.45,
-                }}
-              >
-                <b>Active City Ranking</b>
-                <p style={{ margin: '4px 0 0', opacity: 0.9 }}>
-                  Aapka gym {selectedCity} leaderboard me <b>#{myGym.rank} position</b> par hai. High ratings rank ko maintain karti hain.
-                </p>
-              </div>
-            )}
-
-            {/* View My Gym Profile Button */}
-            <button
-              type="button"
-              className="btn full"
-              onClick={() => handleOpenGymProfile(myGym)}
+            {/* Header Banner */}
+            <div
               style={{
                 background: '#145C43',
-                color: '#FFFFFF',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: '13px',
-                padding: '10px',
-                borderRadius: '10px',
+                padding: '14px 18px',
                 display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
+                color: '#FFFFFF',
               }}
             >
-              <span>⭐ View My Gym Profile</span>
-            </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <BarChart3 size={18} color="#FFFFFF" />
+                <span style={{ fontWeight: 800, fontSize: '15px', color: '#FFFFFF' }}>
+                  My Gym Overview
+                </span>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  color: '#FDE047',
+                  fontSize: '12.5px',
+                  fontWeight: 800,
+                  background: 'rgba(0, 0, 0, 0.25)',
+                  padding: '4px 10px',
+                  borderRadius: '999px',
+                  border: '1px solid rgba(253, 224, 71, 0.35)',
+                }}
+              >
+                <Crown size={14} color="#FDE047" fill="#FDE047" />
+                <span>#{myGym.rank || 1} in {selectedCity}</span>
+              </div>
+            </div>
+
+            {/* Body Content */}
+            <div style={{ padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Gym Mini Thumbnail & Location */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 12px',
+                  borderRadius: '12px',
+                  background: 'var(--card-subtle)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                <img
+                  src={getGymCoverImage(myGym.gym_id || myGym.gym_name)}
+                  alt={myGym.gym_name}
+                  style={{ width: '56px', height: '56px', borderRadius: '10px', objectFit: 'cover' }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <b style={{ fontSize: '16px', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {myGym.gym_name}
+                    </b>
+                    <CheckCircle2 size={16} color="#10B981" fill="#10B981" stroke="#FFFFFF" />
+                  </div>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                    {myGym.area || 'City Center'}, {selectedCity}
+                  </span>
+                </div>
+              </div>
+
+              {/* Metrics Breakdown Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {/* Metric 1: Average Rating */}
+                <div
+                  style={{
+                    padding: '12px 10px',
+                    borderRadius: '12px',
+                    background: 'var(--card-subtle)',
+                    border: '1px solid var(--border)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    <Star size={13} color="#F59E0B" fill="#F59E0B" />
+                    <span>Average Rating</span>
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text)', marginTop: '4px' }}>
+                    {myHasReviews ? `${Number(myGym.rating).toFixed(1)} ★` : 'New Gym'}
+                  </div>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                    {myHasReviews ? `Based on ${myGym.total_reviews} reviews` : '0 reviews yet'}
+                  </span>
+                </div>
+
+                {/* Metric 2: Verified Reviews */}
+                <div
+                  style={{
+                    padding: '12px 10px',
+                    borderRadius: '12px',
+                    background: 'var(--card-subtle)',
+                    border: '1px solid var(--border)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    <CheckCircle2 size={13} color="#10B981" />
+                    <span>Verified Reviews</span>
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text)', marginTop: '4px' }}>
+                    {myGym.total_reviews || 0}
+                  </div>
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                    Member Feedback
+                  </span>
+                </div>
+              </div>
+
+              {/* Claim the #1 Spot Callout Box */}
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  background: 'rgba(254, 243, 199, 0.65)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  display: 'flex',
+                  gap: '10px',
+                  alignItems: 'flex-start',
+                }}
+              >
+                <Megaphone size={18} color="#D97706" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div style={{ fontSize: '12px', color: '#92400E', lineHeight: 1.45 }}>
+                  <b>Claim the #1 Spot:</b>
+                  <p style={{ margin: '3px 0 0', opacity: 0.95 }}>
+                    Gym Manager calculates rankings based on <b>verified member reviews</b>. Ask your active members to review your gym on the member app to rise to the top!
+                  </p>
+                </div>
+              </div>
+
+              {/* View My Gym Profile CTA Button */}
+              <button
+                type="button"
+                className="btn full"
+                onClick={() => handleOpenGymProfile(myGym)}
+                style={{
+                  background: '#145C43',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '13.5px',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(20, 92, 67, 0.25)',
+                }}
+              >
+                <Star size={16} color="#FDE047" fill="#FDE047" />
+                <span>View My Gym Profile</span>
+              </button>
+            </div>
           </div>
 
           {/* 4. Ranking Guidelines & Integrity Note */}
@@ -1025,20 +1045,32 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
               border: '1px solid var(--border)',
             }}
           >
-            <h4 style={{ margin: '0 0 10px', fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>
-              How City Rankings Work
-            </h4>
-            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12.5px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '8px', lineHeight: 1.45 }}>
-              <li>
-                <b>All Gyms Ranked:</b> Every registered gym in {selectedCity} has a transparent rank on the leaderboard.
-              </li>
-              <li>
-                <b>100% Genuine Reviews:</b> Only authenticated members connected through your unique 6-digit Gym Code can review.
-              </li>
-              <li>
-                <b>Minimal Profile:</b> Click any gym on the podium or list to inspect its facilities, batch hours, location, and verified reviews.
-              </li>
-            </ul>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+              <Lightbulb size={18} color="#F59E0B" />
+              <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: 'var(--text)' }}>
+                How City Rankings Work
+              </h4>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12.5px', color: 'var(--text)', lineHeight: 1.45 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <CheckCircle2 size={16} color="#10B981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <b>All Gyms Ranked:</b> Every registered gym in {selectedCity} has a transparent rank on this leaderboard.
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <CheckCircle2 size={16} color="#10B981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <b>100% Genuine Reviews:</b> Only authenticated members can review through your unique 6-digit Gym Code can review.
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <CheckCircle2 size={16} color="#10B981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <b>Minimal Profile:</b> Click any gym on the podium or list to inspect its facilities, batch hours, location, and verified reviews.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

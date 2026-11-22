@@ -3253,6 +3253,81 @@ body {
   border-color: rgba(20, 92, 67, 0.25);
 }
 
+/* ==========================================================================
+   CITY RANKINGS HERO STAGE & PEDESTAL STYLES
+   ========================================================================== */
+.champion-stage-card {
+  border-radius: 20px;
+  padding: 24px 22px 26px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.champion-pedestal {
+  position: relative;
+  width: 220px;
+  height: 90px;
+  background: linear-gradient(180deg, #FDE047 0%, #D97706 65%, #92400E 100%);
+  border-radius: 16px 16px 6px 6px;
+  box-shadow: 0 12px 32px rgba(217, 119, 6, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.8), inset 0 -4px 8px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #FCD34D;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.champion-stage-card:hover .champion-pedestal {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(217, 119, 6, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -4px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Scalloped Rank Seal Badges */
+.rank-seal {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+  text-align: center;
+  position: relative;
+  user-select: none;
+}
+
+.rank-seal.gold {
+  background: radial-gradient(circle, #FDE047 0%, #D97706 75%, #B45309 100%);
+  color: #451A03;
+  border: 2px solid #FDE047;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+}
+
+.rank-seal.silver {
+  background: radial-gradient(circle, #F8FAFC 0%, #CBD5E1 75%, #94A3B8 100%);
+  color: #1E293B;
+  border: 2px solid #E2E8F0;
+  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.25);
+}
+
+.rank-seal.bronze {
+  background: radial-gradient(circle, #FED7AA 0%, #EA580C 75%, #9A3412 100%);
+  color: #431407;
+  border: 2px solid #FDBA74;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+}
+
+.rank-seal.standard {
+  background: var(--card-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
 @media (max-width: 860px) {
   .rankings-layout-grid {
     grid-template-columns: 1fr !important;
