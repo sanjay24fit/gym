@@ -8,7 +8,7 @@ export default function ThemeToggle({
 }) {
   const { isDark, toggleTheme } = useTheme()
 
-  const tooltip = title || (isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode')
+  const tooltip = title || (isDark ? 'Dark Mode Active (Click to switch to Light Mode)' : 'Light Mode Active (Click to switch to Dark Mode)')
 
   return (
     <button
@@ -20,13 +20,26 @@ export default function ThemeToggle({
     >
       <div className="theme-toggle-icon-wrap">
         {isDark ? (
-          /* Sun icon when in dark mode (click to go light) */
+          /* Half Moon icon in Dark Mode */
+          <svg
+            className="theme-icon moon-icon"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        ) : (
+          /* Sun icon in Light Mode */
           <svg
             className="theme-icon sun-icon"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -40,25 +53,12 @@ export default function ThemeToggle({
             <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </svg>
-        ) : (
-          /* Moon icon when in light mode (click to go dark) */
-          <svg
-            className="theme-icon moon-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
         )}
       </div>
 
       {showLabel && (
         <span className="theme-toggle-label">
-          {isDark ? 'Light Mode' : 'Dark Mode'}
+          {isDark ? 'Dark Mode' : 'Light Mode'}
         </span>
       )}
     </button>

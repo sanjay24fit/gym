@@ -385,75 +385,114 @@ export default function GymProfile({
         </div>
 
         {/* Theme & Appearance */}
-        <div className="card">
-          <div className="section-head" style={{ marginBottom: '10px' }}>
-            <div>
-              <h4 style={{ margin: 0 }}>Theme & Appearance</h4>
-              <span className="muted small">Choose between Forest Charcoal Dark mode and Off-White Light mode</span>
-            </div>
-            <span className="badge blue">
-              {theme === 'dark' ? '● Dark Mode Active' : '● Light Mode Active'}
+        <div className="card settings-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+          <div>
+            <b>Theme & Appearance / थीम</b>
+            <span className="small muted block">
+              {theme === 'dark' ? 'Forest Charcoal (Dark Mode active)' : 'Off-White Emerald (Light Mode active)'}
             </span>
           </div>
 
-          <div className="theme-options-grid">
-            {/* Dark Theme Option */}
-            <div
-              className={`theme-option-card ${theme === 'dark' ? 'active' : ''}`}
-              onClick={() => setTheme('dark')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTheme('dark') }}
-            >
-              <div className="theme-option-preview dark-preview">
-                <div className="preview-bar" />
-                <div className="preview-body">
-                  <div className="preview-card" />
-                  <div className="preview-accent" />
-                </div>
-              </div>
-              <div className="theme-option-info">
-                <div className="theme-option-name">
-                  <span>Forest Charcoal Dark</span>
-                </div>
-                <div className="theme-option-check">
-                  {theme === 'dark' && (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Light Theme Option */}
-            <div
-              className={`theme-option-card ${theme === 'light' ? 'active' : ''}`}
+          <div
+            className="theme-segmented-toggle"
+            role="radiogroup"
+            aria-label="Theme Selection"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'var(--card-subtle, rgba(0, 0, 0, 0.06))',
+              border: '1.5px solid var(--border)',
+              borderRadius: '999px',
+              padding: '3px',
+              gap: '4px',
+              userSelect: 'none',
+            }}
+          >
+            {/* Light Mode Option with Sun SVG Icon */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={theme === 'light'}
               onClick={() => setTheme('light')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setTheme('light') }}
+              title="Switch to Light Mode"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                borderRadius: '999px',
+                border: theme === 'light' ? '1px solid var(--border)' : '1px solid transparent',
+                background: theme === 'light' ? 'var(--card, #FFFFFF)' : 'transparent',
+                color: theme === 'light' ? 'var(--primary, #145C43)' : 'var(--text-secondary, #718096)',
+                fontWeight: theme === 'light' ? 700 : 500,
+                fontSize: '13px',
+                cursor: 'pointer',
+                boxShadow: theme === 'light' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.18s ease',
+              }}
             >
-              <div className="theme-option-preview light-preview">
-                <div className="preview-bar" />
-                <div className="preview-body">
-                  <div className="preview-card" />
-                  <div className="preview-accent" />
-                </div>
-              </div>
-              <div className="theme-option-info">
-                <div className="theme-option-name">
-                  <span>Off-White Emerald Light</span>
-                </div>
-                <div className="theme-option-check">
-                  {theme === 'light' && (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-              </div>
-            </div>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ color: theme === 'light' ? '#D97706' : 'currentColor' }}
+              >
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+              <span>Light Mode</span>
+            </button>
+
+            {/* Dark Mode Option with Half Moon SVG Icon */}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={theme === 'dark'}
+              onClick={() => setTheme('dark')}
+              title="Switch to Dark Mode"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                borderRadius: '999px',
+                border: theme === 'dark' ? '1px solid var(--border)' : '1px solid transparent',
+                background: theme === 'dark' ? 'var(--card, #1A231F)' : 'transparent',
+                color: theme === 'dark' ? 'var(--accent, #35B982)' : 'var(--text-secondary, #718096)',
+                fontWeight: theme === 'dark' ? 700 : 500,
+                fontSize: '13px',
+                cursor: 'pointer',
+                boxShadow: theme === 'dark' ? '0 2px 6px rgba(0,0,0,0.18)' : 'none',
+                transition: 'all 0.18s ease',
+              }}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill={theme === 'dark' ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ color: theme === 'dark' ? 'var(--accent, #35B982)' : 'currentColor' }}
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <span>Dark Mode</span>
+            </button>
           </div>
         </div>
 
