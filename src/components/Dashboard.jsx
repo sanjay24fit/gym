@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import GymConnectCode from './GymConnectCode'
 import ExpiryWhatsAppModal from './ExpiryWhatsAppModal'
 import CityLeaderboardModal from './CityLeaderboardModal'
+import MemberSearchClipboard from './MemberSearchClipboard'
 import { WhatsAppIcon } from './WhatsAppSupport'
 import {
   dueAmount,
@@ -29,10 +30,19 @@ function getGreetingAndDate() {
   return { greeting, todayFormatted }
 }
 
-export default function Dashboard({ members, onOpen, onAction, gymName, gym, onGymUpdated }) {
+export default function Dashboard({
+  members,
+  onOpen,
+  onAction,
+  gymName,
+  gym,
+  onGymUpdated,
+  onPreviewMemberPass,
+}) {
   const [showNotificationPopup, setShowNotificationPopup] = useState(false)
   const [showExpiryWhatsAppModal, setShowExpiryWhatsAppModal] = useState(false)
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false)
+  const [showSearchModal, setShowSearchModal] = useState(false)
 
   const active = members.filter((m) => membershipStatus(m) !== 'expired')
   const expiring = members
@@ -77,12 +87,12 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
         </div>
 
         <div className="dash-header-actions">
-          {/* Search Trigger */}
+          {/* Search Trigger - Opens Quick Member Search Clipboard */}
           <button
             type="button"
             className="dash-circle-btn"
-            onClick={() => onOpen('all')}
-            title="Search registered members"
+            onClick={() => setShowSearchModal(true)}
+            title="Search registered members (Clipboard)"
             aria-label="Search members"
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
@@ -645,6 +655,35 @@ export default function Dashboard({ members, onOpen, onAction, gymName, gym, onG
         members={members}
         onOpenSettings={() => (onAction ? onAction('profile') : onOpen('profile'))}
       />
+
+      {/* Quick Member Search Clipboard Modal */}
+      {showSearchModal && (
+        <MemberSearchClipboard
+          members={members}
+          gym={gym}
+          onClose={() => setShowSearchModal(false)}
+          onPreviewPass={(m) => {
+            setShowSearchModal(false)
+            onPreviewMemberPass?.(m)
+          }}
+          onRenew={(m) => {
+            setShowSearchModal(false)
+            onAction?.('renew', m)
+          }}
+          onEdit={(m) => {
+            setShowSearchModal(false)
+            onAction?.('edit', m)
+          }}
+          onPay={(m) => {
+            setShowSearchModal(false)
+            onAction?.('pay', m)
+          }}
+          onOpenMemberInList={(m) => {
+            setShowSearchModal(false)
+            onOpen?.('all')
+          }}
+        />
+      )}
     </div>
   )
 }

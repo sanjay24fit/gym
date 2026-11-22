@@ -284,6 +284,12 @@ export default function App() {
     } else if (action === 'scan') {
       setMembersInitialDialog({ type: 'scan' })
       setTab('members')
+    } else if (action === 'renew' && data) {
+      setMembersInitialDialog({ type: 'renew', member: data })
+      setTab('members')
+    } else if (action === 'edit' && data) {
+      setMembersInitialDialog({ type: 'edit', member: data })
+      setTab('members')
     } else if (action === 'payments') {
       setTab('payments')
     } else if (action === 'rankings') {
@@ -580,6 +586,7 @@ export default function App() {
               setTab('members')
             }}
             onAction={handleDashboardAction}
+            onPreviewMemberPass={(m) => setMemberPreview({ member: m, gym })}
           />
         )}
 
