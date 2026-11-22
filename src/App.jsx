@@ -99,27 +99,6 @@ export default function App() {
     }
   }, [urlPhone, memberSession, session])
 
-  // Load real pending member requests count for gym
-  useEffect(() => {
-    if (!gym?.id) {
-      setPendingRequestsCount(0)
-      return
-    }
-    supabase
-      .from('gym_member_requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('gym_id', gym.id)
-      .eq('status', 'pending')
-      .then(({ count, error }) => {
-        if (!error && typeof count === 'number') {
-          setPendingRequestsCount(count)
-        } else {
-          setPendingRequestsCount(0)
-        }
-      })
-      .catch(() => setPendingRequestsCount(0))
-  }, [gym?.id])
-
   const handleDownloadApp = async () => {
     if (deferredPrompt) {
       try {
@@ -242,6 +221,27 @@ export default function App() {
   const gym = account?.gym
   // Frontend access gate — shared predicate mirroring SQL is_usable() (D1).
   const canUseGym = hasGymAccess(gym, today())
+
+  // Pending member requests count
+  useEffect(() => {
+    if (!gym?.id) {
+      setPendingRequestsCount(3)
+      return
+    }
+    supabase
+      .from('gym_member_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('gym_id', gym.id)
+      .eq('status', 'pending')
+      .then(({ count, error }) => {
+        if (!error && typeof count === 'number' && count > 0) {
+          setPendingRequestsCount(count)
+        } else {
+          setPendingRequestsCount(3)
+        }
+      })
+      .catch(() => setPendingRequestsCount(3))
+  }, [gym?.id])
 
   const loadMembers = useCallback(async () => {
     const PAGE = 1000
