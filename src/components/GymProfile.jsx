@@ -176,8 +176,8 @@ export default function GymProfile({
         {/* Gym Location & City Leaderboard Settings */}
         <form className="card" onSubmit={handleSaveLocation}>
           <div className="section-head" style={{ marginBottom: '10px' }}>
-            <div>
-              <h4 style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                   <circle cx="12" cy="10" r="3" />
