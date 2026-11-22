@@ -207,7 +207,10 @@ export default function App() {
       try {
         localStorage.setItem('gym_cached_account', JSON.stringify(freshAcc))
       } catch {}
-      setTab(isAdmin ? 'admin' : 'dashboard')
+      setTab((prevTab) => {
+        if (!prevTab || prevTab === 'auth') return isAdmin ? 'admin' : 'dashboard'
+        return prevTab
+      })
     })
     return () => {
       cancelled = true
@@ -252,8 +255,23 @@ export default function App() {
     supabase.auth.signOut()
   }
 
-  const refresh = () => {
+  const refresh = async () => {
     setLoadError('')
+    if (userId) {
+      try {
+        const { data: freshGym } = await supabase
+          .from('gyms')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle()
+        if (freshGym) {
+          setAccount((prev) => (prev ? { ...prev, gym: freshGym } : prev))
+          return
+        }
+      } catch {
+        // Fallback
+      }
+    }
     setAccount(null)
     setRefreshKey((k) => k + 1)
   }

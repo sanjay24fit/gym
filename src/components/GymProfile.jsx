@@ -41,13 +41,13 @@ export default function GymProfile({
     }
   })()
 
-  const [selectedCity, setSelectedCity] = useState(gym?.city || localSaved?.city || 'Udaipur')
-  const [selectedState, setSelectedState] = useState(gym?.state || localSaved?.state || 'Rajasthan')
-  const [selectedPincode, setSelectedPincode] = useState(gym?.pincode || localSaved?.pincode || '')
-  const [selectedArea, setSelectedArea] = useState(gym?.area || localSaved?.area || 'City Center')
+  const [selectedCity, setSelectedCity] = useState(localSaved?.city || gym?.city || 'Udaipur')
+  const [selectedState, setSelectedState] = useState(localSaved?.state || gym?.state || 'Rajasthan')
+  const [selectedPincode, setSelectedPincode] = useState(localSaved?.pincode || gym?.pincode || '')
+  const [selectedArea, setSelectedArea] = useState(localSaved?.area || gym?.area || 'City Center')
   const [gymFacilities, setGymFacilities] = useState(() => {
-    if (Array.isArray(gym?.facilities) && gym.facilities.length > 0) return gym.facilities
     if (Array.isArray(localSaved?.facilities) && localSaved.facilities.length > 0) return localSaved.facilities
+    if (Array.isArray(gym?.facilities) && gym.facilities.length > 0) return gym.facilities
     return ['Cardio Zone (Treadmill, Cycles, Steppers)', 'Strength & Heavy Free Weights', 'Personal Training (Certified Coaches)']
   })
   const [savingLocation, setSavingLocation] = useState(false)
@@ -59,6 +59,23 @@ export default function GymProfile({
     setSavingLocation(true)
     setLocationError('')
     setLocationSuccess('')
+
+    // Immediately cache in localStorage for instant persistence
+    const savedPayload = {
+      city: selectedCity,
+      state: selectedState,
+      pincode: selectedPincode,
+      area: selectedArea,
+      facilities: gymFacilities,
+    }
+    if (gym?.id) {
+      try {
+        localStorage.setItem(`gym_location_${gym.id}`, JSON.stringify(savedPayload))
+      } catch {
+        // Non-blocking
+      }
+    }
+
     const res = await updateGymLocation({
       city: selectedCity,
       state: selectedState,

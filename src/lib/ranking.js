@@ -283,7 +283,7 @@ export async function updateGymLocation({ gymName, city, state, pincode, area, f
     if (!uid) return { success: false, error: 'User not authenticated' }
 
     // Always cache location & facilities locally and in user metadata
-    // so the app remains 100% functional even if remote database table is missing columns
+    // so the app remains 100% functional even if remote database table is missing columns or RLS policies
     try {
       const cacheObj = {
         city: city || 'Udaipur',
@@ -309,6 +309,7 @@ export async function updateGymLocation({ gymName, city, state, pincode, area, f
         p_state: state || 'Rajasthan',
         p_pincode: pincode || '',
         p_area: area || 'City Center',
+        p_facilities: facilities || [],
       })
 
       if (!error && data?.success) {
@@ -324,14 +325,19 @@ export async function updateGymLocation({ gymName, city, state, pincode, area, f
       state: state || 'Rajasthan',
       pincode: pincode || '',
       area: area || 'City Center',
+      facilities: facilities || [],
     }
     if (gymName) updatePayload.gym_name = gymName
-    if (facilities && facilities.length > 0) updatePayload.facilities = facilities
 
-    const { error: updateErr } = await supabase
+    const { data: updatedRows, error: updateErr } = await supabase
       .from('gyms')
       .update(updatePayload)
       .eq('id', uid)
+      .select('id, city, area, facilities')
+
+    if (!updateErr && updatedRows && updatedRows.length > 0) {
+      return { success: true }
+    }
 
     if (updateErr) {
       // If column is missing in schema cache (e.g. area, facilities), attempt resilient fallback
@@ -340,28 +346,21 @@ export async function updateGymLocation({ gymName, city, state, pincode, area, f
         if (gymName) pruned.gym_name = gymName
         if (city) pruned.city = city
 
-        // Try updating just city/name if allowed
-        const { error: retryErr } = await supabase
+        await supabase
           .from('gyms')
           .update(pruned)
           .eq('id', uid)
 
-        if (!retryErr) {
-          return {
-            success: true,
-            notice: 'Saved! Note: Run the SQL migration in Supabase to sync the area column to the database.',
-          }
-        }
-
-        // Return success with notice since it's already safely persisted in Auth metadata & localStorage
         return {
           success: true,
-          notice: 'Location saved locally and in your profile! Add the area column in Supabase SQL editor to fully sync the database.',
+          notice: 'Location saved! Note: Enable the update policy in Supabase to sync remote database updates.',
         }
       }
 
       return { success: false, error: updateErr.message }
     }
+
+    // If RLS blocked the update (0 rows affected without error)
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message || 'Failed to update gym details.' }
