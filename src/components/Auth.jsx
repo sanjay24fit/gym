@@ -10,6 +10,7 @@ import { validateEmailAddress } from '../lib/emailValidation'
 import { sendMobileOtp } from '../lib/smsService'
 import { getDeviceInfo } from '../lib/deviceDetect'
 import { useLanguage } from '../lib/language'
+import { verifyGymConnectionCode, submitMemberJoinRequest } from '../lib/memberAuth'
 
 export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initialPhone = '' }) {
   const [deviceInfo] = useState(() => getDeviceInfo())
@@ -47,6 +48,34 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
   const [memberOtpTimer, setMemberOtpTimer] = useState(0)
   const [availableMemberships, setAvailableMemberships] = useState([])
   const [fast2SmsNotice, setFast2SmsNotice] = useState(false)
+
+  // Member Gym Connection Code Join State
+  const [memberJoinMode, setMemberJoinMode] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+  const [joinName, setJoinName] = useState('')
+  const [joinPhone, setJoinPhone] = useState('')
+  const [verifiedGym, setVerifiedGym] = useState(null)
+  const [verifyingCode, setVerifyingCode] = useState(false)
+  const [joinSubmitted, setJoinSubmitted] = useState(false)
+
+  // Auto-detect ?join=CODE or ?code=CODE from URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const qCode = params.get('join') || params.get('code')
+      if (qCode) {
+        setRole('member')
+        setMemberJoinMode(true)
+        const clean = qCode.toUpperCase().trim()
+        setJoinCode(clean)
+        setVerifyingCode(true)
+        verifyGymConnectionCode(clean).then((res) => {
+          setVerifyingCode(false)
+          if (res?.valid) setVerifiedGym(res)
+        }).catch(() => setVerifyingCode(false))
+      }
+    }
+  }, [])
 
   // Owner Email OTP Verification State (blocks fake & unverified emails)
   const [otpStep, setOtpStep] = useState(false)
@@ -568,11 +597,158 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
           )}
 
           {/* ==============================================================
-              SECTION 1: GYM MEMBER (Fast2SMS Real OTP + Direct Quick Pass)
+              SECTION 1: GYM MEMBER (Fast2SMS Real OTP + Direct Quick Pass + Code Join)
           ============================================================== */}
           {role === 'member' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {!memberOtpStep ? (
+              {memberJoinMode ? (
+                /* Mode A: Join Gym with Connection Code */
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault()
+                    if (!joinCode || !joinName || !joinPhone) {
+                      setError('Please enter Gym Code, Name, and Mobile Number.')
+                      return
+                    }
+                    setLoading(true)
+                    setError('')
+                    setInfo('')
+                    try {
+                      const res = await submitMemberJoinRequest({
+                        gymCode: joinCode,
+                        fullName: joinName,
+                        phone: joinPhone,
+                      })
+                      setJoinSubmitted(true)
+                      setInfo(`✓ Connection request sent to ${verifiedGym?.gym_name || 'the gym'}! Your account is pending gym owner approval.`)
+                    } catch (err) {
+                      setError(err.message || 'Failed to submit join request.')
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                >
+                  <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Join Gym with Code</h3>
+                    <span className="muted small">Enter the unique code shared by your gym owner</span>
+                  </div>
+
+                  {joinSubmitted ? (
+                    <div style={{ textAlign: 'center', padding: '16px 8px' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                      </div>
+                      <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800 }}>Request Sent to Gym!</h4>
+                      <p className="muted small" style={{ margin: '0 0 16px', lineHeight: 1.5 }}>
+                        Your connection request has been delivered to <b>{verifiedGym?.gym_name || 'the gym'}</b>. Once approved, your member pass and dashboard will open.
+                      </p>
+                      <button
+                        type="button"
+                        className="btn primary full"
+                        onClick={() => {
+                          setJoinSubmitted(false)
+                          setMemberJoinMode(false)
+                          setMemberPhone(joinPhone)
+                        }}
+                      >
+                        Return to Member Login
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* 1. Gym Connection Code Input */}
+                      <label>
+                        <span style={{ fontWeight: 600 }}>Gym Connection Code *</span>
+                        <input
+                          required
+                          type="text"
+                          placeholder="e.g. OMNI-7X9B-FIT"
+                          value={joinCode}
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase().trim()
+                            setJoinCode(val)
+                            setVerifiedGym(null)
+                            if (val.length >= 4) {
+                              setVerifyingCode(true)
+                              verifyGymConnectionCode(val).then((r) => {
+                                setVerifyingCode(false)
+                                if (r?.valid) setVerifiedGym(r)
+                              }).catch(() => setVerifyingCode(false))
+                            }
+                          }}
+                          style={{
+                            fontFamily: 'monospace, system-ui',
+                            fontWeight: 800,
+                            letterSpacing: '1px',
+                            textTransform: 'uppercase',
+                          }}
+                        />
+                        {verifyingCode && <span className="muted small" style={{ display: 'block', marginTop: 4 }}>Checking code…</span>}
+                        {verifiedGym && (
+                          <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#047857', fontSize: '11.5px', fontWeight: 700 }}>
+                            <span>✓ Connecting to: {verifiedGym.gym_name}</span>
+                          </div>
+                        )}
+                      </label>
+
+                      {/* 2. Full Name Input */}
+                      <label>
+                        <span style={{ fontWeight: 600 }}>Your Full Name *</span>
+                        <input
+                          required
+                          type="text"
+                          placeholder="e.g. Aman Sharma"
+                          value={joinName}
+                          onChange={(e) => setJoinName(e.target.value)}
+                        />
+                      </label>
+
+                      {/* 3. Mobile Number Input */}
+                      <label>
+                        <span style={{ fontWeight: 600 }}>10-Digit Mobile Number *</span>
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                          <span style={{ position: 'absolute', left: '12px', fontWeight: 700, fontSize: '14px', color: '#145C43' }}>+91</span>
+                          <input
+                            required
+                            type="tel"
+                            maxLength={10}
+                            placeholder="9876543210"
+                            value={joinPhone}
+                            onChange={(e) => setJoinPhone(e.target.value.replace(/\D/g, ''))}
+                            style={{ paddingLeft: '48px', fontWeight: 700 }}
+                          />
+                        </div>
+                      </label>
+
+                      {error && <div className="alert error">{error}</div>}
+                      {info && <div className="alert info">{info}</div>}
+
+                      <button
+                        type="submit"
+                        className="btn primary full"
+                        disabled={loading || !joinCode || !joinName || joinPhone.length < 10}
+                        style={{ padding: '11px', marginTop: '4px' }}
+                      >
+                        {loading ? 'Submitting Request…' : 'Send Connection Request →'}
+                      </button>
+
+                      <div style={{ textAlign: 'center', marginTop: '4px' }}>
+                        <button
+                          type="button"
+                          className="link"
+                          onClick={() => setMemberJoinMode(false)}
+                          style={{ fontSize: '12px', fontWeight: 600 }}
+                        >
+                          ← Back to Member Mobile Login
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </form>
+              ) : (
+                /* Mode B: Regular Member Mobile Login */
+                !memberOtpStep ? (
                 /* STEP 1: Enter Mobile Number */
                 <form onSubmit={handleSendMemberOtp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <label style={{ marginTop: '2px' }}>
@@ -758,7 +934,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                     {loading ? 'Verifying OTP…' : 'Verify OTP & Connect to Gym →'}
                   </button>
                 </form>
-              )}
+              ))}
 
               {/* Multiple Gym Memberships Picker (if member is enrolled in multiple gyms) */}
               {availableMemberships.length > 1 && (
@@ -786,6 +962,24 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       <span style={{ fontSize: '16px' }}>→</span>
                     </button>
                   ))}
+                </div>
+              )}
+
+              {/* Switch to Gym Connection Code Join */}
+              {!memberJoinMode && (
+                <div style={{ textAlign: 'center', marginTop: '6px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+                  <button
+                    type="button"
+                    className="link"
+                    onClick={() => {
+                      setMemberJoinMode(true)
+                      setError('')
+                      setInfo('')
+                    }}
+                    style={{ fontSize: '12.5px', fontWeight: 700, color: '#0d9488' }}
+                  >
+                    Have a Gym Connection Code? Join Gym →
+                  </button>
                 </div>
               )}
             </div>

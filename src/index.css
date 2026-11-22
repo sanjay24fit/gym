@@ -3755,6 +3755,579 @@ body {
   }
 }
 
+/* ==========================================================================
+   GYM CONNECTION CODE & REQUESTS SYSTEM (SCREENSHOT INSPIRATION)
+   ========================================================================== */
+.gym-requests-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Card 1: Hero Connection Code Card */
+.gym-code-hero-card {
+  background: radial-gradient(circle at 80% 20%, rgba(13, 148, 136, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%), #0d1b24;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  border-radius: 20px;
+  padding: 24px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #f1f5f9;
+}
+
+[data-theme="light"] .gym-code-hero-card {
+  background: radial-gradient(circle at 80% 20%, rgba(13, 148, 136, 0.1) 0%, rgba(248, 250, 252, 0.98) 100%), #ffffff;
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  color: #0f172a;
+}
+
+.gym-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gym-invite-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.gym-invite-badge.cyan {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.35);
+}
+
+.gym-invite-badge.emerald {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.gym-hero-body-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr 160px;
+  gap: 20px;
+  align-items: center;
+}
+
+.gym-hero-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gym-hero-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="light"] .gym-hero-title {
+  color: #0f172a;
+}
+
+.gym-hero-desc {
+  margin: 0;
+  font-size: 13.5px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+[data-theme="light"] .gym-hero-desc {
+  color: #475569;
+}
+
+/* How It Works Callout */
+.gym-how-it-works-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 4px;
+}
+
+[data-theme="light"] .gym-how-it-works-box {
+  background: rgba(13, 148, 136, 0.05);
+  border-color: rgba(13, 148, 136, 0.2);
+}
+
+.gym-timer-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(45, 212, 191, 0.15);
+  color: #2dd4bf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gym-how-it-works-text {
+  font-size: 12.5px;
+  color: #cbd5e1;
+}
+
+[data-theme="light"] .gym-how-it-works-text {
+  color: #334155;
+}
+
+.gym-how-it-works-text .bold-teal {
+  font-weight: 700;
+  color: #2dd4bf;
+}
+
+[data-theme="light"] .gym-how-it-works-text .bold-teal {
+  color: #0d9488;
+}
+
+/* Neon Code Box */
+.gym-neon-code-box {
+  background: rgba(9, 24, 32, 0.7);
+  border: 1.5px solid rgba(45, 212, 191, 0.45);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.14), inset 0 0 15px rgba(6, 182, 212, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+[data-theme="light"] .gym-neon-code-box {
+  background: rgba(240, 253, 250, 0.7);
+  border-color: rgba(13, 148, 136, 0.4);
+  box-shadow: 0 4px 20px rgba(13, 148, 136, 0.12);
+}
+
+.gym-code-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #5eead4;
+  margin-bottom: 4px;
+}
+
+[data-theme="light"] .gym-code-label {
+  color: #0f766e;
+}
+
+.gym-code-display {
+  font-family: monospace, system-ui;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 0 0 16px rgba(45, 212, 191, 0.5);
+  margin-bottom: 2px;
+}
+
+[data-theme="light"] .gym-code-display {
+  color: #042f2e;
+  text-shadow: none;
+}
+
+.gym-code-alt {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 14px;
+  font-family: monospace, system-ui;
+}
+
+[data-theme="light"] .gym-code-alt {
+  color: #64748b;
+}
+
+.gym-code-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gym-code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  transition: all 0.15s ease;
+}
+
+[data-theme="light"] .gym-code-btn {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.gym-code-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #2dd4bf;
+  color: #ffffff;
+}
+
+.gym-code-btn.whatsapp {
+  background: #25d366;
+  border-color: #25d366;
+  color: #ffffff;
+}
+
+.gym-code-btn.whatsapp:hover {
+  background: #1ebe5d;
+}
+
+/* QR Code Box */
+.gym-qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: 16px;
+  padding: 14px 12px;
+}
+
+[data-theme="light"] .gym-qr-card {
+  background: #ffffff;
+  border-color: rgba(13, 148, 136, 0.2);
+}
+
+.gym-qr-frame {
+  background: #ffffff;
+  padding: 6px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.gym-qr-caption {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  font-weight: 600;
+}
+
+[data-theme="light"] .gym-qr-caption {
+  color: #475569;
+}
+
+/* Card 2: Requests Table Card */
+.gym-requests-card {
+  background: #0f1d26;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+[data-theme="light"] .gym-requests-card {
+  background: #ffffff;
+  border-color: var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.gym-requests-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.gym-requests-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+[data-theme="light"] .gym-requests-title {
+  color: #0f172a;
+}
+
+.gym-requests-sub {
+  font-size: 12.5px;
+  color: #94a3b8;
+}
+
+[data-theme="light"] .gym-requests-sub {
+  color: #64748b;
+}
+
+/* Filter Pills */
+.gym-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gym-filter-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+[data-theme="light"] .gym-filter-pill {
+  border-color: var(--border);
+  color: #64748b;
+}
+
+.gym-filter-pill.active {
+  background: #0d9488;
+  color: #ffffff;
+  border-color: #0d9488;
+}
+
+/* Requests Table Styling */
+.gym-requests-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.gym-requests-table th {
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .gym-requests-table th {
+  border-bottom-color: var(--border);
+  color: #64748b;
+}
+
+.gym-requests-table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+
+[data-theme="light"] .gym-requests-table td {
+  border-bottom-color: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+}
+
+.req-member-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.req-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(45, 212, 191, 0.15);
+  color: #2dd4bf;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.req-name {
+  display: block;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+[data-theme="light"] .req-name {
+  color: #0f172a;
+}
+
+.req-phone {
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+  font-family: monospace, system-ui;
+}
+
+.req-time-text {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.req-code-badge {
+  font-family: monospace, system-ui;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.req-device-text {
+  font-size: 12.5px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+}
+
+.req-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.req-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.req-btn.approve {
+  background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+  color: #ffffff;
+}
+
+.req-btn.approve:hover {
+  background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+  transform: translateY(-1px);
+}
+
+.req-btn.decline {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.req-btn.decline:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.req-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.req-status-pill.approved {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.req-status-pill.declined {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Footer Tooltip Info */
+.gym-requests-footer-info {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 14px;
+}
+
+.gym-footer-tooltip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+[data-theme="light"] .gym-footer-tooltip-badge {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border);
+  color: #475569;
+}
+
+/* Topbar Floating Badge & Share Invite Button */
+.tab-floating-badge {
+  position: absolute;
+  top: -9px;
+  right: -6px;
+  background: #f59e0b;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+  white-space: nowrap;
+}
+
+.topbar-share-invite-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border: 1px solid rgba(13, 148, 136, 0.4);
+  background: rgba(13, 148, 136, 0.15);
+  color: #0d9488;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.topbar-share-invite-btn:hover {
+  background: #0d9488;
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .gym-hero-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 
 
 
