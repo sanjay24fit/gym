@@ -32,12 +32,22 @@ export default function GymProfile({
   const [payError, setPayError] = useState('')
   const [paySuccess, setPaySuccess] = useState('')
 
-  const [selectedCity, setSelectedCity] = useState(gym?.city || 'Udaipur')
-  const [selectedState, setSelectedState] = useState(gym?.state || 'Rajasthan')
-  const [selectedPincode, setSelectedPincode] = useState(gym?.pincode || '')
-  const [selectedArea, setSelectedArea] = useState(gym?.area || 'City Center')
+  const localSaved = (() => {
+    try {
+      const raw = localStorage.getItem(`gym_location_${gym?.id}`)
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  })()
+
+  const [selectedCity, setSelectedCity] = useState(gym?.city || localSaved?.city || 'Udaipur')
+  const [selectedState, setSelectedState] = useState(gym?.state || localSaved?.state || 'Rajasthan')
+  const [selectedPincode, setSelectedPincode] = useState(gym?.pincode || localSaved?.pincode || '')
+  const [selectedArea, setSelectedArea] = useState(gym?.area || localSaved?.area || 'City Center')
   const [gymFacilities, setGymFacilities] = useState(() => {
     if (Array.isArray(gym?.facilities) && gym.facilities.length > 0) return gym.facilities
+    if (Array.isArray(localSaved?.facilities) && localSaved.facilities.length > 0) return localSaved.facilities
     return ['Cardio Zone (Treadmill, Cycles, Steppers)', 'Strength & Heavy Free Weights', 'Personal Training (Certified Coaches)']
   })
   const [savingLocation, setSavingLocation] = useState(false)
@@ -58,7 +68,7 @@ export default function GymProfile({
     })
     setSavingLocation(false)
     if (res.success) {
-      setLocationSuccess('Gym location and facilities saved! City leaderboard rank updated.')
+      setLocationSuccess(res.notice || 'Gym location and facilities saved! City leaderboard rank updated.')
       if (onRefresh) onRefresh()
     } else {
       setLocationError(res.error || 'Failed to update location.')
