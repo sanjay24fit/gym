@@ -222,10 +222,18 @@ export default function App() {
   // Frontend access gate — shared predicate mirroring SQL is_usable() (D1).
   const canUseGym = hasGymAccess(gym, today())
 
+  const ownerPhoto =
+    gym?.owner_photo ||
+    gym?.avatar_url ||
+    gym?.logo_url ||
+    (typeof window !== 'undefined'
+      ? localStorage.getItem(`gym_owner_photo_${gym?.id}`) || localStorage.getItem('gym_owner_photo_current')
+      : null)
+
   // Pending member requests count
   useEffect(() => {
     if (!gym?.id) {
-      setPendingRequestsCount(3)
+      setPendingRequestsCount(0)
       return
     }
     supabase
@@ -234,13 +242,13 @@ export default function App() {
       .eq('gym_id', gym.id)
       .eq('status', 'pending')
       .then(({ count, error }) => {
-        if (!error && typeof count === 'number' && count > 0) {
+        if (!error && typeof count === 'number') {
           setPendingRequestsCount(count)
         } else {
-          setPendingRequestsCount(3)
+          setPendingRequestsCount(0)
         }
       })
-      .catch(() => setPendingRequestsCount(3))
+      .catch(() => setPendingRequestsCount(0))
   }, [gym?.id])
 
   const loadMembers = useCallback(async () => {
@@ -594,7 +602,7 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Topbar Actions: Share Invite (matching screenshot) */}
+        {/* Topbar Actions: Share Invite & Gym Owner Profile Avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {canUseGym && (
             <button
@@ -611,6 +619,31 @@ export default function App() {
                 <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
               </svg>
               <span>Share Invite</span>
+            </button>
+          )}
+
+          {canUseGym && (
+            <button
+              type="button"
+              className="topbar-owner-profile-btn"
+              onClick={() => setTab('gym')}
+              title="Open Gym Profile & Settings"
+            >
+              <div className="topbar-owner-avatar">
+                {ownerPhoto ? (
+                  <img src={ownerPhoto} alt={gym?.owner_name || 'Gym Owner'} className="topbar-owner-img" />
+                ) : (
+                  <span>
+                    {gym?.owner_name
+                      ? gym.owner_name.slice(0, 2).toUpperCase()
+                      : (gym?.gym_name ? gym.gym_name.slice(0, 2).toUpperCase() : 'GM')}
+                  </span>
+                )}
+              </div>
+              <div className="topbar-owner-info">
+                <span className="topbar-owner-name">{gym?.owner_name || 'Gym Owner'}</span>
+                <span className="topbar-owner-role">Gym Owner</span>
+              </div>
             </button>
           )}
         </div>
@@ -684,6 +717,9 @@ export default function App() {
             isInstalled={isInstalled}
             onDownloadApp={handleDownloadApp}
             onRefresh={refresh}
+            onGymUpdated={(updatedGym) => {
+              setAccount((prev) => (prev ? { ...prev, gym: { ...prev.gym, ...updatedGym } } : prev))
+            }}
           />
         )}
 
@@ -726,23 +762,34 @@ export default function App() {
       {/* Mobile Floating Bottom Navigation Dock */}
       <nav className="bottom-nav" aria-label="Quick Navigation Dock">
         <div className="bottom-nav-inner">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              className={`bottom-nav-item ${tab === t.key ? 'active' : ''}`}
-              onClick={() => {
-                setMembersInitialDialog(null)
-                setTab(t.key)
-              }}
-              title={t.label}
-              aria-label={t.label}
-            >
-              <span style={{ display: 'inline-flex', width: 19, height: 19, alignItems: 'center', justifyContent: 'center' }}>
-                {t.icon}
-              </span>
-              {tab === t.key && <span style={{ marginLeft: 2, fontSize: 12 }}>{t.label}</span>}
-            </button>
-          ))}
+          {tabs.map((t) => {
+            const isActive = tab === t.key
+            return (
+              <button
+                key={t.key}
+                type="button"
+                className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+                onClick={() => {
+                  setMembersInitialDialog(null)
+                  setTab(t.key)
+                }}
+                title={t.label}
+                aria-label={t.label}
+              >
+                <div className="bottom-nav-icon-container">
+                  <span className="bottom-nav-icon-wrap">
+                    {t.icon}
+                  </span>
+                  {t.badge && (
+                    <span className="bottom-nav-badge-dot">
+                      {t.badge}
+                    </span>
+                  )}
+                </div>
+                <span className="bottom-nav-label-text">{t.label}</span>
+              </button>
+            )
+          })}
         </div>
       </nav>
     </div>

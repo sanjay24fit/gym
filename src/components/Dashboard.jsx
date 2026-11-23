@@ -64,6 +64,13 @@ export default function Dashboard({
 
   const { greeting, todayFormatted } = getGreetingAndDate()
   const gymInitials = (gymName ? gymName.slice(0, 2) : 'GM').toUpperCase()
+  const ownerPhoto =
+    gym?.owner_photo ||
+    gym?.avatar_url ||
+    gym?.logo_url ||
+    (typeof window !== 'undefined'
+      ? localStorage.getItem(`gym_owner_photo_${gym?.id}`) || localStorage.getItem('gym_owner_photo_current')
+      : null)
 
   // Alert-dot weight: includes expiring today, expiring in 2 days (urgent WhatsApp reminder), and dues
   const pendingAlertsCount = expiringToday.length + expiringIn2Days.length + due.length
@@ -74,7 +81,11 @@ export default function Dashboard({
       <div className="dash-pastel-header">
         <div className="dash-pastel-user">
           <div className="dash-avatar-circle" aria-label="Gym Profile">
-            {gymInitials}
+            {ownerPhoto ? (
+              <img src={ownerPhoto} alt={gymName || 'Gym Owner'} className="dash-avatar-img" />
+            ) : (
+              gymInitials
+            )}
           </div>
           <div className="dash-user-titles">
             <h1 className="dash-greeting-text">

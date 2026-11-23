@@ -93,42 +93,11 @@ export default function GymMemberRequests({
   const appBaseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://gymmanager.app'
   const inviteUrl = `${appBaseUrl}/?join=${encodeURIComponent(displayCodes.primaryCode)}`
 
-  // Default demo requests matching screenshot if database has zero requests yet
-  const demoRequests = [
-    {
-      id: 'demo-req-1',
-      full_name: 'Aman Sharma',
-      phone: '9876543210',
-      gym_code_used: displayCodes.primaryCode,
-      device: 'Member App (Android)',
-      status: 'pending',
-      created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'demo-req-2',
-      full_name: 'Priya Patel',
-      phone: '9812345678',
-      gym_code_used: displayCodes.primaryCode,
-      device: 'Member App (Android)',
-      status: 'pending',
-      created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'demo-req-3',
-      full_name: 'Vikram Singh',
-      phone: '9765432109',
-      gym_code_used: displayCodes.primaryCode,
-      device: 'iOS App',
-      status: 'pending',
-      created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-    },
-  ]
-
   const loadRequests = useCallback(async () => {
     if (!gym?.id) {
-      setRequests(demoRequests)
+      setRequests([])
       setLoading(false)
-      onPendingCountChange?.(3)
+      onPendingCountChange?.(0)
       return
     }
     setLoading(true)
@@ -138,11 +107,11 @@ export default function GymMemberRequests({
       const pending = list.filter((r) => r.status === 'pending').length
       onPendingCountChange?.(pending)
     } else {
-      setRequests(demoRequests)
-      onPendingCountChange?.(3)
+      setRequests([])
+      onPendingCountChange?.(0)
     }
     setLoading(false)
-  }, [gym?.id, displayCodes.primaryCode, onPendingCountChange])
+  }, [gym?.id, onPendingCountChange])
 
   useEffect(() => {
     loadRequests()
@@ -206,38 +175,6 @@ export default function GymMemberRequests({
     const req = reviewDialog
     setActionId(req.id)
 
-    // If it's a demo request (simulated)
-    if (req.id.startsWith('demo-req-')) {
-      if (gym?.id) {
-        try {
-          const todayIso = new Date().toISOString().slice(0, 10)
-          const endIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-          await supabase.from('members').insert({
-            gym_id: gym.id,
-            name: req.full_name,
-            phone: req.phone,
-            plan: selectedPlan,
-            start_date: todayIso,
-            end_date: endIso,
-            total_fee: Number(memberFee || 2000),
-            paid_amount: Number(memberPaid || 2000),
-            facility: selectedFacility,
-            notes: `[Facility: ${selectedFacility}] Joined via Connection Code ${displayCodes.primaryCode}`,
-          })
-        } catch (err) {
-          console.warn('Demo member insert error:', err)
-        }
-      }
-
-      setRequests((prev) =>
-        prev.map((r) => (r.id === req.id ? { ...r, status: 'approved' } : r))
-      )
-      setActionId(null)
-      setReviewDialog(null)
-      if (reloadMembers) reloadMembers()
-      return
-    }
-
     // Real Supabase request approval
     const res = await approveMemberJoinRequest(req.id)
     setActionId(null)
@@ -256,16 +193,6 @@ export default function GymMemberRequests({
     if (!rejectDialog) return
     const req = rejectDialog
     setActionId(req.id)
-
-    if (req.id.startsWith('demo-req-')) {
-      setRequests((prev) =>
-        prev.map((r) => (r.id === req.id ? { ...r, status: 'rejected' } : r))
-      )
-      setActionId(null)
-      setRejectDialog(null)
-      setRejectReason('')
-      return
-    }
 
     const res = await rejectMemberJoinRequest(req.id, rejectReason)
     setActionId(null)
