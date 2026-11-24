@@ -1,27 +1,40 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, lazy, Suspense } from 'react'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { today } from './lib/utils'
 import { canUseGym as hasGymAccess } from './lib/access'
 import { updateMemberPayment } from './lib/payments'
 import { getStoredMemberSession, setStoredMemberSession, clearMemberSession, lookupMemberPortal } from './lib/memberPortal'
 import Auth from './components/Auth'
-import AccessBlocked from './components/AccessBlocked'
 import Dashboard from './components/Dashboard'
-import Members from './components/Members'
-import Payments from './components/Payments'
-import GymProfile from './components/GymProfile'
-import Admin from './components/Admin'
-import PaymentForm from './components/PaymentForm'
 import SetupNotice from './components/SetupNotice'
 import GymLogo from './components/GymLogo'
-import DownloadAppModal from './components/DownloadAppModal'
-import ResetPassword from './components/ResetPassword'
-import MemberPortal from './components/MemberPortal'
-import GymMemberRequests from './components/GymMemberRequests'
-import MemberPendingApproval from './components/MemberPendingApproval'
-import MemberRejected from './components/MemberRejected'
-import CityRankings from './components/CityRankings'
 import SplashScreen from './components/SplashScreen'
+
+// Lazy-loaded components for fast mobile initial load and minimal initial bundle size
+const Members = lazy(() => import('./components/Members'))
+const Payments = lazy(() => import('./components/Payments'))
+const GymProfile = lazy(() => import('./components/GymProfile'))
+const Admin = lazy(() => import('./components/Admin'))
+const PaymentForm = lazy(() => import('./components/PaymentForm'))
+const DownloadAppModal = lazy(() => import('./components/DownloadAppModal'))
+const ResetPassword = lazy(() => import('./components/ResetPassword'))
+const MemberPortal = lazy(() => import('./components/MemberPortal'))
+const GymMemberRequests = lazy(() => import('./components/GymMemberRequests'))
+const MemberPendingApproval = lazy(() => import('./components/MemberPendingApproval'))
+const MemberRejected = lazy(() => import('./components/MemberRejected'))
+const CityRankings = lazy(() => import('./components/CityRankings'))
+const AccessBlocked = lazy(() => import('./components/AccessBlocked'))
+
+function TabFallback() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '260px', padding: '32px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        <div style={{ width: '28px', height: '28px', border: '3px solid rgba(53, 185, 130, 0.2)', borderTopColor: '#35B982', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <span style={{ fontSize: '13px', color: 'var(--muted, #96A39C)' }}>Loading…</span>
+      </div>
+    </div>
+  )
+}
 
 function getInitialCachedAccount() {
   if (typeof window === 'undefined') return null
@@ -31,6 +44,29 @@ function getInitialCachedAccount() {
   } catch {
     return null
   }
+}
+
+function getInitialCachedMembers() {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem('gym_cached_members')
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function hasStoredSupabaseToken() {
+  if (typeof window === 'undefined') return false
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        return true
+      }
+    }
+  } catch {}
+  return false
 }
 
 export default function App() {
@@ -43,7 +79,7 @@ export default function App() {
       new URLSearchParams(window.location.search).get('type') === 'recovery'
     )
   })
-  const [members, setMembers] = useState([])
+  const [members, setMembers] = useState(() => getInitialCachedMembers())
   const [tab, setTab] = useState('dashboard')
   const [filter, setFilter] = useState('all')
   const [refreshKey, setRefreshKey] = useState(0)
@@ -269,6 +305,9 @@ export default function App() {
       if (data.length < PAGE) break
     }
     setMembers(all)
+    try {
+      localStorage.setItem('gym_cached_members', JSON.stringify(all.slice(0, 500)))
+    } catch {}
   }, [])
 
   useEffect(() => {
@@ -280,6 +319,7 @@ export default function App() {
     setLoadError('')
     try {
       localStorage.removeItem('gym_cached_account')
+      localStorage.removeItem('gym_cached_members')
     } catch {}
     setAccount(null)
     supabase.auth.signOut()
@@ -348,22 +388,24 @@ export default function App() {
 
   if (isPasswordRecovery) {
     return (
-      <ResetPassword
-        onComplete={() => {
-          setIsPasswordRecovery(false)
-          if (typeof window !== 'undefined') {
-            window.history.replaceState(null, '', window.location.pathname)
-          }
-          refresh()
-        }}
-        onCancel={() => {
-          setIsPasswordRecovery(false)
-          if (typeof window !== 'undefined') {
-            window.history.replaceState(null, '', window.location.pathname)
-          }
-          logout()
-        }}
-      />
+      <Suspense fallback={<SplashScreen message="Loading…" />}>
+        <ResetPassword
+          onComplete={() => {
+            setIsPasswordRecovery(false)
+            if (typeof window !== 'undefined') {
+              window.history.replaceState(null, '', window.location.pathname)
+            }
+            refresh()
+          }}
+          onCancel={() => {
+            setIsPasswordRecovery(false)
+            if (typeof window !== 'undefined') {
+              window.history.replaceState(null, '', window.location.pathname)
+            }
+            logout()
+          }}
+        />
+      </Suspense>
     )
   }
 
@@ -384,36 +426,35 @@ export default function App() {
   // Member Portal Session (Direct Phone-Based Access)
   if (memberSession) {
     return (
-      <MemberPortal
-        member={memberSession.member}
-        gym={memberSession.gym}
-        onLogout={() => {
-          clearMemberSession()
-          setMemberSession(null)
-          if (typeof window !== 'undefined' && window.location.search.includes('phone')) {
-            window.history.replaceState(null, '', window.location.pathname)
-          }
-        }}
-        onRefresh={async () => {
-          const res = await lookupMemberPortal(memberSession.member?.phone)
-          if (res.success && res.memberships?.[0]) {
-            setStoredMemberSession(res.memberships[0])
-            setMemberSession(res.memberships[0])
-          }
-        }}
-      />
+      <Suspense fallback={<SplashScreen message="Opening Member Pass…" />}>
+        <MemberPortal
+          member={memberSession.member}
+          gym={memberSession.gym}
+          onLogout={() => {
+            clearMemberSession()
+            setMemberSession(null)
+            if (typeof window !== 'undefined' && window.location.search.includes('phone')) {
+              window.history.replaceState(null, '', window.location.pathname)
+            }
+          }}
+          onRefresh={async () => {
+            const res = await lookupMemberPortal(memberSession.member?.phone)
+            if (res.success && res.memberships?.[0]) {
+              setStoredMemberSession(res.memberships[0])
+              setMemberSession(res.memberships[0])
+            }
+          }}
+        />
+      </Suspense>
     )
   }
 
-  if (session === undefined) {
-    return <SplashScreen message={account ? "Opening your gym dashboard…" : "Starting Gym Manager…"} />
-  }
-
-  if (session && !account) {
-    return <SplashScreen message="Opening your gym dashboard…" />
-  }
-
-  if (!session) {
+  // Instant render: if account is already cached from previous login, DO NOT block UI with splash screen!
+  // Only show splash screen if session is resolving AND there's a stored token with no cached account yet.
+  if (session === undefined && !account) {
+    if (hasStoredSupabaseToken()) {
+      return <SplashScreen message="Starting Gym Manager…" />
+    }
     return (
       <>
         <Auth
@@ -425,16 +466,54 @@ export default function App() {
             setMemberSession(data)
           }}
         />
-        <DownloadAppModal
-          isOpen={showDownloadApp}
-          onClose={() => setShowDownloadApp(false)}
-          deferredPrompt={deferredPrompt}
-          onInstalled={() => {
-            setIsInstalled(true)
-            localStorage.setItem('gym_app_installed', 'true')
-            setDeferredPrompt(null)
+        {showDownloadApp && (
+          <Suspense fallback={null}>
+            <DownloadAppModal
+              isOpen={showDownloadApp}
+              onClose={() => setShowDownloadApp(false)}
+              deferredPrompt={deferredPrompt}
+              onInstalled={() => {
+                setIsInstalled(true)
+                localStorage.setItem('gym_app_installed', 'true')
+                setDeferredPrompt(null)
+              }}
+            />
+          </Suspense>
+        )}
+      </>
+    )
+  }
+
+  if (session && !account) {
+    return <SplashScreen message="Opening your gym dashboard…" />
+  }
+
+  if (!session && !account) {
+    return (
+      <>
+        <Auth
+          onDownloadApp={handleDownloadApp}
+          isInstalled={isInstalled}
+          initialPhone={urlPhone}
+          onMemberLogin={(data) => {
+            setStoredMemberSession(data)
+            setMemberSession(data)
           }}
         />
+        {showDownloadApp && (
+          <Suspense fallback={null}>
+            <DownloadAppModal
+              isOpen={showDownloadApp}
+              onClose={() => setShowDownloadApp(false)}
+              deferredPrompt={deferredPrompt}
+              onInstalled={() => {
+                setIsInstalled(true)
+                localStorage.setItem('gym_app_installed', 'true')
+                setDeferredPrompt(null)
+              }}
+            />
+          </Suspense>
+        )}
       </>
     )
   }
@@ -444,38 +523,48 @@ export default function App() {
     const memData = authMemberData || account?.memberData
     if (memData?.status === 'pending') {
       return (
-        <MemberPendingApproval
-          gym={memData.gym}
-          request={memData.request}
-          onRefresh={refresh}
-          onLogout={logout}
-        />
+        <Suspense fallback={<SplashScreen message="Checking status…" />}>
+          <MemberPendingApproval
+            gym={memData.gym}
+            request={memData.request}
+            onRefresh={refresh}
+            onLogout={logout}
+          />
+        </Suspense>
       )
     }
     if (memData?.status === 'rejected') {
       return (
-        <MemberRejected
-          gym={memData.gym}
-          notes={memData.notes}
-          onRetry={refresh}
-          onLogout={logout}
-        />
+        <Suspense fallback={<SplashScreen message="Loading status…" />}>
+          <MemberRejected
+            gym={memData.gym}
+            notes={memData.notes}
+            onRetry={refresh}
+            onLogout={logout}
+          />
+        </Suspense>
       )
     }
     if (memData?.status === 'approved' && memData.member) {
       return (
-        <MemberPortal
-          member={memData.member}
-          gym={memData.gym}
-          onLogout={logout}
-          onRefresh={refresh}
-        />
+        <Suspense fallback={<SplashScreen message="Opening Member Pass…" />}>
+          <MemberPortal
+            member={memData.member}
+            gym={memData.gym}
+            onLogout={logout}
+            onRefresh={refresh}
+          />
+        </Suspense>
       )
     }
   }
 
   if (!account.isAdmin && !canUseGym) {
-    return <AccessBlocked gym={gym} userEmail={session?.user?.email || gym?.email || ''} onLogout={logout} onRefresh={refresh} />
+    return (
+      <Suspense fallback={<SplashScreen message="Checking access…" />}>
+        <AccessBlocked gym={gym} userEmail={session?.user?.email || gym?.email || ''} onLogout={logout} onRefresh={refresh} />
+      </Suspense>
+    )
   }
 
   const tabs = [
@@ -670,92 +759,114 @@ export default function App() {
         )}
 
         {tab === 'members' && canUseGym && (
-          <Members
-            members={members}
-            filter={filter}
-            setFilter={setFilter}
-            reload={loadMembers}
-            gym={gym}
-            initialDialog={membersInitialDialog}
-            onPreviewMemberPass={(m) => setMemberPreview({ member: m, gym })}
-          />
+          <Suspense fallback={<TabFallback />}>
+            <Members
+              members={members}
+              filter={filter}
+              setFilter={setFilter}
+              reload={loadMembers}
+              gym={gym}
+              initialDialog={membersInitialDialog}
+              onPreviewMemberPass={(m) => setMemberPreview({ member: m, gym })}
+            />
+          </Suspense>
         )}
 
         {tab === 'payments' && canUseGym && (
-          <Payments
-            members={members}
-            onCollectPayment={(m) => setPaymentDialogMember(m)}
-            onEditMember={(m) => {
-              setMembersInitialDialog({ type: 'edit', member: m })
-              setTab('members')
-            }}
-          />
+          <Suspense fallback={<TabFallback />}>
+            <Payments
+              members={members}
+              onCollectPayment={(m) => setPaymentDialogMember(m)}
+              onEditMember={(m) => {
+                setMembersInitialDialog({ type: 'edit', member: m })
+                setTab('members')
+              }}
+            />
+          </Suspense>
         )}
 
         {tab === 'rankings' && canUseGym && (
-          <CityRankings
-            gym={gym}
-            onRefreshGym={refresh}
-          />
+          <Suspense fallback={<TabFallback />}>
+            <CityRankings
+              gym={gym}
+              onRefreshGym={refresh}
+            />
+          </Suspense>
         )}
 
         {tab === 'requests' && canUseGym && (
-          <GymMemberRequests
-            gym={gym}
-            existingMembers={members}
-            reloadGym={refresh}
-            reloadMembers={loadMembers}
-            onPendingCountChange={setPendingRequestsCount}
-          />
+          <Suspense fallback={<TabFallback />}>
+            <GymMemberRequests
+              gym={gym}
+              existingMembers={members}
+              reloadGym={refresh}
+              reloadMembers={loadMembers}
+              onPendingCountChange={setPendingRequestsCount}
+            />
+          </Suspense>
         )}
 
         {tab === 'gym' && canUseGym && (
-          <GymProfile
-            gym={gym}
-            userEmail={session?.user?.email || gym?.email || ''}
-            onLogout={logout}
-            isInstalled={isInstalled}
-            onDownloadApp={handleDownloadApp}
-            onRefresh={refresh}
-            onGymUpdated={(updatedGym) => {
-              setAccount((prev) => (prev ? { ...prev, gym: { ...prev.gym, ...updatedGym } } : prev))
-            }}
-          />
+          <Suspense fallback={<TabFallback />}>
+            <GymProfile
+              gym={gym}
+              userEmail={session?.user?.email || gym?.email || ''}
+              onLogout={logout}
+              isInstalled={isInstalled}
+              onDownloadApp={handleDownloadApp}
+              onRefresh={refresh}
+              onGymUpdated={(updatedGym) => {
+                setAccount((prev) => (prev ? { ...prev, gym: { ...prev.gym, ...updatedGym } } : prev))
+              }}
+            />
+          </Suspense>
         )}
 
-        {tab === 'admin' && account.isAdmin && <Admin adminId={userId} />}
+        {tab === 'admin' && account.isAdmin && (
+          <Suspense fallback={<TabFallback />}>
+            <Admin adminId={userId} />
+          </Suspense>
+        )}
       </main>
 
       {/* Standalone Payment Modal when triggered from Payments tab or Dashboard */}
       {paymentDialogMember && (
-        <PaymentForm
-          member={paymentDialogMember}
-          onSave={handlePaymentSave}
-          onClose={() => setPaymentDialogMember(null)}
-        />
+        <Suspense fallback={null}>
+          <PaymentForm
+            member={paymentDialogMember}
+            onSave={handlePaymentSave}
+            onClose={() => setPaymentDialogMember(null)}
+          />
+        </Suspense>
       )}
 
       {/* Download App Modal */}
-      <DownloadAppModal
-        isOpen={showDownloadApp}
-        onClose={() => setShowDownloadApp(false)}
-        deferredPrompt={deferredPrompt}
-        onInstalled={() => {
-          setIsInstalled(true)
-          localStorage.setItem('gym_app_installed', 'true')
-          setDeferredPrompt(null)
-        }}
-      />
+      {showDownloadApp && (
+        <Suspense fallback={null}>
+          <DownloadAppModal
+            isOpen={showDownloadApp}
+            onClose={() => setShowDownloadApp(false)}
+            deferredPrompt={deferredPrompt}
+            onInstalled={() => {
+              setIsInstalled(true)
+              localStorage.setItem('gym_app_installed', 'true')
+              setDeferredPrompt(null)
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Live Member Pass Preview Overlay for Gym Owners */}
       {memberPreview && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--bg)', overflowY: 'auto' }}>
-          <MemberPortal
-            member={memberPreview.member}
-            gym={memberPreview.gym}
-            isOwnerPreview={true}
-            onClosePreview={() => setMemberPreview(null)}
-          />
+          <Suspense fallback={<SplashScreen message="Opening Pass Preview…" />}>
+            <MemberPortal
+              member={memberPreview.member}
+              gym={memberPreview.gym}
+              isOwnerPreview={true}
+              onClosePreview={() => setMemberPreview(null)}
+            />
+          </Suspense>
         </div>
       )}
 

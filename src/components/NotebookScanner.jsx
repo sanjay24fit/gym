@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import Modal from './Modal'
-import { createWorker } from 'tesseract.js'
 import { preprocessImage } from '../lib/imagePreprocessor'
 import { parseNotebookText } from '../lib/ocrParser'
 import { PLANS, planEndDate, today, formatMoney, formatDate, isSchemaDriftError, buildFallbackMemberValues } from '../lib/utils'
@@ -151,6 +150,7 @@ export default function NotebookScanner({ existingMembers = [], onImportSuccess,
     const imageToScan = adjustedImageSrc || rawImageSrc
 
     try {
+      const { createWorker } = await import('tesseract.js')
       const worker = await createWorker('eng', 1, {
         logger: (m) => {
           if (m.status === 'recognizing text') {

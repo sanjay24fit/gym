@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import Modal from './Modal'
 import MemberForm from './MemberForm'
 import PaymentForm from './PaymentForm'
-import NotebookScanner from './NotebookScanner'
+const NotebookScanner = lazy(() => import('./NotebookScanner'))
 import { supabase } from '../lib/supabase'
 import { updateMemberPayment } from '../lib/payments'
 import { WhatsAppIcon } from './WhatsAppSupport'
@@ -503,14 +503,16 @@ export default function Members({
 
       {/* Notebook Scanner Modal */}
       {dialog && dialog.type === 'scan' && (
-        <NotebookScanner
-          existingMembers={members}
-          onImportSuccess={async () => {
-            setDialog(null)
-            await reload()
-          }}
-          onClose={() => setDialog(null)}
-        />
+        <Suspense fallback={<div className="modal-backdrop"><div className="card loading-card" style={{ padding: '24px', textAlign: 'center' }}>Loading Scanner…</div></div>}>
+          <NotebookScanner
+            existingMembers={members}
+            onImportSuccess={async () => {
+              setDialog(null)
+              await reload()
+            }}
+            onClose={() => setDialog(null)}
+          />
+        </Suspense>
       )}
 
       {/* Payment Form Modal */}

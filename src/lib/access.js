@@ -5,10 +5,9 @@
 // Server-side activation decisions live in api/payments/policy.js — never here.
 
 // Core access check: may this gym use the app right now?
-// Under subscription-based access, approval is automatic. Any account that is not
-// explicitly blocked and has not expired may use the gym application.
+// Mirror SQL is_usable(): status = 'active' AND (valid_until IS NULL OR valid_until >= current_date)
 export function canUseGym(gym, todayStr) {
-  return gym?.status !== 'blocked' && (!gym.valid_until || gym.valid_until >= todayStr)
+  return gym?.status === 'active' && (!gym?.valid_until || gym.valid_until >= todayStr)
 }
 
 // Account explicitly blocked by an administrator.
@@ -18,7 +17,7 @@ export function isBlockedGym(gym) {
 
 // Account past its validity date (trial or paid — see isTrialGym).
 export function isExpiredGym(gym, todayStr) {
-  return gym?.status !== 'blocked' && Boolean(gym?.valid_until) && gym.valid_until < todayStr
+  return gym?.status === 'active' && Boolean(gym?.valid_until) && gym.valid_until < todayStr
 }
 
 // Trial vs paid comes from the explicit backend field (never inferred from
