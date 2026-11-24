@@ -25,8 +25,8 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
   // rows without the field (legacy accounts) are treated as paid/not-trial.
   const isTrial = isTrialGym(gym)
 
-  let title = 'Approval pending'
-  let text = 'Your account has been created. You can use the app once the admin approves it, or activate it via subscription.'
+  let title = 'Subscription Required'
+  let text = 'Your subscription or trial has ended. Subscribe or renew to continue managing your gym.'
   if (!gym) {
     title = 'Account not found'
     text = 'No gym account is linked to this login.'

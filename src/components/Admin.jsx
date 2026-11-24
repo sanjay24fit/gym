@@ -71,8 +71,9 @@ export default function Admin({ adminId }) {
       (g.phone && g.phone.includes(q))
   )
 
-  const pending = gyms.filter((g) => g.status === 'pending').length
-  const active = gyms.filter((g) => g.status === 'active').length
+  const todayStr = today()
+  const active = gyms.filter((g) => g.status !== 'blocked' && (!g.valid_until || g.valid_until >= todayStr)).length
+  const expiredCount = gyms.filter((g) => g.status !== 'blocked' && g.valid_until && g.valid_until < todayStr).length
   const blocked = gyms.filter((g) => g.status === 'blocked').length
 
   return (
@@ -80,7 +81,7 @@ export default function Admin({ adminId }) {
       <div className="section-head" style={{ marginBottom: '16px' }}>
         <div>
           <h2>Gym Accounts</h2>
-          <span className="muted small">Approve, monitor, and manage all registered gym owner accounts</span>
+          <span className="muted small">Monitor and manage all registered gym owner accounts and subscriptions</span>
         </div>
         <button type="button" className="btn primary" onClick={() => setCreating(true)}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -127,7 +128,7 @@ export default function Admin({ adminId }) {
 
         <div className="summary-card warning">
           <div className="summary-card-head">
-            <span className="summary-card-label">Pending Approval</span>
+            <span className="summary-card-label">Expired Plans</span>
             <div className="summary-card-icon" aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
@@ -135,8 +136,8 @@ export default function Admin({ adminId }) {
               </svg>
             </div>
           </div>
-          <div className="summary-card-value">{pending}</div>
-          <div className="summary-card-sub">Awaiting admin review</div>
+          <div className="summary-card-value">{expiredCount}</div>
+          <div className="summary-card-sub">Renewal required</div>
         </div>
 
         <div className="summary-card danger">
@@ -217,9 +218,15 @@ export default function Admin({ adminId }) {
                     </td>
 
                     <td data-label="Status">
-                      <span className={`badge ${STATUS_TONE[g.status]}`}>{g.status}</span>
-                      {g.status === 'active' && expired && (
-                        <span className="badge red block" style={{ marginTop: '4px' }}>Plan Expired</span>
+                      {g.status === 'blocked' ? (
+                        <span className="badge red">blocked</span>
+                      ) : expired ? (
+                        <>
+                          <span className="badge green">active</span>
+                          <span className="badge red block" style={{ marginTop: '4px' }}>Plan Expired</span>
+                        </>
+                      ) : (
+                        <span className="badge green">active</span>
                       )}
                     </td>
 
@@ -237,7 +244,7 @@ export default function Admin({ adminId }) {
                             e.target.value = g.valid_until || ''
                             return
                           }
-                          update(g.id, { valid_until: v })
+                          update(g.id, { status: g.status === 'blocked' ? 'blocked' : 'active', valid_until: v })
                         }}
                       />
                       <span className="muted small block" style={{ marginTop: '2px' }}>
@@ -250,65 +257,53 @@ export default function Admin({ adminId }) {
                     </td>
 
                     <td className="actions">
-                      {g.status !== 'active' && (
+                      {g.status === 'blocked' ? (
                         <button
                           type="button"
                           className="btn sm primary"
-                          onClick={() =>
-                            update(g.id, {
-                              status: 'active',
-                              valid_until: g.valid_until || plusOneYear(),
-                            })
-                          }
+                          onClick={() => update(g.id, { status: 'active' })}
                         >
-                          {g.status === 'pending' ? 'Approve' : 'Activate'}
+                          Unblock
                         </button>
-                      )}
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="btn sm"
+                            onClick={() =>
+                              update(g.id, {
+                                status: 'active',
+                                valid_until: plusOneYear(expired ? null : g.valid_until),
+                              })
+                            }
+                          >
+                            +1 Year
+                          </button>
 
-                      {g.status === 'active' && expired && (
-                        <button
-                          type="button"
-                          className="btn sm accent"
-                          onClick={() => update(g.id, { valid_until: plusOneYear() })}
-                        >
-                          Reactivate (1 year)
-                        </button>
-                      )}
+                          {!expired && (
+                            <button
+                              type="button"
+                              className="btn sm danger"
+                              onClick={() => {
+                                setError('')
+                                setConfirmDialog({ type: 'expire', gym: g })
+                              }}
+                            >
+                              Expire
+                            </button>
+                          )}
 
-                      {g.status === 'active' && !expired && (
-                        <button
-                          type="button"
-                          className="btn sm"
-                          onClick={() => update(g.id, { valid_until: plusOneYear(g.valid_until) })}
-                        >
-                          +1 Year
-                        </button>
-                      )}
-
-                      {g.status === 'active' && !expired && (
-                        <button
-                          type="button"
-                          className="btn sm danger"
-                          onClick={() => {
-                            setError('')
-                            setConfirmDialog({ type: 'expire', gym: g })
-                          }}
-                        >
-                          Expire
-                        </button>
-                      )}
-
-                      {g.status !== 'blocked' && (
-                        <button
-                          type="button"
-                          className="btn sm danger"
-                          onClick={() => {
-                            setError('')
-                            setConfirmDialog({ type: 'block', gym: g })
-                          }}
-                        >
-                          Block
-                        </button>
+                          <button
+                            type="button"
+                            className="btn sm danger"
+                            onClick={() => {
+                              setError('')
+                              setConfirmDialog({ type: 'block', gym: g })
+                            }}
+                          >
+                            Block
+                          </button>
+                        </>
                       )}
                     </td>
                   </tr>
