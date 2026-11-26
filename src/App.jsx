@@ -36,11 +36,23 @@ function TabFallback() {
   )
 }
 
+function isValidUUID(str) {
+  return (
+    typeof str === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str)
+  )
+}
+
 function getInitialCachedAccount() {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem('gym_cached_account')
-    return raw ? JSON.parse(raw) : null
+    const parsed = raw ? JSON.parse(raw) : null
+    if (parsed && parsed.userId && !isValidUUID(parsed.userId)) {
+      localStorage.removeItem('gym_cached_account')
+      return null
+    }
+    return parsed
   } catch {
     return null
   }
@@ -179,7 +191,10 @@ export default function App() {
     return () => data?.subscription?.unsubscribe()
   }, [])
 
-  const userId = session?.user?.id || (session === undefined ? loadedAccount?.userId : null)
+  const userId =
+    session?.user?.id && isValidUUID(session.user.id)
+      ? session.user.id
+      : (session === undefined && isValidUUID(loadedAccount?.userId) ? loadedAccount.userId : null)
   const account = (loadedAccount && (!userId || loadedAccount.userId === userId)) ? loadedAccount : null
 
   useEffect(() => {
@@ -228,6 +243,22 @@ export default function App() {
       }
 
       if (gymRes.error && !gymRes.error.message?.includes('0 rows')) {
+        const isAuthOrBadReq =
+          gymRes.error.code === '22P02' ||
+          gymRes.error.code === 'PGRST301' ||
+          gymRes.error.message?.toLowerCase().includes('bad request') ||
+          gymRes.error.message?.toLowerCase().includes('jwt') ||
+          gymRes.error.message?.toLowerCase().includes('permission denied')
+
+        if (isAuthOrBadReq) {
+          try {
+            localStorage.removeItem('gym_cached_account')
+          } catch {}
+          setAccount(null)
+          supabase.auth.signOut().catch(() => {})
+          return
+        }
+
         if (!memberRes.data?.success) {
           setLoadError(gymRes.error.message)
           return
@@ -327,9 +358,12 @@ export default function App() {
 
   const refresh = async () => {
     setLoadError('')
-    if (userId) {
+    try {
+      localStorage.removeItem('gym_cached_account')
+    } catch {}
+    if (userId && isValidUUID(userId)) {
       try {
-        const { data: freshGym } = await supabase
+        const { data: freshGym, error: gymErr } = await supabase
           .from('gyms')
           .select('*')
           .eq('id', userId)
@@ -337,6 +371,10 @@ export default function App() {
         if (freshGym) {
           setAccount((prev) => (prev ? { ...prev, gym: freshGym } : prev))
           return
+        }
+        if (gymErr) {
+          const { data: sData } = await supabase.auth.getSession()
+          setSession(sData?.session || null)
         }
       } catch {
         // Fallback
