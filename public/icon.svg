@@ -1,42 +1,71 @@
 <svg width="512" height="512" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- Electric Athletic Orange Gradient Background -->
     <linearGradient id="logoBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#14243A" />
-      <stop offset="100%" stop-color="#0B1320" />
+      <stop offset="0%" stop-color="#FF7A1A" />
+      <stop offset="45%" stop-color="#FF5500" />
+      <stop offset="100%" stop-color="#E63900" />
     </linearGradient>
-    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="100%" stop-color="#2563EB" />
+
+    <!-- Pure White to Radiant Warm Flame Accent -->
+    <linearGradient id="flameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="65%" stop-color="#FFF2E8" />
+      <stop offset="100%" stop-color="#FFD1B3" />
     </linearGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#F59E0B" />
-      <stop offset="100%" stop-color="#FBBF24" />
-    </linearGradient>
+
+    <!-- Soft Athletic Orange Glow -->
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#2563EB" flood-opacity="0.4" />
+      <feDropShadow dx="0" dy="2.5" stdDeviation="3.5" flood-color="#B32B00" flood-opacity="0.55" />
     </filter>
+
+    <linearGradient id="innerGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#FF7A1A" stop-opacity="0" />
+    </linearGradient>
   </defs>
 
-  <!-- Background Badge -->
-  <rect width="100" height="100" rx="22" fill="url(#logoBg)" />
-  <rect x="1" y="1" width="98" height="98" rx="21" stroke="#334155" stroke-width="1.5" />
+  <!-- Full Bleed Background Surface for Maskable & Standalone Icons -->
+  <rect width="100" height="100" fill="url(#logoBg)" />
 
-  <!-- Stylized Modern Dumbbell & Athletic Monogram -->
+  <!-- Subtle Inner Border Highlight -->
+  <rect
+    x="1.5"
+    y="1.5"
+    width="97"
+    height="97"
+    stroke="rgba(255, 255, 255, 0.28)"
+    stroke-width="1.5"
+  />
+
+  <!-- Subtle Top-Left Gloss Highlight -->
+  <path
+    d="M4 25C4 13.402 13.402 4 25 4H75C77.2091 4 79 5.79086 79 8C79 10.2091 77.2091 12 75 12H28C19.1634 12 12 19.1634 12 28V75C12 77.2091 10.2091 79 8 79C5.79086 79 4 77.2091 4 75V25Z"
+    fill="url(#innerGlow)"
+    opacity="0.3"
+  />
+
+  <!-- Iconic Athletic Flame & Power Dumbbell Silhouette (Centered in Safe Zone) -->
   <g filter="url(#glow)">
-    <!-- Left Weight Plates -->
-    <rect x="20" y="32" width="8" height="36" rx="3.5" fill="url(#primaryGrad)" />
-    <rect x="30" y="38" width="6" height="24" rx="2.5" fill="url(#primaryGrad)" />
+    <!-- Core Athletic Power Flame -->
+    <path
+      d="M50 16C50 16 55.5 24.5 55.5 30C55.5 32.2 54.8 34.2 53.6 35.8C59.2 32.6 63 26.8 63 26.8C63 26.8 68 34.2 68 44C68 56.5 59.5 65 50 65C40.5 65 32 56.5 32 44C32 35.5 36.5 28.5 41 24.5C40.2 27.2 40.5 30.5 42 32.5C44.2 35.5 47.8 35.8 49.5 33C51.2 30.2 50.8 23 50 16Z"
+      fill="url(#flameGrad)"
+    />
 
-    <!-- Right Weight Plates -->
-    <rect x="64" y="38" width="6" height="24" rx="2.5" fill="url(#primaryGrad)" />
-    <rect x="72" y="32" width="8" height="36" rx="3.5" fill="url(#primaryGrad)" />
+    <!-- Athletic Barbells Anchor / Platform Base -->
+    <!-- Left Plate -->
+    <rect x="22" y="68" width="6" height="18" rx="3" fill="#FFFFFF" />
+    <rect x="30" y="71" width="5" height="12" rx="2.5" fill="#FFE2CC" />
 
-    <!-- Central Connecting Bar -->
-    <rect x="34" y="47.5" width="32" height="5" rx="2.5" fill="#FFFFFF" />
+    <!-- Center Barbell Bar -->
+    <rect x="35" y="74.5" width="30" height="5" rx="2.5" fill="#FFFFFF" />
 
-    <!-- Center Athletic Diamond / Crown Core -->
-    <path d="M50 30L59 44H41L50 30Z" fill="url(#accentGrad)" />
-    <circle cx="50" cy="50" r="4.5" fill="#FFFFFF" />
-    <path d="M50 70L41 56H59L50 70Z" fill="url(#primaryGrad)" />
+    <!-- Right Plate -->
+    <rect x="65" y="71" width="5" height="12" rx="2.5" fill="#FFE2CC" />
+    <rect x="72" y="68" width="6" height="18" rx="3" fill="#FFFFFF" />
+
+    <!-- Energetic Center Core Pip -->
+    <circle cx="50" cy="51" r="4.5" fill="#FF5500" />
   </g>
 </svg>
