@@ -15,6 +15,12 @@ import { verifyGymConnectionCode, submitMemberJoinRequest } from '../lib/memberA
 export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initialPhone = '' }) {
   const [deviceInfo] = useState(() => getDeviceInfo())
 
+  // True standalone mode check: only hide install button when already running inside installed standalone PWA
+  const isStandalone = typeof window !== 'undefined' && Boolean(
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+  )
+
   // App Language Support
   const langContext = useLanguage()
   const currentLanguage = langContext?.currentLanguage || 'en'
@@ -526,7 +532,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
           </div>
 
           {/* Mobile App Install Button */}
-          {!isInstalled && onDownloadApp && !isOwnerForgot && !otpStep && (
+          {!isStandalone && onDownloadApp && !isOwnerForgot && !otpStep && (
             <div style={{ textAlign: 'center', margin: '2px 0 6px' }}>
               <button
                 type="button"

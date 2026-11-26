@@ -110,21 +110,23 @@ export default function App() {
   })
   const [isInstalled, setIsInstalled] = useState(() => {
     if (typeof window === 'undefined') return false
-    const standalone =
+    return Boolean(
       window.matchMedia('(display-mode: standalone)').matches ||
       window.navigator.standalone === true
-    const stored = localStorage.getItem('gym_app_installed') === 'true'
-    return Boolean(standalone || stored)
+    )
   })
 
   useEffect(() => {
+    // Clear any legacy stored flag so browsers on mobile are never permanently blocked from seeing the install button
+    try {
+      localStorage.removeItem('gym_app_installed')
+    } catch {}
+
     const handlePrompt = (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
     }
     const handleInstalled = () => {
-      setIsInstalled(true)
-      localStorage.setItem('gym_app_installed', 'true')
       setDeferredPrompt(null)
     }
     window.addEventListener('beforeinstallprompt', handlePrompt)
@@ -153,8 +155,6 @@ export default function App() {
         await deferredPrompt.prompt()
         const { outcome } = await deferredPrompt.userChoice
         if (outcome === 'accepted') {
-          setIsInstalled(true)
-          localStorage.setItem('gym_app_installed', 'true')
           setDeferredPrompt(null)
           return
         }
@@ -511,8 +511,6 @@ export default function App() {
               onClose={() => setShowDownloadApp(false)}
               deferredPrompt={deferredPrompt}
               onInstalled={() => {
-                setIsInstalled(true)
-                localStorage.setItem('gym_app_installed', 'true')
                 setDeferredPrompt(null)
               }}
             />
@@ -545,8 +543,6 @@ export default function App() {
               onClose={() => setShowDownloadApp(false)}
               deferredPrompt={deferredPrompt}
               onInstalled={() => {
-                setIsInstalled(true)
-                localStorage.setItem('gym_app_installed', 'true')
                 setDeferredPrompt(null)
               }}
             />
@@ -886,8 +882,6 @@ export default function App() {
             onClose={() => setShowDownloadApp(false)}
             deferredPrompt={deferredPrompt}
             onInstalled={() => {
-              setIsInstalled(true)
-              localStorage.setItem('gym_app_installed', 'true')
               setDeferredPrompt(null)
             }}
           />
