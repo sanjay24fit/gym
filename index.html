@@ -16,15 +16,13 @@
     <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#17141D" />
+    <meta name="theme-color" content="#0A0B0E" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" />
-    </noscript>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" />
     <title>Gym Manager</title>
     <script>
       (function() {
@@ -32,7 +30,7 @@
           var t = localStorage.getItem('gym_theme') || 'dark';
           document.documentElement.setAttribute('data-theme', t);
           var m = document.querySelector('meta[name="theme-color"]');
-          if (m) m.setAttribute('content', t === 'light' ? '#F7F5FA' : '#17141D');
+          if (m) m.setAttribute('content', t === 'light' ? '#F8F9FB' : '#0A0B0E');
         } catch (e) {}
       })();
     </script>
@@ -40,7 +38,7 @@
   <body>
     <div id="google_translate_element" style="display:none"></div>
     <div id="root">
-      <div id="initial-splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0E1411;font-family:'Outfit',system-ui,-apple-system,sans-serif;z-index:99999;user-select:none;">
+      <div id="initial-splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0A0B0E;font-family:'Outfit',system-ui,-apple-system,sans-serif;z-index:99999;user-select:none;">
         <style>
           @keyframes splashInitPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:0.92}}
           @keyframes splashInitBar{0%{left:-45%}100%{left:100%}}

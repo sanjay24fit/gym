@@ -9,6 +9,7 @@ import Dashboard from './components/Dashboard'
 import SetupNotice from './components/SetupNotice'
 import GymLogo from './components/GymLogo'
 import SplashScreen from './components/SplashScreen'
+import AccessBlocked from './components/AccessBlocked'
 
 // Lazy-loaded components for fast mobile initial load and minimal initial bundle size
 const Members = lazy(() => import('./components/Members'))
@@ -23,7 +24,6 @@ const GymMemberRequests = lazy(() => import('./components/GymMemberRequests'))
 const MemberPendingApproval = lazy(() => import('./components/MemberPendingApproval'))
 const MemberRejected = lazy(() => import('./components/MemberRejected'))
 const CityRankings = lazy(() => import('./components/CityRankings'))
-const AccessBlocked = lazy(() => import('./components/AccessBlocked'))
 
 function TabFallback() {
   return (
@@ -81,8 +81,27 @@ function hasStoredSupabaseToken() {
   return false
 }
 
+function getStoredSupabaseSession() {
+  if (typeof window === 'undefined') return undefined
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        const raw = localStorage.getItem(key)
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (parsed?.user?.id && isValidUUID(parsed.user.id)) {
+            return parsed
+          }
+        }
+      }
+    }
+  } catch {}
+  return undefined
+}
+
 export default function App() {
-  const [session, setSession] = useState(undefined)
+  const [session, setSession] = useState(() => getStoredSupabaseSession())
   const [loadedAccount, setAccount] = useState(() => getInitialCachedAccount()) // { userId, gym, isAdmin }
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -283,7 +302,7 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [userId, refreshKey, session])
+  }, [userId, refreshKey])
 
   const gym = account?.gym
   // Frontend access gate — shared predicate mirroring SQL is_usable() (D1).
@@ -339,8 +358,8 @@ export default function App() {
         .order('id')
         .range(from, from + PAGE - 1)
       if (error) {
-        alert('Could not load members: ' + error.message)
-        return
+        console.warn('Could not load members:', error.message)
+        break
       }
       all.push(...data)
       if (data.length < PAGE) break
@@ -606,34 +625,30 @@ export default function App() {
   // Hard-block accounts explicitly banned by administrator
   if (!account.isAdmin && isBlocked) {
     return (
-      <Suspense fallback={<SplashScreen message="Checking access…" />}>
-        <AccessBlocked
-          gym={gym}
-          userEmail={session?.user?.email || gym?.email || ''}
-          onLogout={logout}
-          onRefresh={refresh}
-        />
-      </Suspense>
+      <AccessBlocked
+        gym={gym}
+        userEmail={session?.user?.email || gym?.email || ''}
+        onLogout={logout}
+        onRefresh={refresh}
+      />
     )
   }
 
   // Display subscription plan card as a readable, dismissible banner with a cross ('✕') close option for new/unpaid gyms
   if (!account.isAdmin && !canUseGym && showSubscriptionBanner) {
     return (
-      <Suspense fallback={<SplashScreen message="Checking access…" />}>
-        <AccessBlocked
-          gym={gym}
-          userEmail={session?.user?.email || gym?.email || ''}
-          onLogout={logout}
-          onRefresh={refresh}
-          onClose={() => {
-            setShowSubscriptionBanner(false)
-            try {
-              sessionStorage.setItem('gym_sub_banner_dismissed', 'true')
-            } catch {}
-          }}
-        />
-      </Suspense>
+      <AccessBlocked
+        gym={gym}
+        userEmail={session?.user?.email || gym?.email || ''}
+        onLogout={logout}
+        onRefresh={refresh}
+        onClose={() => {
+          setShowSubscriptionBanner(false)
+          try {
+            sessionStorage.setItem('gym_sub_banner_dismissed', 'true')
+          } catch {}
+        }}
+      />
     )
   }
 
