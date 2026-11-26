@@ -38,6 +38,8 @@ export default function Dashboard({
   gym,
   onGymUpdated,
   onPreviewMemberPass,
+  isSubscribed = true,
+  onOpenSubscription,
 }) {
   const [showNotificationPopup, setShowNotificationPopup] = useState(false)
   const [showExpiryWhatsAppModal, setShowExpiryWhatsAppModal] = useState(false)
@@ -128,6 +130,53 @@ export default function Dashboard({
           </button>
         </div>
       </div>
+
+      {/* Subscription Required Notice Banner for Preview Mode */}
+      {!isSubscribed && onOpenSubscription && (
+        <div
+          className="card"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255, 98, 0, 0.12) 0%, rgba(255, 122, 26, 0.05) 100%)',
+            border: '1px solid rgba(255, 98, 0, 0.35)',
+            borderRadius: 'var(--radius-xl)',
+            padding: '12px 18px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>⚡</span>
+            <div>
+              <strong style={{ fontSize: '13.5px', color: 'var(--text)' }}>
+                Subscription Required · ₹499 / 30 Days
+              </strong>
+              <div className="muted small" style={{ fontSize: '12px' }}>
+                Subscribe or renew your plan to activate full gym features and WhatsApp alerts.
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn primary sm"
+            onClick={onOpenSubscription}
+            style={{
+              fontWeight: 700,
+              padding: '7px 15px',
+              fontSize: '12.5px',
+              borderRadius: 'var(--radius-full)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>Subscribe / Renew Plan →</span>
+          </button>
+        </div>
+      )}
 
       {/* Popover for Notification Bell */}
       {showNotificationPopup && (

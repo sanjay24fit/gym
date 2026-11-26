@@ -9,7 +9,7 @@ import Modal from './Modal'
 import SubscriptionPricingModal from './SubscriptionPricingModal'
 import { initiateSubscriptionPayment, getRazorpayMeUrl } from '../lib/razorpay'
 
-export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
+export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh, onClose }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [loadingPay, setLoadingPay] = useState(false)
@@ -72,7 +72,39 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
         <LanguageToggle size="sm" />
         <ThemeToggle size="sm" showLabel />
       </div>
-      <div className="card auth-card" style={{ textAlign: 'center', maxWidth: '440px' }}>
+      <div className="card auth-card" style={{ textAlign: 'center', maxWidth: '440px', position: 'relative' }}>
+        {/* Top-Right Cross ('✕') Close Option for Gym Owners */}
+        {onClose && !isBlocked && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close banner and continue to Home"
+            title="Close"
+            style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              border: '1px solid var(--border)',
+              background: 'var(--bg-subtle, rgba(0,0,0,0.06))',
+              color: 'var(--text)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 10,
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
           <GymLogo size={56} />
         </div>
@@ -171,6 +203,26 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
           <span>Refresh Account Status</span>
         </button>
         <WhatsAppSupport label="Need Help? Contact Admin via WhatsApp" className="full" />
+        {onClose && !isBlocked && (
+          <button
+            type="button"
+            className="btn full"
+            onClick={onClose}
+            style={{
+              marginTop: '10px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              fontWeight: 700,
+              background: 'var(--card-subtle)',
+              border: '1px solid var(--border)',
+              color: 'var(--text)',
+            }}
+          >
+            <span>Continue to Home Page →</span>
+          </button>
+        )}
         <button className="btn secondary full" style={{ marginTop: '8px' }} onClick={() => setShowLogoutModal(true)}>
           Logout
         </button>

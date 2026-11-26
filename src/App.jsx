@@ -288,6 +288,16 @@ export default function App() {
   const gym = account?.gym
   // Frontend access gate — shared predicate mirroring SQL is_usable() (D1).
   const canUseGym = hasGymAccess(gym, today())
+  const isBlocked = isBlockedGym(gym)
+  const canAccessGym = Boolean(gym && !isBlocked)
+  const [showSubscriptionBanner, setShowSubscriptionBanner] = useState(() => {
+    if (typeof window === 'undefined') return true
+    try {
+      return sessionStorage.getItem('gym_sub_banner_dismissed') !== 'true'
+    } catch {
+      return true
+    }
+  })
 
   const ownerPhoto =
     gym?.owner_photo ||
@@ -342,8 +352,8 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (canUseGym) loadMembers()
-  }, [canUseGym, loadMembers])
+    if (canAccessGym) loadMembers()
+  }, [canAccessGym, loadMembers])
 
   const logout = () => {
     setMembers([])
@@ -593,16 +603,42 @@ export default function App() {
     }
   }
 
-  if (!account.isAdmin && !canUseGym) {
+  // Hard-block accounts explicitly banned by administrator
+  if (!account.isAdmin && isBlocked) {
     return (
       <Suspense fallback={<SplashScreen message="Checking access…" />}>
-        <AccessBlocked gym={gym} userEmail={session?.user?.email || gym?.email || ''} onLogout={logout} onRefresh={refresh} />
+        <AccessBlocked
+          gym={gym}
+          userEmail={session?.user?.email || gym?.email || ''}
+          onLogout={logout}
+          onRefresh={refresh}
+        />
+      </Suspense>
+    )
+  }
+
+  // Display subscription plan card as a readable, dismissible banner with a cross ('✕') close option for new/unpaid gyms
+  if (!account.isAdmin && !canUseGym && showSubscriptionBanner) {
+    return (
+      <Suspense fallback={<SplashScreen message="Checking access…" />}>
+        <AccessBlocked
+          gym={gym}
+          userEmail={session?.user?.email || gym?.email || ''}
+          onLogout={logout}
+          onRefresh={refresh}
+          onClose={() => {
+            setShowSubscriptionBanner(false)
+            try {
+              sessionStorage.setItem('gym_sub_banner_dismissed', 'true')
+            } catch {}
+          }}
+        />
       </Suspense>
     )
   }
 
   const tabs = [
-    ...(canUseGym
+    ...(canAccessGym
       ? [
         {
           key: 'dashboard',
@@ -727,7 +763,7 @@ export default function App() {
 
         {/* Topbar Actions: Share Invite & Gym Owner Profile Avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {canUseGym && (
+          {canAccessGym && (
             <button
               type="button"
               className="topbar-share-invite-btn"
@@ -745,7 +781,7 @@ export default function App() {
             </button>
           )}
 
-          {canUseGym && (
+          {canAccessGym && (
             <button
               type="button"
               className="topbar-owner-profile-btn"
@@ -774,11 +810,13 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="content">
-        {tab === 'dashboard' && canUseGym && (
+        {tab === 'dashboard' && canAccessGym && (
           <Dashboard
             members={members}
             gymName={gym?.gym_name}
             gym={gym}
+            isSubscribed={canUseGym}
+            onOpenSubscription={() => setShowSubscriptionBanner(true)}
             onGymUpdated={(updatedGym) => {
               setAccount((prev) => (prev ? { ...prev, gym: { ...prev.gym, ...updatedGym } } : prev))
             }}
@@ -792,7 +830,7 @@ export default function App() {
           />
         )}
 
-        {tab === 'members' && canUseGym && (
+        {tab === 'members' && canAccessGym && (
           <Suspense fallback={<TabFallback />}>
             <Members
               members={members}
@@ -806,7 +844,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {tab === 'payments' && canUseGym && (
+        {tab === 'payments' && canAccessGym && (
           <Suspense fallback={<TabFallback />}>
             <Payments
               members={members}
@@ -819,7 +857,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {tab === 'rankings' && canUseGym && (
+        {tab === 'rankings' && canAccessGym && (
           <Suspense fallback={<TabFallback />}>
             <CityRankings
               gym={gym}
@@ -828,7 +866,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {tab === 'requests' && canUseGym && (
+        {tab === 'requests' && canAccessGym && (
           <Suspense fallback={<TabFallback />}>
             <GymMemberRequests
               gym={gym}
@@ -840,7 +878,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {tab === 'gym' && canUseGym && (
+        {tab === 'gym' && canAccessGym && (
           <Suspense fallback={<TabFallback />}>
             <GymProfile
               gym={gym}
