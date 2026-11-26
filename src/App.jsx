@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, lazy, Suspense } from 'react'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { today } from './lib/utils'
-import { canUseGym as hasGymAccess } from './lib/access'
+import { canUseGym as hasGymAccess, isBlockedGym } from './lib/access'
 import { updateMemberPayment } from './lib/payments'
 import { getStoredMemberSession, setStoredMemberSession, clearMemberSession, lookupMemberPortal } from './lib/memberPortal'
 import Auth from './components/Auth'
@@ -308,7 +308,8 @@ export default function App() {
   // Frontend access gate — shared predicate mirroring SQL is_usable() (D1).
   const canUseGym = hasGymAccess(gym, today())
   const isBlocked = isBlockedGym(gym)
-  const canAccessGym = Boolean(gym && !isBlocked)
+  const isOwner = account?.role === 'owner' || (!account?.isAdmin && account?.role !== 'member')
+  const canAccessGym = Boolean((gym || isOwner) && !isBlocked)
   const [showSubscriptionBanner, setShowSubscriptionBanner] = useState(() => {
     if (typeof window === 'undefined') return true
     try {
