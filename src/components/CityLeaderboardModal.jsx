@@ -234,7 +234,7 @@ export default function CityLeaderboardModal({
                             )}
                           </div>
                           <span className="muted small" style={{ fontSize: '11.5px' }}>
-                            {item.area} · ⭐ {item.rating} ({item.reviews_count || 12} reviews) · {item.active_members_tier}
+                            {item.area} · {item.total_reviews ? `⭐ ${item.rating} (${item.total_reviews} reviews)` : 'New Gym · 0 reviews'}
                           </span>
                         </div>
                       </div>

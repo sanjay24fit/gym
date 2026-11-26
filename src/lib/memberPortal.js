@@ -173,3 +173,13 @@ export function generateMemberUpiUri(gymPhone, gymName, amount, memberName) {
   return `upi://pay?pa=${pa}&pn=${encodedName}&tn=${note}${amtParam}&cu=INR`
 }
 
+export {
+  normalizeMemberEmail,
+  isValidEmailFormat,
+  checkMemberEmailEligible,
+  sendMemberEmailOtp,
+  verifyMemberEmailOtp,
+  fetchMemberMembershipsByEmail,
+} from './memberAuth'
+
+

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Modal from './Modal'
 import { createIsolatedClient, supabase } from '../lib/supabase'
 import { addDays, formatDate, parseISO, toISO, today } from '../lib/utils'
+import AdminRankingsManager from './AdminRankingsManager'
 
 const STATUS_TONE = { pending: 'amber', active: 'green', blocked: 'red' }
 
@@ -13,6 +14,7 @@ function plusOneYear(fromIso) {
 }
 
 export default function Admin({ adminId }) {
+  const [adminTab, setAdminTab] = useState('accounts') // 'accounts' | 'rankings'
   const [gyms, setGyms] = useState([])
   const [counts, setCounts] = useState(null) // null = member counts unavailable (RPC failed)
   const [loading, setLoading] = useState(true)
@@ -78,19 +80,43 @@ export default function Admin({ adminId }) {
 
   return (
     <div>
-      <div className="section-head" style={{ marginBottom: '16px' }}>
-        <div>
-          <h2>Gym Accounts</h2>
-          <span className="muted small">Monitor and manage all registered gym owner accounts and subscriptions</span>
-        </div>
-        <button type="button" className="btn primary" onClick={() => setCreating(true)}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>Create Owner Account</span>
+      {/* Top Admin Sub-Navigation */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className={`btn ${adminTab === 'accounts' ? 'primary' : ''}`}
+          onClick={() => setAdminTab('accounts')}
+          style={{ fontWeight: 700, borderRadius: '10px' }}
+        >
+          Gym Accounts & Subscriptions
+        </button>
+        <button
+          type="button"
+          className={`btn ${adminTab === 'rankings' ? 'primary' : ''}`}
+          onClick={() => setAdminTab('rankings')}
+          style={{ fontWeight: 700, borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        >
+          <span>Rankings & Discovery Management</span>
         </button>
       </div>
+
+      {adminTab === 'rankings' ? (
+        <AdminRankingsManager />
+      ) : (
+        <>
+          <div className="section-head" style={{ marginBottom: '16px' }}>
+            <div>
+              <h2>Gym Accounts</h2>
+              <span className="muted small">Monitor and manage all registered gym owner accounts and subscriptions</span>
+            </div>
+            <button type="button" className="btn primary" onClick={() => setCreating(true)}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>Create Owner Account</span>
+            </button>
+          </div>
 
       {/* Admin KPI Summary */}
       <div className="summary-grid" style={{ marginBottom: '20px' }}>
@@ -350,6 +376,8 @@ export default function Admin({ adminId }) {
       )}
 
       {creating && <CreateOwner onClose={() => setCreating(false)} onCreated={load} />}
+        </>
+      )}
     </div>
   )
 }

@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchRegisteredCityGyms, POPULAR_CITIES } from '../lib/ranking'
+import {
+  fetchPublicGymRankings,
+  POPULAR_CITIES,
+  POPULAR_STATES,
+  getUserGeolocation,
+} from '../lib/ranking'
 import { fetchGymReviews } from '../lib/reviews'
 import { GYM_IMAGES, getGymCoverImage } from '../lib/assets'
 import Modal from './Modal'
@@ -22,6 +27,11 @@ import {
   CheckCircle2,
   ArrowRight,
   Crown,
+  Navigation,
+  Sparkles,
+  TrendingUp,
+  TrendingDown,
+  Minus,
 } from 'lucide-react'
 
 // Scalloped Rosette Seal Medal for Ranks 1, 2, 3
@@ -172,7 +182,12 @@ function LaurelRight() {
 
 export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
   const defaultCity = gym?.city || 'Udaipur'
+  const defaultState = gym?.state || 'Rajasthan'
+  const [scope, setScope] = useState('city') // 'city' | 'state' | 'all' | 'nearby'
   const [selectedCity, setSelectedCity] = useState(defaultCity)
+  const [selectedState, setSelectedState] = useState(defaultState)
+  const [userCoords, setUserCoords] = useState(null)
+  const [requestingLoc, setRequestingLoc] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterTab, setFilterTab] = useState('all') // 'all' | 'highest_rated' | 'most_reviewed'
   const [loading, setLoading] = useState(true)
@@ -191,22 +206,48 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
   const [loadingReviews, setLoadingReviews] = useState(false)
   const [copiedShare, setCopiedShare] = useState(false)
 
-  // Load real registered gyms in selected city
-  const loadRankings = useCallback(async (cityToLoad) => {
+  // Load real registered gyms across selected scope
+  const loadRankings = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetchRegisteredCityGyms(cityToLoad, gym?.id, gym)
+      let locTarget = ''
+      if (scope === 'city') locTarget = selectedCity
+      else if (scope === 'state') locTarget = selectedState
+
+      const res = await fetchPublicGymRankings({
+        scope,
+        location: locTarget,
+        latitude: userCoords?.latitude || null,
+        longitude: userCoords?.longitude || null,
+        gymId: gym?.id || null,
+        currentGym: gym,
+      })
       if (res && res.success) {
         setRankingData(res)
       }
     } finally {
       setLoading(false)
     }
-  }, [gym])
+  }, [scope, selectedCity, selectedState, userCoords, gym])
 
   useEffect(() => {
-    loadRankings(selectedCity)
-  }, [selectedCity, loadRankings])
+    loadRankings()
+  }, [loadRankings])
+
+  const handleEnableNearby = async () => {
+    setRequestingLoc(true)
+    try {
+      const coords = await getUserGeolocation()
+      if (coords) {
+        setUserCoords(coords)
+        setScope('nearby')
+      } else {
+        alert('Location access was denied or timed out. Please select your city manually.')
+      }
+    } finally {
+      setRequestingLoc(false)
+    }
+  }
 
   // Open Minimal Gym Profile for any gym (clicked from podium or leaderboard)
   const handleOpenGymProfile = async (targetGym) => {
@@ -282,7 +323,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
   return (
     <div className="gym-rankings-page" style={{ maxWidth: '1120px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* ==============================================================
-          1. CLEAN MODERN PAGE HEADER WITH CITY SELECTOR
+          1. CLEAN MODERN PAGE HEADER WITH SCOPE SELECTOR
       ============================================================== */}
       <header
         style={{
@@ -312,50 +353,168 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             </div>
             <div>
               <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.4px' }}>
-                Gym Rankings Leaderboard
+                Centralized Gym Rankings
               </h1>
               <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Compare all registered fitness centers in {selectedCity}. Click any gym to view its profile & reviews.
+                {scope === 'city' && `Transparent rankings for all registered gyms in ${selectedCity}.`}
+                {scope === 'state' && `State-wide leaderboard for registered fitness centers in ${selectedState}.`}
+                {scope === 'all' && 'Global directory of all registered fitness centers across the platform.'}
+                {scope === 'nearby' && 'Rankings of gyms closest to your current location.'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* City Selector Pill */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'var(--card)',
-            padding: '8px 14px',
-            borderRadius: '12px',
-            border: '1px solid var(--border)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-          }}
-        >
-          <MapPin size={16} color="#FF6200" />
-          <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>City:</span>
-          <select
-            value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
+        {/* Scope Selector Pills & Dropdowns */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setScope('city')}
             style={{
-              background: 'transparent',
-              color: 'var(--text)',
-              border: 'none',
+              padding: '7px 14px',
+              borderRadius: '999px',
+              fontSize: '12px',
               fontWeight: 700,
-              fontSize: '13.5px',
               cursor: 'pointer',
-              outline: 'none',
-              paddingRight: '4px',
+              border: '1px solid',
+              background: scope === 'city' ? '#FF6200' : 'var(--card)',
+              color: scope === 'city' ? '#FFFFFF' : 'var(--text)',
+              borderColor: scope === 'city' ? '#FF6200' : 'var(--border)',
             }}
           >
-            {POPULAR_CITIES.map((c) => (
-              <option key={c} value={c} style={{ background: 'var(--card)', color: 'var(--text)' }}>
-                {c}
-              </option>
-            ))}
-          </select>
+            In City
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setScope('state')}
+            style={{
+              padding: '7px 14px',
+              borderRadius: '999px',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: '1px solid',
+              background: scope === 'state' ? '#FF6200' : 'var(--card)',
+              color: scope === 'state' ? '#FFFFFF' : 'var(--text)',
+              borderColor: scope === 'state' ? '#FF6200' : 'var(--border)',
+            }}
+          >
+            Across State
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setScope('all')}
+            style={{
+              padding: '7px 14px',
+              borderRadius: '999px',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: '1px solid',
+              background: scope === 'all' ? '#FF6200' : 'var(--card)',
+              color: scope === 'all' ? '#FFFFFF' : 'var(--text)',
+              borderColor: scope === 'all' ? '#FF6200' : 'var(--border)',
+            }}
+          >
+            All India
+          </button>
+
+          <button
+            type="button"
+            onClick={handleEnableNearby}
+            disabled={requestingLoc}
+            style={{
+              padding: '7px 14px',
+              borderRadius: '999px',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: '1px solid',
+              background: scope === 'nearby' ? '#FF6200' : 'var(--card)',
+              color: scope === 'nearby' ? '#FFFFFF' : 'var(--text)',
+              borderColor: scope === 'nearby' ? '#FF6200' : 'var(--border)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+            }}
+          >
+            <Navigation size={13} />
+            <span>{requestingLoc ? 'Locating…' : 'Nearby'}</span>
+          </button>
+
+          {/* City Selector Pill when scope is city */}
+          {scope === 'city' && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'var(--card)',
+                padding: '6px 12px',
+                borderRadius: '10px',
+                border: '1px solid var(--border)',
+              }}
+            >
+              <MapPin size={15} color="#FF6200" />
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  color: 'var(--text)',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                }}
+              >
+                {POPULAR_CITIES.map((c) => (
+                  <option key={c} value={c} style={{ background: 'var(--card)', color: 'var(--text)' }}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* State Selector Pill when scope is state */}
+          {scope === 'state' && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'var(--card)',
+                padding: '6px 12px',
+                borderRadius: '10px',
+                border: '1px solid var(--border)',
+              }}
+            >
+              <MapPin size={15} color="#FF6200" />
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  color: 'var(--text)',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                }}
+              >
+                {POPULAR_STATES.map((s) => (
+                  <option key={s} value={s} style={{ background: 'var(--card)', color: 'var(--text)' }}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </header>
 
@@ -791,7 +950,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       </div>
                     </div>
 
-                    {/* Right: Rating & View Profile Button */}
+                    {/* Right: Truthful Rating, Score & View Profile Button */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <div style={{ textAlign: 'right' }}>
                         {g.has_reviews ? (
@@ -806,20 +965,28 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                           </div>
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                            <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                            <b style={{ fontSize: '14.5px', color: 'var(--text)' }}>
-                              4.8
-                            </b>
-                            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                              (124 reviews)
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                              New Gym · 0 Reviews
                             </span>
                           </div>
                         )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', marginTop: '2px' }}>
-                          <Clock size={11} color="var(--text-secondary)" />
-                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                            {g.has_reviews ? 'Verified Score' : 'Awaiting Reviews'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end', marginTop: '3px' }}>
+                          <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#FF6200' }}>
+                            Score: {g.score || 50}/100
                           </span>
+                          <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)' }}>
+                            ({g.tier || 'Silver Pro'})
+                          </span>
+                          {g.movement === 'up' && (
+                            <span title="Rank moved up!" style={{ color: '#10B981', display: 'inline-flex', alignItems: 'center' }}>
+                              <TrendingUp size={12} />
+                            </span>
+                          )}
+                          {g.movement === 'down' && (
+                            <span title="Rank moved down" style={{ color: '#EF4444', display: 'inline-flex', alignItems: 'center' }}>
+                              <TrendingDown size={12} />
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -904,7 +1071,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 }}
               >
                 <Crown size={14} color="#FDE047" fill="#FDE047" />
-                <span>#{myGym.rank || 1} in {selectedCity}</span>
+                <span>{myGym.rank_display || (myGym.rank ? `#${myGym.rank}` : 'Not Ranked')} in {selectedCity}</span>
               </div>
             </div>
 
@@ -940,54 +1107,120 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 </div>
               </div>
 
-              {/* Metrics Breakdown Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                {/* Metric 1: Average Rating */}
-                <div
-                  style={{
-                    padding: '12px 10px',
-                    borderRadius: '12px',
-                    background: 'var(--card-subtle)',
-                    border: '1px solid var(--border)',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                    <Star size={13} color="#F59E0B" fill="#F59E0B" />
-                    <span>Average Rating</span>
-                  </div>
-                  <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text)', marginTop: '4px' }}>
-                    {myHasReviews ? `${Number(myGym.rating).toFixed(1)} ★` : 'New Gym'}
-                  </div>
-                  <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
-                    {myHasReviews ? `Based on ${myGym.total_reviews} reviews` : '0 reviews yet'}
+              {/* Total Score & Tier Banner */}
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, rgba(255, 98, 0, 0.12) 0%, rgba(255, 122, 26, 0.04) 100%)',
+                  border: '1px solid rgba(255, 98, 0, 0.25)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Total Ranking Score
                   </span>
+                  <div style={{ fontSize: '20px', fontWeight: 900, color: '#FF6200', marginTop: '2px' }}>
+                    {myGym.score || 50} <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>/ 100</span>
+                  </div>
                 </div>
-
-                {/* Metric 2: Verified Reviews */}
-                <div
-                  style={{
-                    padding: '12px 10px',
-                    borderRadius: '12px',
-                    background: 'var(--card-subtle)',
-                    border: '1px solid var(--border)',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                    <CheckCircle2 size={13} color="#10B981" />
-                    <span>Verified Reviews</span>
-                  </div>
-                  <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text)', marginTop: '4px' }}>
-                    {myGym.total_reviews || 0}
-                  </div>
-                  <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
-                    Member Feedback
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Platform Tier
                   </span>
+                  <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text)', marginTop: '2px' }}>
+                    {myGym.tier || 'Silver Pro'}
+                  </div>
                 </div>
               </div>
 
-              {/* Claim the #1 Spot Callout Box */}
+              {/* 6-Criteria Transparent Score Progress Breakdown */}
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  background: 'var(--card-subtle)',
+                  border: '1px solid var(--border)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <b style={{ fontSize: '12px', color: 'var(--text)', display: 'block', marginBottom: '2px' }}>
+                  Transparent Scoring Criteria:
+                </b>
+
+                {/* 1. Verified Facilities */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                    <span>Verified Gym Facilities</span>
+                    <b>{myGym.score_breakdown?.facilities ?? 10} / 30 pts</b>
+                  </div>
+                  <div style={{ height: '4px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
+                    <div style={{ width: `${((myGym.score_breakdown?.facilities ?? 10) / 30) * 100}%`, height: '100%', background: '#FF6200', borderRadius: '99px' }} />
+                  </div>
+                </div>
+
+                {/* 2. Member Reviews */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                    <span>Member Ratings & Reviews</span>
+                    <b>{myGym.score_breakdown?.reviews ?? 0} / 25 pts</b>
+                  </div>
+                  <div style={{ height: '4px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
+                    <div style={{ width: `${((myGym.score_breakdown?.reviews ?? 0) / 25) * 100}%`, height: '100%', background: '#F59E0B', borderRadius: '99px' }} />
+                  </div>
+                </div>
+
+                {/* 3. Equipment & Infrastructure */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                    <span>Equipment & Infrastructure</span>
+                    <b>{myGym.score_breakdown?.equipment ?? 8} / 20 pts</b>
+                  </div>
+                  <div style={{ height: '4px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
+                    <div style={{ width: `${((myGym.score_breakdown?.equipment ?? 8) / 20) * 100}%`, height: '100%', background: '#10B981', borderRadius: '99px' }} />
+                  </div>
+                </div>
+
+                {/* 4. Cleanliness & Maintenance */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                    <span>Cleanliness & Maintenance</span>
+                    <b>{myGym.score_breakdown?.cleanliness ?? 4} / 10 pts</b>
+                  </div>
+                  <div style={{ height: '4px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
+                    <div style={{ width: `${((myGym.score_breakdown?.cleanliness ?? 4) / 10) * 100}%`, height: '100%', background: '#06B6D4', borderRadius: '99px' }} />
+                  </div>
+                </div>
+
+                {/* 5. Trainer & Coaching Quality */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                    <span>Trainer & Coaching Quality</span>
+                    <b>{myGym.score_breakdown?.trainer ?? 4} / 10 pts</b>
+                  </div>
+                  <div style={{ height: '4px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
+                    <div style={{ width: `${((myGym.score_breakdown?.trainer ?? 4) / 10) * 100}%`, height: '100%', background: '#8B5CF6', borderRadius: '99px' }} />
+                  </div>
+                </div>
+
+                {/* 6. Profile Completeness */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+                    <span>Profile Completeness</span>
+                    <b>{myGym.score_breakdown?.profile ?? 3} / 5 pts</b>
+                  </div>
+                  <div style={{ height: '4px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
+                    <div style={{ width: `${((myGym.score_breakdown?.profile ?? 3) / 5) * 100}%`, height: '100%', background: '#EC4899', borderRadius: '99px' }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actionable Ranking Improvement Guidance */}
               <div
                 style={{
                   padding: '12px 14px',
@@ -1001,10 +1234,12 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
               >
                 <Megaphone size={18} color="#D97706" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div style={{ fontSize: '12px', color: '#92400E', lineHeight: 1.45 }}>
-                  <b>Claim the #1 Spot:</b>
-                  <p style={{ margin: '3px 0 0', opacity: 0.95 }}>
-                    Gym Manager calculates rankings based on <b>verified member reviews</b>. Ask your active members to review your gym on the member app to rise to the top!
-                  </p>
+                  <b>How to Increase Your Ranking:</b>
+                  <ul style={{ margin: '4px 0 0', paddingLeft: '16px', opacity: 0.95 }}>
+                    <li>Ask members to leave 5-star reviews (+25 pts).</li>
+                    <li>Update your equipment & coaches in Gym Profile.</li>
+                    <li>Admin verifies facilities to award up to +20 extra pts!</li>
+                  </ul>
                 </div>
               </div>
 

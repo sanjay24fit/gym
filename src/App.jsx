@@ -3,7 +3,13 @@ import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { today } from './lib/utils'
 import { canUseGym as hasGymAccess, isBlockedGym } from './lib/access'
 import { updateMemberPayment } from './lib/payments'
-import { getStoredMemberSession, setStoredMemberSession, clearMemberSession, lookupMemberPortal } from './lib/memberPortal'
+import {
+  getStoredMemberSession,
+  setStoredMemberSession,
+  clearMemberSession,
+  lookupMemberPortal,
+  fetchMemberMembershipsByEmail,
+} from './lib/memberPortal'
 import Auth from './components/Auth'
 import Dashboard from './components/Dashboard'
 import SetupNotice from './components/SetupNotice'
@@ -506,6 +512,15 @@ export default function App() {
             }
           }}
           onRefresh={async () => {
+            const email = memberSession.member?.email
+            if (email) {
+              const res = await fetchMemberMembershipsByEmail(email)
+              if (res.success && res.memberships?.[0]) {
+                setStoredMemberSession(res.memberships[0])
+                setMemberSession(res.memberships[0])
+                return
+              }
+            }
             const res = await lookupMemberPortal(memberSession.member?.phone)
             if (res.success && res.memberships?.[0]) {
               setStoredMemberSession(res.memberships[0])

@@ -7,6 +7,7 @@ import MemberAttendanceTab from './member/MemberAttendanceTab'
 import MemberWorkoutTab from './member/MemberWorkoutTab'
 import MemberPaymentsTab from './member/MemberPaymentsTab'
 import MemberProfileTab from './member/MemberProfileTab'
+import MemberExploreGyms from './member/MemberExploreGyms'
 import MemberReviewModal from './MemberReviewModal'
 import { getStoredMemberReview } from '../lib/reviews'
 import { fetchEliteMemberData } from '../lib/eliteMember'
@@ -124,7 +125,32 @@ export default function MemberPortal({
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('explore')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: activeTab === 'explore' ? '#FF6200' : 'rgba(255, 98, 0, 0.1)',
+              color: activeTab === 'explore' ? '#FFFFFF' : '#FF6200',
+              border: '1px solid rgba(255, 98, 0, 0.3)',
+              padding: '5px 11px',
+              borderRadius: '999px',
+              fontSize: '11.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+            </svg>
+            <span>Explore Gyms</span>
+          </button>
+
           <button
             type="button"
             className="btn sm"
@@ -246,6 +272,13 @@ export default function MemberPortal({
           />
         )}
 
+        {activeTab === 'explore' && (
+          <MemberExploreGyms
+            member={member}
+            currentGym={gym}
+          />
+        )}
+
         {activeTab === 'payments' && (
           <MemberPaymentsTab
             member={member}
@@ -267,7 +300,7 @@ export default function MemberPortal({
         )}
       </main>
 
-      {/* 3. Fixed Bottom Navigation Dock (5 Sections) */}
+      {/* 3. Fixed Bottom Navigation Dock (6 Sections) */}
       <nav
         style={{
           position: 'fixed',
@@ -279,7 +312,7 @@ export default function MemberPortal({
           WebkitBackdropFilter: 'blur(12px)',
           borderTop: '1px solid var(--border)',
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: 'repeat(6, 1fr)',
           padding: '6px 4px env(safe-area-inset-bottom, 8px)',
           zIndex: 50,
           boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.08)',
@@ -367,7 +400,34 @@ export default function MemberPortal({
           <span>Workout</span>
         </button>
 
-        {/* Tab 4: Payments */}
+        {/* Tab 4: Explore */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('explore')}
+          style={{
+            background: 'none',
+            border: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '3px',
+            padding: '6px 2px',
+            color: activeTab === 'explore' ? '#FF6200' : 'var(--muted)',
+            cursor: 'pointer',
+            fontWeight: activeTab === 'explore' ? 700 : 500,
+            fontSize: '11px',
+            transition: 'color 0.15s ease',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+          </svg>
+          <span>Explore</span>
+        </button>
+
+        {/* Tab 5: Payments */}
         <button
           type="button"
           onClick={() => setActiveTab('payments')}

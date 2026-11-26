@@ -125,6 +125,7 @@ export function buildFallbackMemberValues(values) {
   return {
     name: values.name,
     phone: values.phone,
+    email: values.email || '',
     plan: values.plan,
     start_date: values.start_date,
     end_date: values.end_date,

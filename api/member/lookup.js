@@ -6,9 +6,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { phone } = req.body || {}
-    if (!phone) {
-      return res.status(400).json({ error: 'Phone number is required' })
+    const { phone, email } = req.body || {}
+    if (!phone && !email) {
+      return res.status(400).json({ error: 'Email or Phone number is required' })
     }
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
@@ -21,6 +21,17 @@ export default async function handler(req, res) {
     }
 
     const supabase = createClient(supabaseUrl, key)
+
+    if (email) {
+      const cleanEmail = String(email).trim().toLowerCase()
+      const { data, error } = await supabase.rpc('get_member_portal_data_by_email', {
+        member_email: cleanEmail,
+      })
+      if (error) {
+        return res.status(500).json({ error: error.message })
+      }
+      return res.status(200).json(data)
+    }
 
     const { data, error } = await supabase.rpc('get_member_portal_data', { member_phone: phone })
     if (error) {

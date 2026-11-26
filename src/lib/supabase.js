@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-const rawUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const rawUrl = (import.meta.env ? import.meta.env.VITE_SUPABASE_URL : '') || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_URL : '') || ''
 // A relative URL (e.g. "/supabase") goes through the Vite dev proxy
-const url = rawUrl.startsWith('/') ? window.location.origin + rawUrl : rawUrl
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const url = typeof window !== 'undefined' && rawUrl.startsWith('/') ? window.location.origin + rawUrl : rawUrl
+const anonKey = (import.meta.env ? import.meta.env.VITE_SUPABASE_ANON_KEY : '') || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_ANON_KEY : '') || ''
 
 export const isSupabaseConfigured = Boolean(
   rawUrl &&

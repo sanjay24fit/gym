@@ -382,6 +382,70 @@ export default function MemberHomeTab({
         </button>
       </div>
 
+      {/* 🧭 Explore & Discover Top Gyms Banner */}
+      <div
+        className="card"
+        style={{
+          padding: '16px 20px',
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, rgba(255, 98, 0, 0.1) 0%, rgba(255, 122, 26, 0.04) 100%)',
+          border: '1px solid rgba(255, 98, 0, 0.25)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap',
+          cursor: 'pointer',
+        }}
+        onClick={() => onNavigateTab && onNavigateTab('explore')}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: '#FF6200',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              flexShrink: 0,
+            }}
+          >
+            🧭
+          </div>
+          <div>
+            <b style={{ fontSize: '14px', color: 'var(--text)' }}>
+              Explore Top Gyms in {gym?.city || 'Your City'}
+            </b>
+            <span style={{ fontSize: '12px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>
+              Compare verified fitness centers, facilities, and city leaderboard rankings.
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="btn sm"
+          style={{
+            background: '#FF6200',
+            color: '#FFFFFF',
+            border: 'none',
+            fontWeight: 700,
+            borderRadius: '999px',
+            padding: '6px 14px',
+            fontSize: '12px',
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            if (onNavigateTab) onNavigateTab('explore')
+          }}
+        >
+          Explore →
+        </button>
+      </div>
+
       {/* ==============================================================
           D. QUICK ACTIONS GRID
       ============================================================== */}

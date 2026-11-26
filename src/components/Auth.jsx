@@ -10,7 +10,13 @@ import { validateEmailAddress } from '../lib/emailValidation'
 import { sendMobileOtp } from '../lib/smsService'
 import { getDeviceInfo } from '../lib/deviceDetect'
 import { useLanguage } from '../lib/language'
-import { verifyGymConnectionCode, submitMemberJoinRequest } from '../lib/memberAuth'
+import {
+  sendMemberEmailOtp,
+  verifyMemberEmailOtp,
+  checkMemberEmailEligible,
+  normalizeMemberEmail,
+  isValidEmailFormat,
+} from '../lib/memberAuth'
 
 export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initialPhone = '' }) {
   const [deviceInfo] = useState(() => getDeviceInfo())
@@ -46,42 +52,12 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     area: '',
   })
 
-  // Member Mobile & OTP State
-  const [memberPhone, setMemberPhone] = useState(initialPhone)
+  // Member Email OTP Authentication State
+  const [memberEmail, setMemberEmail] = useState('')
   const [memberOtpStep, setMemberOtpStep] = useState(false)
   const [memberOtpCode, setMemberOtpCode] = useState('')
-  const [generatedMemberOtp, setGeneratedMemberOtp] = useState('')
   const [memberOtpTimer, setMemberOtpTimer] = useState(0)
   const [availableMemberships, setAvailableMemberships] = useState([])
-  const [fast2SmsNotice, setFast2SmsNotice] = useState(false)
-
-  // Member Gym Connection Code Join State
-  const [memberJoinMode, setMemberJoinMode] = useState(false)
-  const [joinCode, setJoinCode] = useState('')
-  const [joinName, setJoinName] = useState('')
-  const [joinPhone, setJoinPhone] = useState('')
-  const [verifiedGym, setVerifiedGym] = useState(null)
-  const [verifyingCode, setVerifyingCode] = useState(false)
-  const [joinSubmitted, setJoinSubmitted] = useState(false)
-
-  // Auto-detect ?join=CODE or ?code=CODE from URL
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      const qCode = params.get('join') || params.get('code')
-      if (qCode) {
-        setRole('member')
-        setMemberJoinMode(true)
-        const clean = qCode.toUpperCase().trim()
-        setJoinCode(clean)
-        setVerifyingCode(true)
-        verifyGymConnectionCode(clean).then((res) => {
-          setVerifyingCode(false)
-          if (res?.valid) setVerifiedGym(res)
-        }).catch(() => setVerifyingCode(false))
-      }
-    }
-  }, [])
 
   // Owner Email OTP Verification State (blocks fake & unverified emails)
   const [otpStep, setOtpStep] = useState(false)
@@ -135,123 +111,115 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
   }
 
   // ==========================================================================
-  // GYM MEMBER: SEND REAL SMS OTP VIA FAST2SMS
+  // GYM MEMBER: SEND 6-DIGIT EMAIL OTP VIA SUPABASE AUTH
   // ==========================================================================
-  const handleSendMemberOtp = async (e) => {
+  const handleSendMemberEmailOtp = async (e) => {
     if (e && e.preventDefault) e.preventDefault()
     setError('')
     setInfo('')
-    setFast2SmsNotice(false)
 
-    const cleanPhone = normalizePhone(memberPhone)
-    if (!cleanPhone || cleanPhone.length < 10) {
-      setError('Please enter a valid 10-digit registered mobile number.')
+    const cleanEmail = normalizeMemberEmail(memberEmail)
+    if (!isValidEmailFormat(cleanEmail)) {
+      setError(
+        isHindi
+          ? 'कृपया एक वैध ईमेल पता दर्ज करें (उदा. member@gmail.com)।'
+          : isHinglish
+          ? 'Kripya ek valid email address enter karein (e.g. member@gmail.com).'
+          : 'Please enter a valid email address (e.g. member@gmail.com).'
+      )
       return
     }
 
     setLoading(true)
     try {
-      // 1. First check if number is registered in gym owner's records
-      const lookupRes = await lookupMemberPortal(cleanPhone)
-      if (!lookupRes.success || !lookupRes.memberships || lookupRes.memberships.length === 0) {
-        if (isHindi) {
-          setError(`आपका मोबाइल नंबर (+91 ${cleanPhone}) किसी भी जिम के रिकॉर्ड में नहीं मिला। कृपया अपने जिम ओनर से संपर्क करें।`)
-        } else if (isHinglish) {
-          setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`)
-        } else {
-          setError(`This mobile number (+91 ${cleanPhone}) is not registered with any Gym Owner. Please contact your gym owner to add you as a member.`)
-        }
+      // 1. Strict pre-flight check in database: must be registered in an active gym's member list!
+      const elRes = await checkMemberEmailEligible(cleanEmail)
+      if (!elRes.eligible) {
+        setError(
+          elRes.error || (
+            isHindi
+              ? `यह ईमेल (${cleanEmail}) किसी भी जिम में पंजीकृत नहीं है। कृपया अपने जिम ओनर से संपर्क करें।`
+              : isHinglish
+              ? `Yeh email (${cleanEmail}) kisi bhi Gym me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`
+              : `This email address (${cleanEmail}) is not registered with any Gym. Please contact your gym owner to add you as a member.`
+          )
+        )
         setLoading(false)
         return
       }
 
-      // 2. Generate 6-digit OTP
-      const newOtp = Math.floor(100000 + Math.random() * 900000).toString()
-      setGeneratedMemberOtp(newOtp)
-
-      // 3. Dispatch real SMS to mobile phone via Fast2SMS API
-      const smsRes = await sendMobileOtp({ phone: cleanPhone, otp: newOtp })
-
-      if (smsRes.success) {
+      // 2. Dispatch 6-digit OTP using Supabase Auth signInWithOtp
+      const otpRes = await sendMemberEmailOtp(cleanEmail)
+      if (otpRes.success) {
         setMemberOtpStep(true)
-        setMemberOtpTimer(45)
+        setMemberOtpTimer(60)
         setMemberOtpCode('')
-        if (isHindi) {
-          setInfo(`✓ 6-अंकों का OTP SMS आपके मोबाइल (+91 ${cleanPhone}) पर भेज दिया गया है।`)
-        } else if (isHinglish) {
-          setInfo(`✓ 6-Digit OTP SMS aapke mobile number (+91 ${cleanPhone}) par bhej diya gaya hai. Kripya apna SMS inbox check karein.`)
-        } else {
-          setInfo(`✓ 6-Digit OTP SMS sent to your mobile number (+91 ${cleanPhone}). Please check your SMS inbox.`)
-        }
-      } else if (smsRes.code === 'PAYMENT_REQUIRED') {
-        setFast2SmsNotice(true)
-        if (isHindi) {
-          setError('SMS सेवा: तुरंत लॉगिन करने के लिए नीचे Quick Pass बटन का उपयोग करें।')
-        } else if (isHinglish) {
-          setError('Fast2SMS policy: Quick Pass button se bina OTP turant connect kar sakte hain.')
-        } else {
-          setError('SMS policy notice: You can use the Quick Pass button below to connect instantly without waiting for OTP.')
-        }
+        setInfo(
+          isHindi
+            ? `✓ 6-अंकों का सत्यापन OTP ${cleanEmail} पर भेज दिया गया है। कृपया अपना इनबॉक्स चेक करें।`
+            : isHinglish
+            ? `✓ 6-Digit OTP verification code ${cleanEmail} par bhej diya gaya hai. Kripya apna Gmail / Inbox check karein.`
+            : `✓ 6-Digit OTP verification code sent to ${cleanEmail}. Please check your email inbox.`
+        )
       } else {
-        setError(smsRes.error || 'Failed to dispatch SMS OTP.')
+        setError(otpRes.error || 'Failed to dispatch email verification OTP.')
       }
     } catch (err) {
-      setError(err.message || 'SMS service error.')
+      setError(err.message || 'Email authentication service error.')
     } finally {
       setLoading(false)
     }
   }
 
   // ==========================================================================
-  // GYM MEMBER: VERIFY OTP AND CONNECT TO REGISTERED GYM
+  // GYM MEMBER: VERIFY EMAIL OTP AND OPEN MEMBER DASHBOARD
   // ==========================================================================
-  const handleVerifyMemberOtp = async (e) => {
+  const handleVerifyMemberEmailOtp = async (e) => {
     if (e && e.preventDefault) e.preventDefault()
     setError('')
     setInfo('')
 
     if (!memberOtpCode || memberOtpCode.trim().length < 6) {
-      setError('Please enter the 6-digit OTP verification code received on your mobile.')
-      return
-    }
-
-    const entered = memberOtpCode.trim()
-    if (entered !== generatedMemberOtp) {
-      setError('Invalid OTP code. Please enter the correct 6-digit code received on your phone.')
+      setError(
+        isHindi
+          ? 'कृपया ईमेल पर प्राप्त 6-अंकों का OTP कोड दर्ज करें।'
+          : 'Please enter the 6-digit verification code received on your email.'
+      )
       return
     }
 
     setLoading(true)
     try {
-      const cleanPhone = normalizePhone(memberPhone)
-      const res = await lookupMemberPortal(cleanPhone)
+      const cleanEmail = normalizeMemberEmail(memberEmail)
+      const res = await verifyMemberEmailOtp(cleanEmail, memberOtpCode.trim())
 
-      if (!res.success || !res.memberships || res.memberships.length === 0) {
-        if (isHindi) {
-          setError(`आपका मोबाइल नंबर (+91 ${cleanPhone}) किसी भी जिम के रिकॉर्ड में नहीं मिला।`)
-        } else if (isHinglish) {
-          setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai.`)
-        } else {
-          setError(`This mobile number (+91 ${cleanPhone}) is not registered with any Gym Owner.`)
-        }
+      if (!res.success) {
+        setError(res.error || 'Invalid or expired verification code.')
         setLoading(false)
         return
       }
 
-      if (res.memberships.length === 1) {
-        setInfo(isHindi ? `✓ सत्यापित! ${res.memberships[0].gym?.gym_name || 'Gym'} से कनेक्ट हो रहा है…` : `✓ OTP Verified! Connecting to ${res.memberships[0].gym?.gym_name || 'Gym'}…`)
+      const memberships = res.memberships || []
+      if (memberships.length === 1) {
+        setInfo(
+          isHindi
+            ? `✓ सत्यापित! ${memberships[0].gym?.gym_name || 'Gym'} से कनेक्ट हो रहा है…`
+            : `✓ OTP Verified! Connecting to ${memberships[0].gym?.gym_name || 'Gym'}…`
+        )
         setTimeout(() => {
-          onMemberLogin(res.memberships[0])
-        }, 350)
+          onMemberLogin(memberships[0])
+        }, 300)
+      } else if (memberships.length > 1) {
+        setAvailableMemberships(memberships)
+        setInfo(
+          isHindi
+            ? 'इस ईमेल पर कई जिम सदस्यताएं मिली हैं। कृपया अपना जिम चुनें:'
+            : isHinglish
+            ? 'Is email par multiple gym memberships mili hain. Kripya apna gym select karein:'
+            : 'Multiple gym memberships found for this email. Please select your gym:'
+        )
       } else {
-        setAvailableMemberships(res.memberships)
-        if (isHindi) {
-          setInfo('इस नंबर पर कई जिम सदस्यताएं मिली हैं। कृपया अपना जिम चुनें।')
-        } else if (isHinglish) {
-          setInfo('Is number par multiple gym memberships mili hain. Kripya apna gym select karein.')
-        } else {
-          setInfo('Multiple gym memberships found for this number. Please select your gym.')
-        }
+        setError('No active gym membership found for this email.')
       }
     } catch (err) {
       setError(err.message || 'Verification failed. Please try again.')
@@ -260,76 +228,25 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
     }
   }
 
-  // Resend Member SMS OTP
-  const handleResendMemberOtp = async () => {
+  // Resend Member Email OTP
+  const handleResendMemberEmailOtp = async () => {
     if (memberOtpTimer > 0) return
     setError('')
     setInfo('')
-    const cleanPhone = normalizePhone(memberPhone)
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString()
-    setGeneratedMemberOtp(newOtp)
-
-    const smsRes = await sendMobileOtp({ phone: cleanPhone, otp: newOtp })
-    if (smsRes.success) {
-      setMemberOtpTimer(45)
+    const cleanEmail = normalizeMemberEmail(memberEmail)
+    const otpRes = await sendMemberEmailOtp(cleanEmail)
+    if (otpRes.success) {
+      setMemberOtpTimer(60)
       setMemberOtpCode('')
-      if (isHindi) {
-        setInfo(`✓ नया 6-अंकों का OTP SMS भेज दिया गया है (+91 ${cleanPhone})।`)
-      } else if (isHinglish) {
-        setInfo(`✓ Naya 6-digit OTP SMS bhej diya gaya hai (+91 ${cleanPhone}).`)
-      } else {
-        setInfo(`✓ A new 6-digit OTP SMS has been sent (+91 ${cleanPhone}).`)
-      }
+      setInfo(
+        isHindi
+          ? `✓ नया 6-अंकों का OTP ${cleanEmail} पर भेज दिया गया है।`
+          : isHinglish
+          ? `✓ Naya 6-digit OTP ${cleanEmail} par bhej diya gaya hai.`
+          : `✓ A new 6-digit OTP code has been sent to ${cleanEmail}.`
+      )
     } else {
-      setError(smsRes.error || 'Failed to resend SMS OTP.')
-    }
-  }
-
-  // Direct Quick Pass (1-Click Instant Login for registered members)
-  const handleDirectQuickPass = async () => {
-    setError('')
-    setInfo('')
-    const cleanPhone = normalizePhone(memberPhone)
-    if (!cleanPhone || cleanPhone.length < 10) {
-      setError('Please enter a valid 10-digit registered mobile number.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const res = await lookupMemberPortal(cleanPhone)
-
-      if (!res.success || !res.memberships || res.memberships.length === 0) {
-        if (isHindi) {
-          setError(`आपका मोबाइल नंबर (+91 ${cleanPhone}) किसी भी जिम के रिकॉर्ड में नहीं मिला। कृपया अपने जिम ओनर से कहें कि वो आपको सदस्य सूची में जोड़ें।`)
-        } else if (isHinglish) {
-          setError(`Aapka mobile number (+91 ${cleanPhone}) kisi bhi Gym Owner ke records me registered nahi hai. Kripya apne gym owner se kahein ki wo aapko member list me add karein.`)
-        } else {
-          setError(`This mobile number (+91 ${cleanPhone}) is not registered with any Gym Owner. Please contact your gym owner to add you as a member.`)
-        }
-        setLoading(false)
-        return
-      }
-
-      if (res.memberships.length === 1) {
-        setInfo(isHindi ? `✓ सत्यापित! ${res.memberships[0].gym?.gym_name || 'Gym'} से कनेक्ट हो रहा है…` : `✓ Verified! Connecting to ${res.memberships[0].gym?.gym_name || 'Gym'}…`)
-        setTimeout(() => {
-          onMemberLogin(res.memberships[0])
-        }, 300)
-      } else {
-        setAvailableMemberships(res.memberships)
-        if (isHindi) {
-          setInfo('इस नंबर पर कई जिम सदस्यताएं मिली हैं। कृपया अपना जिम चुनें।')
-        } else if (isHinglish) {
-          setInfo('Is number par multiple gym memberships mili hain. Kripya apna gym select karein.')
-        } else {
-          setInfo('Multiple gym memberships found for this number. Please select your gym.')
-        }
-      }
-    } catch (err) {
-      setError(err.message || 'Verification failed. Please try again.')
-    } finally {
-      setLoading(false)
+      setError(otpRes.error || 'Failed to resend OTP.')
     }
   }
 
@@ -603,269 +520,81 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
           )}
 
           {/* ==============================================================
-              SECTION 1: GYM MEMBER (Fast2SMS Real OTP + Direct Quick Pass + Code Join)
+              SECTION 1: GYM MEMBER (Registered Email + 6-Digit Email OTP)
           ============================================================== */}
           {role === 'member' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {memberJoinMode ? (
-                /* Mode A: Join Gym with Connection Code */
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault()
-                    if (!joinCode || !joinName || !joinPhone) {
-                      setError('Please enter Gym Code, Name, and Mobile Number.')
-                      return
-                    }
-                    setLoading(true)
-                    setError('')
-                    setInfo('')
-                    try {
-                      const res = await submitMemberJoinRequest({
-                        gymCode: joinCode,
-                        fullName: joinName,
-                        phone: joinPhone,
-                      })
-                      setJoinSubmitted(true)
-                      setInfo(`✓ Connection request sent to ${verifiedGym?.gym_name || 'the gym'}! Your account is pending gym owner approval.`)
-                    } catch (err) {
-                      setError(err.message || 'Failed to submit join request.')
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
-                  style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
-                >
-                  <div style={{ textAlign: 'center', marginBottom: '4px' }}>
-                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Join Gym with Code</h3>
-                    <span className="muted small">Enter the unique code shared by your gym owner</span>
-                  </div>
-
-                  {joinSubmitted ? (
-                    <div style={{ textAlign: 'center', padding: '16px 8px' }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-                      </div>
-                      <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: 800 }}>Request Sent to Gym!</h4>
-                      <p className="muted small" style={{ margin: '0 0 16px', lineHeight: 1.5 }}>
-                        Your connection request has been delivered to <b>{verifiedGym?.gym_name || 'the gym'}</b>. Once approved, your member pass and dashboard will open.
-                      </p>
-                      <button
-                        type="button"
-                        className="btn primary full"
-                        onClick={() => {
-                          setJoinSubmitted(false)
-                          setMemberJoinMode(false)
-                          setMemberPhone(joinPhone)
-                        }}
-                      >
-                        Return to Member Login
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {/* 1. Gym Connection Code Input */}
-                      <label>
-                        <span style={{ fontWeight: 600 }}>Gym Connection Code *</span>
-                        <input
-                          required
-                          type="text"
-                          placeholder="e.g. OMNI-7X9B-FIT"
-                          value={joinCode}
-                          onChange={(e) => {
-                            const val = e.target.value.toUpperCase().trim()
-                            setJoinCode(val)
-                            setVerifiedGym(null)
-                            if (val.length >= 4) {
-                              setVerifyingCode(true)
-                              verifyGymConnectionCode(val).then((r) => {
-                                setVerifyingCode(false)
-                                if (r?.valid) setVerifiedGym(r)
-                              }).catch(() => setVerifyingCode(false))
-                            }
-                          }}
-                          style={{
-                            fontFamily: 'monospace, system-ui',
-                            fontWeight: 800,
-                            letterSpacing: '1px',
-                            textTransform: 'uppercase',
-                          }}
-                        />
-                        {verifyingCode && <span className="muted small" style={{ display: 'block', marginTop: 4 }}>Checking code…</span>}
-                        {verifiedGym && (
-                          <div style={{ marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#047857', fontSize: '11.5px', fontWeight: 700 }}>
-                            <span>✓ Connecting to: {verifiedGym.gym_name}</span>
-                          </div>
-                        )}
-                      </label>
-
-                      {/* 2. Full Name Input */}
-                      <label>
-                        <span style={{ fontWeight: 600 }}>Your Full Name *</span>
-                        <input
-                          required
-                          type="text"
-                          placeholder="e.g. Aman Sharma"
-                          value={joinName}
-                          onChange={(e) => setJoinName(e.target.value)}
-                        />
-                      </label>
-
-                      {/* 3. Mobile Number Input */}
-                      <label>
-                        <span style={{ fontWeight: 600 }}>10-Digit Mobile Number *</span>
-                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-                          <span style={{ position: 'absolute', left: '12px', fontWeight: 700, fontSize: '14px', color: 'var(--primary, #FF6200)' }}>+91</span>
-                          <input
-                            required
-                            type="tel"
-                            maxLength={10}
-                            placeholder="9876543210"
-                            value={joinPhone}
-                            onChange={(e) => setJoinPhone(e.target.value.replace(/\D/g, ''))}
-                            style={{ paddingLeft: '48px', fontWeight: 700 }}
-                          />
-                        </div>
-                      </label>
-
-                      {error && <div className="alert error">{error}</div>}
-                      {info && <div className="alert info">{info}</div>}
-
-                      <button
-                        type="submit"
-                        className="btn primary full"
-                        disabled={loading || !joinCode || !joinName || joinPhone.length < 10}
-                        style={{ padding: '11px', marginTop: '4px' }}
-                      >
-                        {loading ? 'Submitting Request…' : 'Send Connection Request →'}
-                      </button>
-
-                      <div style={{ textAlign: 'center', marginTop: '4px' }}>
-                        <button
-                          type="button"
-                          className="link"
-                          onClick={() => setMemberJoinMode(false)}
-                          style={{ fontSize: '12px', fontWeight: 600 }}
-                        >
-                          ← Back to Member Mobile Login
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </form>
-              ) : (
-                /* Mode B: Regular Member Mobile Login */
-                !memberOtpStep ? (
-                /* STEP 1: Enter Mobile Number */
-                <form onSubmit={handleSendMemberOtp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {!memberOtpStep ? (
+                /* STEP 1: Enter Registered Email Address */
+                <form onSubmit={handleSendMemberEmailOtp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <label style={{ marginTop: '2px' }}>
-                    <span style={{ fontWeight: 600 }}>Registered Mobile Number *</span>
+                    <span style={{ fontWeight: 600 }}>Registered Email Address *</span>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
                       <span
                         style={{
                           position: 'absolute',
                           left: '12px',
-                          fontWeight: 700,
-                          fontSize: '14px',
                           color: 'var(--primary, #FF6200)',
+                          display: 'flex',
+                          alignItems: 'center',
                         }}
                       >
-                        +91
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="4" width="20" height="16" rx="2" />
+                          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                        </svg>
                       </span>
                       <input
                         required
-                        type="tel"
-                        maxLength={10}
+                        type="email"
                         autoFocus
-                        placeholder="9876543210"
-                        value={memberPhone}
+                        placeholder="member@gmail.com"
+                        value={memberEmail}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '')
-                          setMemberPhone(val)
+                          setMemberEmail(e.target.value)
                           setError('')
                           setInfo('')
-                          setFast2SmsNotice(false)
                         }}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck="false"
                         style={{
-                          paddingLeft: '48px',
+                          paddingLeft: '40px',
                           fontSize: '15px',
-                          fontWeight: 700,
-                          letterSpacing: '0.8px',
+                          fontWeight: 600,
                         }}
                       />
                     </div>
-                    <span className="muted small" style={{ display: 'block', marginTop: '4px' }}>
+                    <span className="muted small" style={{ display: 'block', marginTop: '5px', lineHeight: 1.4 }}>
                       {isHindi
-                        ? 'अपने जिम में पंजीकृत 10 अंकों का मोबाइल नंबर दर्ज करें।'
+                        ? 'अपने जिम में पंजीकृत ईमेल पता दर्ज करें। लॉगिन के लिए 6-अंकों का OTP भेजा जाएगा।'
                         : isHinglish
-                        ? 'Apne gym owner ke pas registered 10-digit mobile number enter karein.'
-                        : 'Enter the 10-digit mobile number registered with your gym.'}
+                        ? 'Apne gym me registered email address enter karein. Login ke liye 6-digit OTP code bhej diya jayega.'
+                        : 'Enter the email address registered with your gym. A 6-digit verification OTP will be sent to log in.'}
                     </span>
                   </label>
 
                   {error && <div className="alert error">{error}</div>}
                   {info && <div className="alert info">{info}</div>}
 
-                  {/* Send SMS OTP Button */}
+                  {/* Send Email OTP Button */}
                   <button
                     type="submit"
                     className="btn primary full"
-                    disabled={loading || memberPhone.replace(/\D/g, '').length < 10}
-                    style={{ padding: '11px', marginTop: '4px' }}
+                    disabled={loading || !memberEmail || !memberEmail.includes('@')}
+                    style={{ padding: '11px', marginTop: '4px', fontWeight: 700 }}
                   >
                     {loading
-                      ? (isHindi ? 'SMS OTP भेजा जा रहा है…' : 'Sending SMS OTP…')
-                      : (isHindi ? 'मोबाइल पर SMS OTP भेजें →' : isHinglish ? 'Send SMS OTP to Mobile →' : 'Send SMS OTP to Mobile →')}
+                      ? (isHindi ? 'OTP भेजा जा रहा है…' : 'Sending OTP…')
+                      : (isHindi ? 'ईमेल OTP प्राप्त करें →' : isHinglish ? 'Send Email OTP →' : 'Send Verification OTP →')}
                   </button>
-
-                  {/* Instant Direct Quick Pass Button (Bypasses SMS Delay) */}
-                  <div style={{ textAlign: 'center', marginTop: '2px' }}>
-                    <button
-                      type="button"
-                      className="link"
-                      onClick={handleDirectQuickPass}
-                      disabled={loading || memberPhone.replace(/\D/g, '').length < 10}
-                      style={{
-                        fontSize: '12.5px',
-                        fontWeight: 700,
-                        color: 'var(--primary, #FF6200)',
-                        padding: '4px',
-                      }}
-                    >
-                      {isHindi
-                        ? 'Quick Pass से तुरंत लॉगिन करें (OTP की आवश्यकता नहीं)'
-                        : 'Instant Access via Quick Pass (No OTP needed)'}
-                    </button>
-                  </div>
-
-                  {fast2SmsNotice && (
-                    <div
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        background: 'rgba(214, 180, 106, 0.12)',
-                        border: '1px solid rgba(214, 180, 106, 0.35)',
-                        fontSize: '12px',
-                        color: '#92400E',
-                        lineHeight: 1.45,
-                      }}
-                    >
-                      <b>Fast2SMS Note:</b>
-                      <p style={{ margin: '3px 0 0' }}>
-                        {isHindi
-                          ? 'SMS सेवा सूचना: बिना OTP के तुरंत लॉगिन करने के लिए ऊपर दिए गए Quick Pass बटन का उपयोग करें।'
-                          : isHinglish
-                          ? 'Fast2SMS notice: Upar diye gaye Instant Access via Quick Pass button se bina OTP login kar sakte hain.'
-                          : 'SMS Service Notice: You can use the Instant Access via Quick Pass button above to log in immediately without waiting for SMS.'}
-                      </p>
-                    </div>
-                  )}
                 </form>
               ) : (
-                /* STEP 2: Enter 6-digit OTP received via SMS */
-                <form onSubmit={handleVerifyMemberOtp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                /* STEP 2: Enter 6-digit OTP received via Email */
+                <form onSubmit={handleVerifyMemberEmailOtp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>
                     <span style={{ fontSize: '13px', color: 'var(--text)' }}>
-                      OTP sent to <b>+91 {normalizePhone(memberPhone)}</b>
+                      OTP sent to <b className="font-mono">{normalizeMemberEmail(memberEmail)}</b>
                     </span>
                     <button
                       type="button"
@@ -878,15 +607,17 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       }}
                       style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)' }}
                     >
-                      Change Number
+                      Change Email
                     </button>
                   </div>
 
-                  {/* 6-Digit OTP Input (NO CODE DISPLAYED ON SCREEN) */}
+                  {/* 6-Digit OTP Input */}
                   <label>
-                    <span style={{ fontWeight: 600 }}>Enter 6-Digit SMS OTP *</span>
+                    <span style={{ fontWeight: 600 }}>Enter 6-Digit Email OTP *</span>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       maxLength={6}
                       autoFocus
                       placeholder="• • • • • •"
@@ -899,33 +630,29 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                         fontWeight: 800,
                         padding: '10px',
                         marginTop: '4px',
+                        fontFamily: 'monospace, system-ui',
                       }}
                     />
                   </label>
 
-                  {/* Resend Timer & Actions */}
+                  {/* Resend Timer & Security Notice */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
                     <button
                       type="button"
                       className="link"
-                      onClick={handleResendMemberOtp}
-                      disabled={memberOtpTimer > 0}
+                      onClick={handleResendMemberEmailOtp}
+                      disabled={memberOtpTimer > 0 || loading}
                       style={{
                         color: memberOtpTimer > 0 ? 'var(--text-secondary)' : 'var(--primary)',
                         fontWeight: 700,
                       }}
                     >
-                      {memberOtpTimer > 0 ? `Resend SMS (${memberOtpTimer}s)` : 'Resend SMS OTP'}
+                      {memberOtpTimer > 0 ? `Resend OTP (${memberOtpTimer}s)` : 'Resend Email OTP'}
                     </button>
 
-                    <button
-                      type="button"
-                      className="link"
-                      onClick={handleDirectQuickPass}
-                      style={{ color: 'var(--primary, #FF6200)', fontWeight: 700 }}
-                    >
-                      Skip & Connect →
-                    </button>
+                    <span className="muted small" style={{ fontSize: '11px' }}>
+                      Valid for 5 mins
+                    </span>
                   </div>
 
                   {error && <div className="alert error">{error}</div>}
@@ -935,17 +662,19 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                     type="submit"
                     className="btn primary full"
                     disabled={loading || memberOtpCode.length < 6}
-                    style={{ padding: '11px', marginTop: '4px' }}
+                    style={{ padding: '11px', marginTop: '4px', fontWeight: 700 }}
                   >
-                    {loading ? 'Verifying OTP…' : 'Verify OTP & Connect to Gym →'}
+                    {loading ? 'Verifying OTP…' : 'Verify OTP & Open Dashboard →'}
                   </button>
                 </form>
-              ))}
+              )}
 
-              {/* Multiple Gym Memberships Picker (if member is enrolled in multiple gyms) */}
+              {/* Multiple Gym Memberships Picker (if member is enrolled in multiple gyms under this email) */}
               {availableMemberships.length > 1 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 700 }}>Select your Gym:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700 }}>
+                    Select your Gym ({availableMemberships.length} memberships):
+                  </span>
                   {availableMemberships.map((item) => (
                     <button
                       key={item.member?.id || item.gym?.id}
@@ -955,37 +684,23 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       style={{
                         textAlign: 'left',
                         justifyContent: 'space-between',
-                        padding: '10px 14px',
+                        padding: '12px 14px',
                         background: 'var(--card-subtle)',
                         border: '1px solid var(--border)',
                         borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
                       }}
                     >
                       <div>
-                        <b style={{ display: 'block', fontSize: '13.5px' }}>{item.gym?.gym_name || 'Gym'}</b>
-                        <span className="muted small">{item.member?.plan} · {item.member?.facility}</span>
+                        <b style={{ display: 'block', fontSize: '14px' }}>{item.gym?.gym_name || 'Gym'}</b>
+                        <span className="muted small">
+                          {item.gym?.area ? `${item.gym.area}, ` : ''}{item.gym?.city || ''} · {item.member?.plan} ({item.member?.facility})
+                        </span>
                       </div>
-                      <span style={{ fontSize: '16px' }}>→</span>
+                      <span style={{ fontSize: '18px', color: 'var(--primary)' }}>→</span>
                     </button>
                   ))}
-                </div>
-              )}
-
-              {/* Switch to Gym Connection Code Join */}
-              {!memberJoinMode && (
-                <div style={{ textAlign: 'center', marginTop: '6px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
-                  <button
-                    type="button"
-                    className="link"
-                    onClick={() => {
-                      setMemberJoinMode(true)
-                      setError('')
-                      setInfo('')
-                    }}
-                    style={{ fontSize: '12.5px', fontWeight: 700, color: '#0d9488' }}
-                  >
-                    Have a Gym Connection Code? Join Gym →
-                  </button>
                 </div>
               )}
             </div>

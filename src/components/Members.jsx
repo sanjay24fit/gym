@@ -80,7 +80,8 @@ export default function Members({
       (m) =>
         !q ||
         m.name.toLowerCase().includes(q) ||
-        m.phone.includes(q) ||
+        (m.phone && m.phone.includes(q)) ||
+        (m.email && m.email.toLowerCase().includes(q)) ||
         getMemberFacility(m).toLowerCase().includes(q) ||
         getTrainerName(m).toLowerCase().includes(q) ||
         (m.plan && m.plan.toLowerCase().includes(q))
@@ -300,7 +301,24 @@ export default function Members({
                   </div>
                   <div className="member-card-info">
                     <h3 className="member-card-name">{m.name}</h3>
-                    <span className="member-card-phone">{displayPhone}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <span className="member-card-phone">{displayPhone}</span>
+                      {m.email ? (
+                        <span className="muted small font-mono" style={{ fontSize: '11px' }}>{m.email}</span>
+                      ) : (
+                        <span
+                          className="badge amber"
+                          style={{ fontSize: '10px', padding: '1px 5px', cursor: 'pointer' }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setDialog({ type: 'edit', member: m })
+                          }}
+                          title="Click to add email address for member login"
+                        >
+                          ⚠️ Needs Email
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

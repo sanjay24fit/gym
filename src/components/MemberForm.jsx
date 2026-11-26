@@ -27,7 +27,8 @@ function initialForm(member, renew) {
     return {
       previousDue,
       name: member.name,
-      phone: member.phone,
+      phone: member.phone || '',
+      email: (member.email || '').trim().toLowerCase(),
       plan: plan ? plan.label : 'Custom',
       facility: isStandardFac ? fac : 'Custom',
       custom_facility: isStandardFac ? '' : fac,
@@ -45,7 +46,8 @@ function initialForm(member, renew) {
     const isStandardFac = FACILITIES.includes(fac)
     return {
       name: member.name,
-      phone: member.phone,
+      phone: member.phone || '',
+      email: (member.email || '').trim().toLowerCase(),
       plan: member.plan || 'Custom',
       facility: isStandardFac ? fac : 'Custom',
       custom_facility: isStandardFac ? '' : fac,
@@ -62,6 +64,7 @@ function initialForm(member, renew) {
   return {
     name: '',
     phone: '',
+    email: '',
     plan: '1 Month',
     facility: 'Gym & Fitness',
     custom_facility: '',
@@ -100,6 +103,19 @@ export default function MemberForm({ member, renew, onSave, onDelete, onScanNote
       setError('Paid amount cannot be more than total fee')
       return
     }
+
+    // Email Address is strictly mandatory for member creation & login access
+    const cleanEmail = (form.email || '').trim().toLowerCase()
+    if (!cleanEmail) {
+      setError('Email address is required. Members use this email to receive login OTP and access their dashboard.')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(cleanEmail)) {
+      setError('Please enter a valid email address (e.g. member@gmail.com).')
+      return
+    }
+
     setSaving(true)
     setError('')
 
@@ -111,6 +127,7 @@ export default function MemberForm({ member, renew, onSave, onDelete, onScanNote
     const err = await onSave({
       name: form.name.trim(),
       phone: form.phone.trim(),
+      email: cleanEmail,
       plan: form.plan,
       facility: resolvedFacility,
       personal_trainer: Boolean(form.personal_trainer),
@@ -143,8 +160,35 @@ export default function MemberForm({ member, renew, onSave, onDelete, onScanNote
             </button>
           </div>
         )}
+
+        {/* Existing Member Email Notice if Email was missing */}
+        {member && !member.email && (
+          <div className="alert warning small" style={{ marginBottom: '10px', fontSize: '12px' }}>
+            ⚠️ <strong>Action Required:</strong> This member does not have an email address yet. Add their email below so they can log in to the Member App using Email OTP.
+          </div>
+        )}
+
         <label>Name<input required value={form.name} onChange={set('name')} disabled={renew} /></label>
-        <label>Mobile number<input type="tel" value={form.phone} onChange={set('phone')} /></label>
+
+        <div className="row">
+          <label>
+            <span>Email Address <b style={{ color: 'var(--primary, #FF6200)' }}>*</b></span>
+            <input
+              required
+              type="email"
+              placeholder="member@gmail.com"
+              value={form.email}
+              onChange={set('email')}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
+            />
+          </label>
+          <label>
+            <span>Mobile number</span>
+            <input type="tel" value={form.phone} onChange={set('phone')} placeholder="e.g. 9876543210" />
+          </label>
+        </div>
 
         <div className="row">
           <label>

@@ -10,6 +10,9 @@
     "preview": "vite preview",
     "test:ocr": "node scripts/test-ocr-parser.mjs",
     "test:access": "node scripts/test-account-states.mjs",
+    "test:ranking": "node scripts/test-ranking-engine.mjs",
+    "test:member-auth": "node scripts/test-member-email-auth.mjs",
+    "test": "node scripts/test-account-states.mjs && node scripts/test-ocr-parser.mjs && node scripts/test-ranking-engine.mjs && node scripts/test-member-email-auth.mjs",
     "test:rls": "node scripts/rls-test.mjs"
   },
   "dependencies": {
