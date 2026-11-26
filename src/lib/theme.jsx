@@ -27,7 +27,7 @@ export function ThemeProvider({ children }) {
     // Update mobile browser status bar / theme-color
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta) {
-      meta.setAttribute('content', nextTheme === 'light' ? '#F7F8F5' : '#0E1411')
+      meta.setAttribute('content', nextTheme === 'light' ? '#F8F9FB' : '#0A0B0E')
     }
   }
 

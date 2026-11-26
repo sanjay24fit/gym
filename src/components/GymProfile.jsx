@@ -5,8 +5,9 @@ import WhatsAppSupport from './WhatsAppSupport'
 import Modal from './Modal'
 import { useTheme } from '../lib/theme'
 import LanguageToggle from './LanguageToggle'
-import { initiateSubscriptionPayment, RAZORPAY_ME_HANDLE_URL } from '../lib/razorpay'
-import { STANDARD_FACILITIES, updateGymLocation } from '../lib/ranking'
+import { getRazorpayMeUrl } from '../lib/razorpay'
+import { updateGymLocation } from '../lib/ranking'
+import SubscriptionPricingModal from './SubscriptionPricingModal'
 
 function compressImage(file, maxWidth = 500, quality = 0.85) {
   return new Promise((resolve, reject) => {
@@ -179,9 +180,9 @@ export default function GymProfile({
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState('')
 
-  const [paying, setPaying] = useState(false)
   const [payError, setPayError] = useState('')
   const [paySuccess, setPaySuccess] = useState('')
+  const [showPricingModal, setShowPricingModal] = useState(false)
 
   // Gym Owner Profile Photo state & upload
   const [ownerPhoto, setOwnerPhoto] = useState(() => {
@@ -838,73 +839,131 @@ export default function GymProfile({
           </button>
         </form>
 
-        {/* Subscription & Validity Card */}
-        <div className="card">
-          <div className="section-head" style={{ marginBottom: '10px' }}>
-            <h4>Subscription Status</h4>
-            <span className={`badge ${daysRemaining !== null && daysRemaining <= 0 ? 'red' : 'green'}`}>
-              ● {daysRemaining !== null && daysRemaining <= 0 ? 'Expired' : isTrial ? 'Free Trial' : 'Active Plan'}
-            </span>
+        {/* Redesigned Premium Subscription & Validity Card */}
+        <div className="sub-status-card">
+          <div className="sub-status-card-glow" aria-hidden="true" />
+
+          <div className="sub-status-header">
+            <div className="sub-status-title-group">
+              <div className="sub-status-crown-badge" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="sub-status-title">Subscription Status</h4>
+                <span className="small muted block" style={{ fontSize: '12px' }}>
+                  Professional Gym Management SaaS
+                </span>
+              </div>
+            </div>
+
+            <div className={`sub-status-badge ${daysRemaining !== null && daysRemaining <= 0 ? 'expired' : isTrial ? 'trial' : 'active'}`}>
+              <span className="sub-pulse-dot" />
+              <span>{daysRemaining !== null && daysRemaining <= 0 ? 'Expired' : isTrial ? 'Free Trial' : 'Active Plan'}</span>
+            </div>
           </div>
 
-          <p className="small muted" style={{ marginBottom: '14px' }}>
-            Your Gym Manager {isTrial ? '21-day free trial' : 'subscription'} gives you unlimited members, paper register scanning, and automated expiry tracking.
+          <p className="sub-status-desc">
+            Your Gym Manager {isTrial ? '21-day free trial' : 'subscription'} gives you unlimited members, paper register scanning, automated dues tracking, and instant member passes.
           </p>
 
-          <div className="row" style={{ background: 'var(--card-subtle)', padding: '14px 18px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', marginBottom: '16px' }}>
-            <div>
-              <span className="small muted block">{isTrial ? 'Trial Valid Until:' : 'Plan Valid Until:'}</span>
-              <b>{validUntil ? formatDate(validUntil) : 'Unlimited Access'}</b>
+          {/* Metric Tiles Grid */}
+          <div className="sub-metrics-grid">
+            <div className="sub-metric-tile">
+              <div className="sub-metric-label-row">
+                <svg className="sub-metric-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span>{isTrial ? 'Trial Valid Until' : 'Plan Valid Until'}</span>
+              </div>
+              <span className="sub-metric-value">
+                {validUntil ? formatDate(validUntil) : 'Unlimited Access'}
+              </span>
             </div>
-            <div>
-              <span className="small muted block">Remaining Days:</span>
-              <b>{daysRemaining !== null ? (daysRemaining >= 0 ? `${daysRemaining} days remaining` : 'Expired') : 'No expiry limit'}</b>
+
+            <div className="sub-metric-tile">
+              <div className="sub-metric-label-row">
+                <svg className="sub-metric-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span>Remaining Days</span>
+              </div>
+              <span className={`sub-metric-value ${daysRemaining !== null ? (daysRemaining <= 0 ? 'highlight-red' : daysRemaining <= 7 ? 'highlight-red' : 'highlight-green') : 'highlight-green'}`}>
+                {daysRemaining !== null ? (daysRemaining >= 0 ? `${daysRemaining} days remaining` : 'Expired') : 'No expiry limit'}
+              </span>
+            </div>
+
+            <div className="sub-metric-tile">
+              <div className="sub-metric-label-row">
+                <svg className="sub-metric-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Included Access</span>
+              </div>
+              <span className="sub-metric-value highlight-green">
+                All Pro Features Active
+              </span>
             </div>
           </div>
 
-          {payError && <div className="alert error small" style={{ marginBottom: '10px' }}>{payError}</div>}
-          {paySuccess && <div className="alert success small" style={{ marginBottom: '10px' }}>{paySuccess}</div>}
+          {payError && <div className="alert error small" style={{ marginBottom: '14px' }}>{payError}</div>}
+          {paySuccess && <div className="alert success small" style={{ marginBottom: '14px' }}>{paySuccess}</div>}
 
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Action Buttons */}
+          <div className="sub-status-actions">
             <button
               type="button"
-              className="btn primary"
-              disabled={paying}
-              onClick={async () => {
+              className="sub-renew-btn"
+              onClick={() => {
                 setPayError('')
                 setPaySuccess('')
-                setPaying(true)
-                await initiateSubscriptionPayment({
-                  gym,
-                  userEmail,
-                  amount: 499,
-                  onSuccess: (data) => {
-                    setPaying(false)
-                    setPaySuccess(data.message || 'Payment successful! Subscription extended by 30 days.')
-                    if (onRefresh) onRefresh()
-                  },
-                  onError: (err) => {
-                    setPaying(false)
-                    setPayError(err)
-                  },
-                })
+                setShowPricingModal(true)
               }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <span>{paying ? 'Connecting to Razorpay…' : 'Renew Plan (₹499 / 30 Days)'}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+              <span>Renew / Upgrade Plan</span>
             </button>
 
             <a
-              href={RAZORPAY_ME_HANDLE_URL}
+              href={getRazorpayMeUrl(499)}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn secondary"
-              style={{ fontSize: '12.5px', textDecoration: 'none' }}
+              className="sub-upi-btn"
             >
-              Direct UPI / QR (Gym Manager)
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+              <span>Direct UPI / QR (Gym Manager)</span>
             </a>
           </div>
+
+          <div className="sub-trust-note">
+            <span>🔒 Secure 256-bit encrypted checkout via Razorpay & UPI · Instant automatic renewal</span>
+          </div>
         </div>
+
+        {/* Subscription Renewal Pricing Offers Modal */}
+        {showPricingModal && (
+          <SubscriptionPricingModal
+            gym={gym}
+            userEmail={userEmail}
+            onClose={() => setShowPricingModal(false)}
+            onSuccess={(data) => {
+              setPaySuccess(data.message || 'Payment confirmed! Subscription extended.')
+              if (onRefresh) onRefresh()
+            }}
+          />
+        )}
 
         {/* Theme & Appearance */}
         <div className="card settings-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
@@ -945,7 +1004,7 @@ export default function GymProfile({
                 borderRadius: '999px',
                 border: theme === 'light' ? '1px solid var(--border)' : '1px solid transparent',
                 background: theme === 'light' ? 'var(--card, #FFFFFF)' : 'transparent',
-                color: theme === 'light' ? 'var(--primary, #145C43)' : 'var(--text-secondary, #718096)',
+                color: theme === 'light' ? 'var(--primary, #FF6200)' : 'var(--text-secondary, #718096)',
                 fontWeight: theme === 'light' ? 700 : 500,
                 fontSize: '13px',
                 cursor: 'pointer',
@@ -991,8 +1050,8 @@ export default function GymProfile({
                 padding: '7px 14px',
                 borderRadius: '999px',
                 border: theme === 'dark' ? '1px solid var(--border)' : '1px solid transparent',
-                background: theme === 'dark' ? 'var(--card, #1A231F)' : 'transparent',
-                color: theme === 'dark' ? 'var(--accent, #35B982)' : 'var(--text-secondary, #718096)',
+                background: theme === 'dark' ? 'var(--card, #151821)' : 'transparent',
+                color: theme === 'dark' ? 'var(--accent, #FF6200)' : 'var(--text-secondary, #718096)',
                 fontWeight: theme === 'dark' ? 700 : 500,
                 fontSize: '13px',
                 cursor: 'pointer',
@@ -1009,7 +1068,7 @@ export default function GymProfile({
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ color: theme === 'dark' ? 'var(--accent, #35B982)' : 'currentColor' }}
+                style={{ color: theme === 'dark' ? 'var(--accent, #FF6200)' : 'currentColor' }}
               >
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>

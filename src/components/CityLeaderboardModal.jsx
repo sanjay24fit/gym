@@ -78,7 +78,7 @@ export default function CityLeaderboardModal({
         <div
           className="card"
           style={{
-            background: 'linear-gradient(135deg, #145C43 0%, #0C3829 100%)',
+            background: 'linear-gradient(135deg, #FF6200 0%, #E63900 100%)',
             color: '#FFFFFF',
             border: '1px solid rgba(53, 185, 130, 0.3)',
             borderRadius: '20px',

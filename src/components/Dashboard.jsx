@@ -356,9 +356,9 @@ export default function Dashboard({
       <div
         className="card"
         style={{
-          background: 'linear-gradient(135deg, #145C43 0%, #0C3829 100%)',
+          background: 'linear-gradient(135deg, #FF6200 0%, #E63900 100%)',
           color: '#FFFFFF',
-          border: '1px solid rgba(53, 185, 130, 0.35)',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
           borderRadius: 'var(--radius-xl)',
           padding: '18px 22px',
           marginBottom: '16px',
@@ -367,7 +367,7 @@ export default function Dashboard({
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '14px',
-          boxShadow: '0 8px 24px rgba(20, 92, 67, 0.25)',
+          boxShadow: '0 8px 24px rgba(255, 98, 0, 0.3)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -376,18 +376,18 @@ export default function Dashboard({
               width: '46px',
               height: '46px',
               borderRadius: '14px',
-              background: 'linear-gradient(135deg, #D6B46A 0%, #B89649 100%)',
-              color: '#18231E',
+              background: 'linear-gradient(135deg, #FFF0E6 0%, #FFD6BF 100%)',
+              color: '#FF6200',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '22px',
               fontWeight: 800,
               flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(214, 180, 106, 0.35)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D6B46A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6200" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
               <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
               <path d="M4 22h16" />
@@ -404,9 +404,9 @@ export default function Dashboard({
               </b>
               <span
                 style={{
-                  background: 'rgba(53, 185, 130, 0.22)',
-                  border: '1px solid rgba(53, 185, 130, 0.45)',
-                  color: '#A7F3D0',
+                  background: 'rgba(255, 255, 255, 0.22)',
+                  border: '1px solid rgba(255, 255, 255, 0.35)',
+                  color: '#FFFFFF',
                   fontSize: '11px',
                   fontWeight: 700,
                   padding: '2px 8px',
@@ -419,7 +419,7 @@ export default function Dashboard({
               </span>
             </div>
 
-            <span style={{ fontSize: '12.5px', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '3px', color: '#E2E8F0' }}>
+            <span style={{ fontSize: '12.5px', opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '3px', color: '#FFF5F0' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               <span>{gym?.area || 'City Center'}, {gym?.city || 'Udaipur'} {gym?.pincode ? `· PIN ${gym.pincode}` : ''} · Live Leaderboard Decided by Member Reviews</span>
             </span>
@@ -432,7 +432,7 @@ export default function Dashboard({
           onClick={() => (onAction ? onAction('rankings') : setShowLeaderboardModal(true))}
           style={{
             background: '#FFFFFF',
-            color: '#145C43',
+            color: '#FF6200',
             border: 'none',
             fontSize: '12.5px',
             fontWeight: 700,

@@ -140,6 +140,11 @@ check('plan derived from authoritative order amount: 49900 paise → 30 days', (
   assert.deepEqual(planForAmountPaise('49900'), { planDays: 30, planId: 'monthly', amountPaise: 49900 })
 })
 
+check('plan derived for 6-month and 12-month renewal offers', () => {
+  assert.deepEqual(planForAmountPaise(249900), { planDays: 180, planId: 'half_yearly', amountPaise: 249900 })
+  assert.deepEqual(planForAmountPaise(449900), { planDays: 365, planId: 'yearly', amountPaise: 449900 })
+})
+
 check('forged/unsupported amounts rejected (no plan derived)', () => {
   assert.equal(planForAmountPaise(100), null) // ₹1 order cannot buy 30 days
   assert.equal(planForAmountPaise(499), null) // rupees≠paise confusion

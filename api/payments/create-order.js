@@ -11,15 +11,33 @@ export default async function handler(req, res) {
     const authHeader = req.headers.authorization || ''
     const token = authHeader.replace(/^Bearer\s+/i, '').trim()
 
+    const { amount = 499, currency = 'INR', plan: requestedPlan = 'monthly' } = req.body || {}
+    const numericAmount = Math.round(Number(amount)) || 499
+    const amountInPaise = numericAmount * 100 // e.g. ₹499 -> 49900 paise, ₹2,499 -> 249900 paise, ₹4,499 -> 449900 paise
+    // Note: razorpay.me handles reject query parameters with "Amount not valid" error.
+    // The handle URL must be kept clean without ?amount= query parameters.
+    const dynamicFallbackUrl = 'https://razorpay.me/@gymmanagerapk'
+
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
     const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET
 
-    if (!razorpayKeyId || !razorpayKeySecret) {
-      return res.status(500).json({
-        error: 'Razorpay keys not configured on server. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Vercel environment variables.',
-        fallbackUrl: 'https://razorpay.me/@sanjaysalvi2245',
+    const isPlaceholderKey =
+      !razorpayKeyId ||
+      !razorpayKeySecret ||
+      razorpayKeySecret === 'YOUR-RAZORPAY-KEY-SECRET' ||
+      razorpayKeySecret.startsWith('YOUR-') ||
+      razorpayKeyId.includes('xxxx')
+
+    if (isPlaceholderKey) {
+      console.warn('[Payments] Razorpay API keys are not configured or using placeholders. Returning graceful fallback.')
+      return res.status(503).json({
+        error: 'Online payment is temporarily unavailable. Please use the Direct UPI / QR option.',
+        isConfigIssue: true,
+        fallbackUrl: dynamicFallbackUrl,
+        amount: amountInPaise,
+        amountInRupees: numericAmount,
       })
     }
 
@@ -44,16 +62,14 @@ export default async function handler(req, res) {
 
     const gymName = gym?.gym_name || 'Gym Manager'
 
-    const { amount = 499, currency = 'INR' } = req.body || {}
-    const amountInPaise = Math.round(Number(amount) * 100) // ₹499 = 49900 paise
-
     // Server-side plan gate (D1): orders can only be created for published
     // catalog plans — a client cannot order an arbitrary amount and later
     // claim a longer plan at verification time.
     const plan = planForAmountPaise(amountInPaise)
     if (!plan) {
       return res.status(400).json({
-        error: 'Unsupported plan amount. Only the ₹499 / 30-day plan is available.',
+        error: `Unsupported plan amount ₹${numericAmount}. Supported plans: ₹499 (1 Month), ₹2,499 (6 Months), ₹4,499 (12 Months).`,
+        fallbackUrl: dynamicFallbackUrl,
       })
     }
 
@@ -86,13 +102,15 @@ export default async function handler(req, res) {
       return res.status(rzpResponse.status).json({
         error: orderData.error?.description || 'Failed to create Razorpay order',
         details: orderData,
+        fallbackUrl: dynamicFallbackUrl,
       })
     }
 
     return res.status(200).json({
       orderId: orderData.id,
-      amount: orderData.amount,
-      currency: orderData.currency,
+      amount: orderData.amount, // in paise from Razorpay (49900, 249900, 449900)
+      amountInRupees: numericAmount,
+      currency: orderData.currency || 'INR',
       keyId: razorpayKeyId,
       gymId: user.id,
       gymName: gymName,

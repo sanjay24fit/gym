@@ -6,10 +6,12 @@ import GymLogo from './GymLogo'
 import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
 import Modal from './Modal'
-import { initiateSubscriptionPayment, RAZORPAY_ME_HANDLE_URL } from '../lib/razorpay'
+import SubscriptionPricingModal from './SubscriptionPricingModal'
+import { initiateSubscriptionPayment, getRazorpayMeUrl } from '../lib/razorpay'
 
 export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [showPricingModal, setShowPricingModal] = useState(false)
   const [loadingPay, setLoadingPay] = useState(false)
   const [payError, setPayError] = useState('')
   const [paySuccess, setPaySuccess] = useState('')
@@ -121,7 +123,11 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
             <button
               type="button"
               className="btn primary full"
-              onClick={handlePay}
+              onClick={() => {
+                setPayError('')
+                setPaySuccess('')
+                setShowPricingModal(true)
+              }}
               disabled={loadingPay}
               style={{
                 display: 'flex',
@@ -132,22 +138,18 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
                 fontWeight: 600,
               }}
             >
-              {loadingPay ? (
-                'Connecting to Razorpay…'
-              ) : (
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                    <line x1="2" y1="10" x2="22" y2="10" />
-                  </svg>
-                  <span>Pay ₹499 via Razorpay / UPI</span>
-                </span>
-              )}
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+                <span>Subscribe / Renew Plan (From ₹499)</span>
+              </span>
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '10px' }}>
               <a
-                href={RAZORPAY_ME_HANDLE_URL}
+                href={getRazorpayMeUrl(499)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="muted small"
@@ -201,6 +203,22 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh }) {
             </div>
           </div>
         </Modal>
+      )}
+
+      {showPricingModal && (
+        <SubscriptionPricingModal
+          gym={gym}
+          userEmail={userEmail || gym?.email}
+          initialPlanId="monthly"
+          onClose={() => setShowPricingModal(false)}
+          onSuccess={(data) => {
+            setShowPricingModal(false)
+            setPaySuccess(data.message || 'Payment confirmed! Reactivating account…')
+            setTimeout(() => {
+              if (onRefresh) onRefresh()
+            }, 1200)
+          }}
+        />
       )}
     </div>
   )

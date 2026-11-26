@@ -301,8 +301,8 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 width: '38px',
                 height: '38px',
                 borderRadius: '12px',
-                background: 'rgba(20, 92, 67, 0.1)',
-                color: '#145C43',
+                background: 'rgba(255, 98, 0, 0.1)',
+                color: '#FF6200',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -334,7 +334,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
           }}
         >
-          <MapPin size={16} color="#145C43" />
+          <MapPin size={16} color="#FF6200" />
           <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-secondary)' }}>City:</span>
           <select
             value={selectedCity}
@@ -588,7 +588,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   onClick={() => setFilterTab('all')}
                   style={{
                     border: filterTab === 'all' ? 'none' : '1px solid var(--border)',
-                    background: filterTab === 'all' ? '#145C43' : 'var(--card)',
+                    background: filterTab === 'all' ? '#FF6200' : 'var(--card)',
                     color: filterTab === 'all' ? '#FFFFFF' : 'var(--text-secondary)',
                     fontWeight: filterTab === 'all' ? 700 : 600,
                     fontSize: '12.5px',
@@ -598,7 +598,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    boxShadow: filterTab === 'all' ? '0 2px 8px rgba(20, 92, 67, 0.25)' : 'none',
+                    boxShadow: filterTab === 'all' ? '0 2px 8px rgba(255, 98, 0, 0.25)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -609,7 +609,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   onClick={() => setFilterTab('highest_rated')}
                   style={{
                     border: filterTab === 'highest_rated' ? 'none' : '1px solid var(--border)',
-                    background: filterTab === 'highest_rated' ? '#145C43' : 'var(--card)',
+                    background: filterTab === 'highest_rated' ? '#FF6200' : 'var(--card)',
                     color: filterTab === 'highest_rated' ? '#FFFFFF' : 'var(--text-secondary)',
                     fontWeight: filterTab === 'highest_rated' ? 700 : 600,
                     fontSize: '12.5px',
@@ -619,7 +619,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    boxShadow: filterTab === 'highest_rated' ? '0 2px 8px rgba(20, 92, 67, 0.25)' : 'none',
+                    boxShadow: filterTab === 'highest_rated' ? '0 2px 8px rgba(255, 98, 0, 0.25)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -631,7 +631,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   onClick={() => setFilterTab('most_reviewed')}
                   style={{
                     border: filterTab === 'most_reviewed' ? 'none' : '1px solid var(--border)',
-                    background: filterTab === 'most_reviewed' ? '#145C43' : 'var(--card)',
+                    background: filterTab === 'most_reviewed' ? '#FF6200' : 'var(--card)',
                     color: filterTab === 'most_reviewed' ? '#FFFFFF' : 'var(--text-secondary)',
                     fontWeight: filterTab === 'most_reviewed' ? 700 : 600,
                     fontSize: '12.5px',
@@ -641,7 +641,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    boxShadow: filterTab === 'most_reviewed' ? '0 2px 8px rgba(20, 92, 67, 0.25)' : 'none',
+                    boxShadow: filterTab === 'most_reviewed' ? '0 2px 8px rgba(255, 98, 0, 0.25)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -656,7 +656,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {loading ? (
               <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '3px solid rgba(20, 92, 67, 0.2)', borderTopColor: '#145C43', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '3px solid rgba(255, 98, 0, 0.2)', borderTopColor: '#FF6200', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
                 <span>Loading registered gyms in {selectedCity}…</span>
               </div>
             ) : filteredGyms.length === 0 ? (
@@ -676,8 +676,8 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                     width: '64px',
                     height: '64px',
                     borderRadius: '50%',
-                    background: 'rgba(20, 92, 67, 0.08)',
-                    color: '#145C43',
+                    background: 'rgba(255, 98, 0, 0.08)',
+                    color: '#FF6200',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -720,7 +720,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       borderRadius: '16px',
                       background: 'var(--card)',
                       border: isMine ? '1.5px solid #145C43' : '1px solid var(--border)',
-                      boxShadow: isMine ? '0 4px 16px rgba(20, 92, 67, 0.08)' : '0 2px 6px rgba(0,0,0,0.02)',
+                      boxShadow: isMine ? '0 4px 16px rgba(255, 98, 0, 0.08)' : '0 2px 6px rgba(0,0,0,0.02)',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
@@ -731,11 +731,11 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.borderColor = '#145C43'
+                      e.currentTarget.style.borderColor = '#FF6200'
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.borderColor = isMine ? '#145C43' : 'var(--border)'
+                      e.currentTarget.style.borderColor = isMine ? '#FF6200' : 'var(--border)'
                     }}
                   >
                     {/* Left: Scalloped Seal Badge + Gym Thumbnail + Details */}
@@ -764,7 +764,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                           {isMine && (
                             <span
                               style={{
-                                background: '#145C43',
+                                background: '#FF6200',
                                 color: '#FFFFFF',
                                 fontSize: '11px',
                                 fontWeight: 700,
@@ -875,7 +875,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
             {/* Header Banner */}
             <div
               style={{
-                background: '#145C43',
+                background: '#FF6200',
                 padding: '14px 18px',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -1014,7 +1014,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 className="btn full"
                 onClick={() => handleOpenGymProfile(myGym)}
                 style={{
-                  background: '#145C43',
+                  background: '#FF6200',
                   color: '#FFFFFF',
                   border: 'none',
                   fontWeight: 700,
@@ -1026,7 +1026,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   justifyContent: 'center',
                   gap: '8px',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(20, 92, 67, 0.25)',
+                  boxShadow: '0 4px 12px rgba(255, 98, 0, 0.25)',
                 }}
               >
                 <Star size={16} color="#FDE047" fill="#FDE047" />
@@ -1126,7 +1126,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       ? 'linear-gradient(135deg, #E2E8F0, #94A3B8)'
                       : selectedProfileGym.rank === 3
                       ? 'linear-gradient(135deg, #F472B6, #DB2777)'
-                      : '#145C43',
+                      : '#FF6200',
                     color: selectedProfileGym.rank === 1 ? '#18231E' : '#FFFFFF',
                     fontWeight: 800,
                     fontSize: '11.5px',
@@ -1161,7 +1161,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                   <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.3px' }}>
                     {selectedProfileGym.gym_name}
                   </h2>
-                  <ShieldCheck size={18} color="#35B982" />
+                  <ShieldCheck size={18} color="#FF6200" />
                 </div>
                 <span style={{ fontSize: '11.5px', color: '#E2E8F0', opacity: 0.9 }}>
                   Verified Fitness Partner on Gym Manager
@@ -1182,7 +1182,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <MapPin size={17} color="#145C43" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <MapPin size={17} color="#FF6200" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.4 }}>
                   <b>Location:</b> {selectedProfileGym.area || 'City Center'}, {selectedProfileGym.city || selectedCity}, {selectedProfileGym.state || 'Rajasthan'} {selectedProfileGym.pincode ? `(${selectedProfileGym.pincode})` : ''}
                 </div>
@@ -1207,7 +1207,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 }}
               >
                 <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', display: 'block' }}>City Rank</span>
-                <b style={{ fontSize: '18px', color: '#145C43' }}>#{selectedProfileGym.rank || 1}</b>
+                <b style={{ fontSize: '18px', color: '#FF6200' }}>#{selectedProfileGym.rank || 1}</b>
                 <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block' }}>in {selectedProfileGym.city || selectedCity}</span>
               </div>
 
@@ -1270,7 +1270,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                       textDecoration: 'none',
                     }}
                   >
-                    <Phone size={14} color="#145C43" />
+                    <Phone size={14} color="#FF6200" />
                     <span>Call: {selectedProfileGym.phone}</span>
                   </a>
 
@@ -1334,7 +1334,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                <Dumbbell size={16} color="#145C43" />
+                <Dumbbell size={16} color="#FF6200" />
                 <b style={{ fontSize: '13px', color: 'var(--text)' }}>Available Facilities & Training</b>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -1378,7 +1378,7 @@ export default function CityRankings({ gym, onRefreshGym: _onRefreshGym }) {
                 gap: '12px',
               }}
             >
-              <Clock size={18} color="#145C43" />
+              <Clock size={18} color="#FF6200" />
               <div style={{ fontSize: '12px', color: 'var(--text)', lineHeight: 1.4 }}>
                 <b>Standard Batch Hours:</b> Morning 06:00 AM – 11:30 AM &nbsp;|&nbsp; Evening 04:00 PM – 10:00 PM (Mon–Sat)
               </div>

@@ -484,14 +484,14 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
 
       <div className="card auth-card" style={{ maxWidth: '440px', width: '100%', padding: '0 0 28px', overflow: 'hidden' }}>
         {/* Premium Gym Hero Visual Header */}
-        <div style={{ position: 'relative', height: '120px', width: '100%', overflow: 'hidden', background: '#145C43' }}>
+        <div style={{ position: 'relative', height: '120px', width: '100%', overflow: 'hidden', background: 'linear-gradient(135deg, #FF6200 0%, #E63900 100%)' }}>
           <img
             src={GYM_IMAGES.authGymInterior}
             alt="Gym Interior"
             style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
             loading="lazy"
           />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(20, 92, 67, 0.3) 0%, var(--card) 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255, 98, 0, 0.35) 0%, var(--card) 100%)' }} />
           <div style={{ position: 'absolute', bottom: '6px', left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
             <GymLogo size={52} />
           </div>
@@ -708,7 +708,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       <label>
                         <span style={{ fontWeight: 600 }}>10-Digit Mobile Number *</span>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', marginTop: '4px' }}>
-                          <span style={{ position: 'absolute', left: '12px', fontWeight: 700, fontSize: '14px', color: '#145C43' }}>+91</span>
+                          <span style={{ position: 'absolute', left: '12px', fontWeight: 700, fontSize: '14px', color: 'var(--primary, #FF6200)' }}>+91</span>
                           <input
                             required
                             type="tel"
@@ -760,7 +760,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                           left: '12px',
                           fontWeight: 700,
                           fontSize: '14px',
-                          color: '#145C43',
+                          color: 'var(--primary, #FF6200)',
                         }}
                       >
                         +91
@@ -821,7 +821,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       style={{
                         fontSize: '12.5px',
                         fontWeight: 700,
-                        color: '#145C43',
+                        color: 'var(--primary, #FF6200)',
                         padding: '4px',
                       }}
                     >
@@ -916,7 +916,7 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                       type="button"
                       className="link"
                       onClick={handleDirectQuickPass}
-                      style={{ color: '#145C43', fontWeight: 700 }}
+                      style={{ color: 'var(--primary, #FF6200)', fontWeight: 700 }}
                     >
                       Skip & Connect →
                     </button>
@@ -1002,8 +1002,8 @@ export default function Auth({ onDownloadApp, isInstalled, onMemberLogin, initia
                         width: '52px',
                         height: '52px',
                         borderRadius: '16px',
-                        background: 'rgba(20, 92, 67, 0.1)',
-                        color: 'var(--primary, #145C43)',
+                        background: 'rgba(255, 98, 0, 0.12)',
+                        color: 'var(--primary, #FF6200)',
                         margin: '0 auto 8px',
                       }}
                     >

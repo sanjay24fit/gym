@@ -198,7 +198,7 @@ PWA: listens to `beforeinstallprompt` / `appinstalled`, persists `localStorage['
 - Props: `gym, userEmail, onLogout, onRefresh`.
 - **Quirky flags**: `isExpired = gym?.status === 'active' || Boolean(gym?.valid_until)`; `isBlocked = status === 'blocked'`.
 - Titles (priority): default "Approval pending" → "Account blocked" → "Subscription Expired" → (no gym) "Account not found".
-- Renders "Monthly Gym Plan · ₹499 / 30 Days" card with `💳 Pay ₹499 via Razorpay / UPI` (`initiateSubscriptionPayment`, amount 499) unless blocked; direct link `https://razorpay.me/@sanjaysalvi2245`; `🔄 Refresh Account Status`; WhatsApp support; Logout.
+- Renders "Monthly Gym Plan · ₹499 / 30 Days" card with `💳 Pay ₹499 via Razorpay / UPI` (`initiateSubscriptionPayment`, amount 499) unless blocked; direct link `https://razorpay.me/@gymmanagerapk`; `🔄 Refresh Account Status`; WhatsApp support; Logout.
 - Success → message + `setTimeout(onRefresh, 1200)`.
 
 ### 6.3 `Dashboard.jsx`

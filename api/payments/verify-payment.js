@@ -127,12 +127,12 @@ export default async function handler(req, res) {
       })
     }
 
-    // 4. Derive the plan from the actual order amount (catalog: ₹499 → 30 days)
+    // 4. Derive the plan from the actual order amount (catalog: 499 / 2499 / 4499)
     const plan = planForAmountPaise(order.amount)
     if (!plan) {
       return res.status(400).json({
         success: false,
-        error: `Unsupported payment amount. Only the ₹499 / 30-day plan is available (got ${order.amount} paise).`,
+        error: `Unsupported payment amount (got ${order.amount} paise). Supported plans: ₹499 (1 Mo), ₹2,499 (6 Mo), ₹4,499 (12 Mo).`,
       })
     }
 

@@ -80,7 +80,7 @@ export default function SplashScreen({ message = 'Loading Gym Manager…' }) {
               left: 0,
               bottom: 0,
               width: '45%',
-              background: 'linear-gradient(90deg, transparent, var(--accent, #35B982), transparent)',
+              background: 'linear-gradient(90deg, transparent, var(--accent, #FF6200), transparent)',
               borderRadius: '99px',
               animation: 'splashBar 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite',
             }}

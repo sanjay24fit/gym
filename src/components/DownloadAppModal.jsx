@@ -377,7 +377,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
           background: 'var(--card, #FFFFFF)',
           color: 'var(--text, #142019)',
           borderRadius: '24px',
-          boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--border, rgba(20, 92, 67, 0.12))',
+          boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--border, rgba(255, 98, 0, 0.12))',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
@@ -417,9 +417,9 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
               transition: 'all 0.15s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--primary, #145C43)'
+              e.currentTarget.style.background = 'var(--primary, #FF6200)'
               e.currentTarget.style.color = '#FFFFFF'
-              e.currentTarget.style.borderColor = 'var(--primary, #145C43)'
+              e.currentTarget.style.borderColor = 'var(--primary, #FF6200)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--bg-subtle, #F8FAF8)'
@@ -442,8 +442,8 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
               width: '56px',
               height: '56px',
               borderRadius: '16px',
-              background: 'linear-gradient(135deg, #145C43 0%, #0B3728 100%)',
-              boxShadow: '0 8px 20px rgba(20, 92, 67, 0.28)',
+              background: 'linear-gradient(135deg, #FF6200 0%, #E63900 100%)',
+              boxShadow: '0 8px 20px rgba(255, 98, 0, 0.28)',
               marginBottom: '10px',
             }}
           >
@@ -508,10 +508,10 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                 justifyContent: 'center',
                 gap: '6px',
                 padding: '9px 6px',
-                border: selectedPlatform === 'ios' ? '1px solid var(--border, rgba(20, 92, 67, 0.2))' : '1px solid transparent',
+                border: selectedPlatform === 'ios' ? '1px solid var(--border, rgba(255, 98, 0, 0.2))' : '1px solid transparent',
                 borderRadius: '10px',
                 background: selectedPlatform === 'ios' ? 'var(--card, #FFFFFF)' : 'transparent',
-                color: selectedPlatform === 'ios' ? 'var(--primary, #145C43)' : 'var(--muted, #5B6A61)',
+                color: selectedPlatform === 'ios' ? 'var(--primary, #FF6200)' : 'var(--muted, #5B6A61)',
                 fontFamily: 'inherit',
                 fontSize: '12.5px',
                 fontWeight: selectedPlatform === 'ios' ? 700 : 600,
@@ -544,10 +544,10 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                 justifyContent: 'center',
                 gap: '6px',
                 padding: '9px 6px',
-                border: selectedPlatform === 'android' ? '1px solid var(--border, rgba(20, 92, 67, 0.2))' : '1px solid transparent',
+                border: selectedPlatform === 'android' ? '1px solid var(--border, rgba(255, 98, 0, 0.2))' : '1px solid transparent',
                 borderRadius: '10px',
                 background: selectedPlatform === 'android' ? 'var(--card, #FFFFFF)' : 'transparent',
-                color: selectedPlatform === 'android' ? 'var(--primary, #145C43)' : 'var(--muted, #5B6A61)',
+                color: selectedPlatform === 'android' ? 'var(--primary, #FF6200)' : 'var(--muted, #5B6A61)',
                 fontFamily: 'inherit',
                 fontSize: '12.5px',
                 fontWeight: selectedPlatform === 'android' ? 700 : 600,
@@ -580,10 +580,10 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                 justifyContent: 'center',
                 gap: '6px',
                 padding: '9px 6px',
-                border: selectedPlatform === 'desktop' ? '1px solid var(--border, rgba(20, 92, 67, 0.2))' : '1px solid transparent',
+                border: selectedPlatform === 'desktop' ? '1px solid var(--border, rgba(255, 98, 0, 0.2))' : '1px solid transparent',
                 borderRadius: '10px',
                 background: selectedPlatform === 'desktop' ? 'var(--card, #FFFFFF)' : 'transparent',
-                color: selectedPlatform === 'desktop' ? 'var(--primary, #145C43)' : 'var(--muted, #5B6A61)',
+                color: selectedPlatform === 'desktop' ? 'var(--primary, #FF6200)' : 'var(--muted, #5B6A61)',
                 fontFamily: 'inherit',
                 fontSize: '12.5px',
                 fontWeight: selectedPlatform === 'desktop' ? 700 : 600,
@@ -660,22 +660,22 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     gap: '8px',
                     width: '100%',
                     padding: '13px 18px',
-                    background: 'var(--primary, #145C43)',
+                    background: 'var(--primary, #FF6200)',
                     color: '#FFFFFF',
-                    border: '1px solid var(--primary, #145C43)',
+                    border: '1px solid var(--primary, #FF6200)',
                     borderRadius: '14px',
                     fontFamily: 'inherit',
                     fontSize: '14.5px',
                     fontWeight: 700,
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(20, 92, 67, 0.22)',
+                    boxShadow: '0 4px 12px rgba(255, 98, 0, 0.22)',
                     transition: 'all 0.18s ease',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = 'var(--primary-hover, #0F4935)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'var(--primary, #145C43)'
+                    e.currentTarget.style.background = 'var(--primary, #FF6200)'
                   }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
@@ -695,7 +695,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
               <div
                 style={{
                   background: 'var(--bg-subtle, #F8FAF8)',
-                  border: iosGuidanceActive ? '1.5px solid var(--accent, #35B982)' : '1px solid var(--border, #E5EBE6)',
+                  border: iosGuidanceActive ? '1.5px solid var(--accent, #FF7824)' : '1px solid var(--border, #E5EBE6)',
                   borderRadius: '14px',
                   padding: '14px',
                   boxShadow: iosGuidanceActive ? '0 0 0 3px rgba(53, 185, 130, 0.2)' : 'none',
@@ -708,7 +708,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em',
-                    color: 'var(--primary, #145C43)',
+                    color: 'var(--primary, #FF6200)',
                     marginBottom: '12px',
                     display: 'flex',
                     alignItems: 'center',
@@ -717,7 +717,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                 >
                   <span>{content.ios.stepsTitle}</span>
                   {iosGuidanceActive && (
-                    <span style={{ fontSize: '11px', color: 'var(--accent, #35B982)', fontWeight: 700 }}>
+                    <span style={{ fontSize: '11px', color: 'var(--accent, #FF7824)', fontWeight: 700 }}>
                       {content.followBelow}
                     </span>
                   )}
@@ -725,7 +725,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
 
                 <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '11px' }}>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>1</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>1</span>
                     <div style={{ flex: 1 }}>
                       {content.ios.step1}
                       <span style={{ display: 'block', fontSize: '11.5px', color: 'var(--muted, #5B6A61)', marginTop: '2px' }}>
@@ -734,19 +734,19 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     </div>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>2</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>2</span>
                     <div style={{ flex: 1 }}>
                       {content.ios.step2}
                     </div>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>3</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>3</span>
                     <div style={{ flex: 1 }}>
                       {content.ios.step3}
                     </div>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>4</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>4</span>
                     <div style={{ flex: 1 }}>
                       {content.ios.step4}
                     </div>
@@ -769,7 +769,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                   color: 'var(--text, #142019)',
                 }}
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: 'var(--primary, #145C43)', marginTop: '1px' }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: 'var(--primary, #FF6200)', marginTop: '1px' }}>
                   <rect x="5" y="2" width="14" height="20" rx="3" />
                   <line x1="12" y1="18" x2="12.01" y2="18" />
                 </svg>
@@ -827,19 +827,19 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     width: '100%',
                     padding: '13px 18px',
                     background: installedSuccess
-                      ? 'var(--accent, #35B982)'
+                      ? 'var(--accent, #FF7824)'
                       : isPromptAvailable
-                      ? 'var(--primary, #145C43)'
+                      ? 'var(--primary, #FF6200)'
                       : 'var(--bg-subtle, #EAEFEA)',
                     color: isPromptAvailable || installedSuccess ? '#FFFFFF' : 'var(--muted, #7A8981)',
                     border: '1px solid transparent',
-                    borderColor: isPromptAvailable ? 'var(--primary, #145C43)' : 'var(--border, #D5DDD7)',
+                    borderColor: isPromptAvailable ? 'var(--primary, #FF6200)' : 'var(--border, #D5DDD7)',
                     borderRadius: '14px',
                     fontFamily: 'inherit',
                     fontSize: '14.5px',
                     fontWeight: 700,
                     cursor: isPromptAvailable ? 'pointer' : 'not-allowed',
-                    boxShadow: isPromptAvailable ? '0 4px 12px rgba(20, 92, 67, 0.22)' : 'none',
+                    boxShadow: isPromptAvailable ? '0 4px 12px rgba(255, 98, 0, 0.22)' : 'none',
                     transition: 'all 0.18s ease',
                   }}
                   onMouseEnter={(e) => {
@@ -849,7 +849,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                   }}
                   onMouseLeave={(e) => {
                     if (isPromptAvailable && !installedSuccess) {
-                      e.currentTarget.style.background = 'var(--primary, #145C43)'
+                      e.currentTarget.style.background = 'var(--primary, #FF6200)'
                     }
                   }}
                 >
@@ -891,7 +891,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em',
-                    color: 'var(--primary, #145C43)',
+                    color: 'var(--primary, #FF6200)',
                     marginBottom: '12px',
                     display: 'flex',
                     alignItems: 'center',
@@ -903,19 +903,19 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
 
                 <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '11px' }}>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>1</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>1</span>
                     <div style={{ flex: 1 }}>
                       {content.android.step1}
                     </div>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>2</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>2</span>
                     <div style={{ flex: 1 }}>
                       {content.android.step2}
                     </div>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>3</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>3</span>
                     <div style={{ flex: 1 }}>
                       {content.android.step3}
                     </div>
@@ -943,7 +943,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                   color: 'var(--text, #142019)',
                 }}
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: 'var(--primary, #145C43)', marginTop: '1px' }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: 'var(--primary, #FF6200)', marginTop: '1px' }}>
                   <rect x="5" y="2" width="14" height="20" rx="3" />
                   <line x1="12" y1="18" x2="12.01" y2="18" />
                 </svg>
@@ -972,15 +972,15 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     gap: '8px',
                     width: '100%',
                     padding: '13px 18px',
-                    background: 'var(--primary, #145C43)',
+                    background: 'var(--primary, #FF6200)',
                     color: '#FFFFFF',
-                    border: '1px solid var(--primary, #145C43)',
+                    border: '1px solid var(--primary, #FF6200)',
                     borderRadius: '14px',
                     fontFamily: 'inherit',
                     fontSize: '14.5px',
                     fontWeight: 700,
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(20, 92, 67, 0.22)',
+                    boxShadow: '0 4px 12px rgba(255, 98, 0, 0.22)',
                     transition: 'all 0.18s ease',
                   }}
                 >
@@ -1012,7 +1012,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em',
-                    color: 'var(--primary, #145C43)',
+                    color: 'var(--primary, #FF6200)',
                     marginBottom: '12px',
                     display: 'flex',
                     alignItems: 'center',
@@ -1024,19 +1024,19 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
 
                 <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '11px' }}>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>1</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>1</span>
                     <div style={{ flex: 1 }}>
                       {content.desktop.step1}
                     </div>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>2</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>2</span>
                     <div style={{ flex: 1 }}>
                       {content.desktop.step2}
                     </div>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '11px', fontSize: '13px', lineHeight: 1.5 }}>
-                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #145C43)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>3</span>
+                    <span style={{ width: '22px', height: '22px', borderRadius: '99px', background: 'var(--primary, #FF6200)', color: '#FFFFFF', fontSize: '11.5px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '1px' }}>3</span>
                     <div style={{ flex: 1 }}>
                       <strong>{content.desktop.step3Mac}</strong> {content.desktop.step3MacText}
                     </div>
@@ -1059,7 +1059,7 @@ export default function DownloadAppModal({ isOpen, onClose, deferredPrompt, onIn
                   color: 'var(--text, #142019)',
                 }}
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: 'var(--primary, #145C43)', marginTop: '1px' }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: 'var(--primary, #FF6200)', marginTop: '1px' }}>
                   <rect x="2" y="3" width="20" height="14" rx="2" />
                   <line x1="8" y1="21" x2="16" y2="21" />
                   <line x1="12" y1="17" x2="12" y2="21" />

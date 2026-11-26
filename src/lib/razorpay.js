@@ -1,7 +1,23 @@
 import { supabase } from './supabase'
 
-export const RAZORPAY_ME_HANDLE_URL = 'https://razorpay.me/@sanjaysalvi2245'
+export const RAZORPAY_ME_BASE_URL = 'https://razorpay.me/@gymmanagerapk'
 export const DEFAULT_SUBSCRIPTION_AMOUNT = 499
+
+/**
+ * Returns the verified Razorpay.me UPI payment handle URL.
+ * Note: razorpay.me/@handle endpoints reject query parameters with
+ * "Amount not valid. Please contact the merchant for assistance."
+ * Therefore the handle URL is kept clean, and the amount to enter
+ * is displayed to the user in the UI and instructions.
+ *
+ * @param {number|string} [amount=499] - Plan amount in Rupees (e.g. 499, 2499, 4499)
+ * @returns {string} e.g. 'https://razorpay.me/@gymmanagerapk'
+ */
+export function getRazorpayMeUrl(_amount = DEFAULT_SUBSCRIPTION_AMOUNT) {
+  return RAZORPAY_ME_BASE_URL
+}
+
+export const RAZORPAY_ME_HANDLE_URL = RAZORPAY_ME_BASE_URL
 
 /**
  * Dynamically loads Razorpay checkout SDK if not already in window
@@ -26,12 +42,16 @@ export function loadRazorpayScript() {
 }
 
 /**
- * Initiates Razorpay payment for Gym Subscription (₹499/month)
+ * Initiates Razorpay payment for Gym Subscription
+ * Supports 1 Month (₹499), 6 Months (₹2,499), and 12 Months (₹4,499)
  *
  * @param {Object} options
  * @param {Object} options.gym - Gym record object (id, gym_name, phone, email)
  * @param {string} options.userEmail - Logged-in user's email
  * @param {number} [options.amount=499] - Amount in rupees
+ * @param {number} [options.planDays=30] - Plan duration in days (30, 180, 365)
+ * @param {string} [options.planId='monthly'] - Plan ID identifier
+ * @param {string} [options.planTitle='Monthly Plan'] - Readable title for Razorpay modal
  * @param {Function} options.onSuccess - Callback on verified payment (data) => void
  * @param {Function} options.onError - Callback on error (errMsg) => void
  */
@@ -39,10 +59,16 @@ export async function initiateSubscriptionPayment({
   gym,
   userEmail,
   amount = DEFAULT_SUBSCRIPTION_AMOUNT,
+  planDays = 30,
+  planId = 'monthly',
+  planTitle = 'Monthly Plan',
   onSuccess,
   onError,
 }) {
   try {
+    const numericAmount = Math.round(Number(amount)) || DEFAULT_SUBSCRIPTION_AMOUNT
+    const directFallbackUrl = getRazorpayMeUrl(numericAmount)
+
     const isScriptLoaded = await loadRazorpayScript()
     if (!isScriptLoaded) {
       throw new Error('Could not load Razorpay payment SDK. Please check your internet connection.')
@@ -56,46 +82,63 @@ export async function initiateSubscriptionPayment({
     }
 
     // 1. Call backend serverless route to create order
-    const orderRes = await fetch('/api/payments/create-order', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        amount,
-        currency: 'INR',
-        plan: 'monthly',
-      }),
-    })
+    let orderRes
+    try {
+      orderRes = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: numericAmount,
+          currency: 'INR',
+          plan: planId,
+        }),
+      })
+    } catch (fetchErr) {
+      throw new Error(`Unable to connect to payment server: ${fetchErr.message}`)
+    }
 
-    const orderData = await orderRes.json()
+    let orderData = null
+    try {
+      const text = await orderRes.text()
+      orderData = text ? JSON.parse(text) : null
+    } catch {
+      orderData = null
+    }
 
-    if (!orderRes.ok) {
-      // If serverless is not reachable or keys not configured yet, offer direct handle fallback
-      if (orderData.fallbackUrl || orderRes.status === 404 || orderRes.status === 500) {
-        const proceedDirect = window.confirm(
-          `Razorpay automated gateway notice: ${orderData.error || 'Server API not connected yet'}.\n\nWould you like to pay directly via UPI / QR at ${RAZORPAY_ME_HANDLE_URL}?`
-        )
-        if (proceedDirect) {
-          window.open(RAZORPAY_ME_HANDLE_URL, '_blank', 'noopener,noreferrer')
-        }
-      }
-      throw new Error(orderData.error || 'Failed to create payment order.')
+    if (!orderRes.ok || !orderData) {
+      const isConfigIssue =
+        orderRes.status === 503 ||
+        orderRes.status === 500 ||
+        orderRes.status === 404 ||
+        Boolean(orderData?.isConfigIssue)
+
+      const friendlyError = isConfigIssue
+        ? 'Online payment is temporarily unavailable. Please use the Direct UPI / QR option.'
+        : (orderData?.error || 'Payment order creation failed. Please try again or use Direct UPI / QR.')
+
+      const paymentErr = new Error(friendlyError)
+      paymentErr.isConfigIssue = isConfigIssue
+      paymentErr.fallbackUrl = orderData?.fallbackUrl || directFallbackUrl
+      paymentErr.status = orderRes.status
+      throw paymentErr
     }
 
     const { orderId, keyId, gymName: serverGymName } = orderData
 
-    // Use gym's name or fallback to 'Gym Manager' so 'Sanjay Salvi' is never shown to customer
+    // Use gym's name or fallback to 'Gym Manager'
     const businessTitle = gym?.gym_name || serverGymName || 'Gym Manager'
+    const amountInPaise = orderData.amount || (numericAmount * 100)
 
-    // 2. Open Razorpay Checkout Modal
+    // 2. Open Razorpay Checkout Modal with exact order amount in paise
     const rzpOptions = {
       key: keyId,
-      amount: orderData.amount,
+      amount: amountInPaise,
       currency: orderData.currency || 'INR',
       name: businessTitle, // Display name at the top of Razorpay payment page
-      description: `${businessTitle} · Monthly Subscription (₹499 / 30 Days)`,
+      description: `${businessTitle} · ${planTitle} (₹${numericAmount.toLocaleString('en-IN')})`,
       image: '/gym-logo.png',
       order_id: orderId,
       prefill: {
@@ -107,33 +150,45 @@ export async function initiateSubscriptionPayment({
         business_name: businessTitle,
         gym_id: gym?.id,
         gym_name: businessTitle,
+        plan_id: planId,
+        plan_days: String(planDays),
+        amount_rupees: String(numericAmount),
         platform: 'Gym Manager',
       },
       theme: {
-        color: '#2563eb', // Matches Gym Manager athletic blue accent
+        color: '#FF6200', // Athletic Electric Orange Theme
       },
       handler: async function (response) {
         try {
           // 3. Verify payment signature on backend
-          const verifyRes = await fetch('/api/payments/verify-payment', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              plan_days: 30,
-              amount,
-            }),
-          })
+          let verifyRes
+          try {
+            verifyRes = await fetch('/api/payments/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            })
+          } catch (netErr) {
+            throw new Error(`Payment succeeded, but could not contact verification server: ${netErr.message}`)
+          }
 
-          const verifyData = await verifyRes.json()
+          let verifyData = null
+          try {
+            const vText = await verifyRes.text()
+            verifyData = vText ? JSON.parse(vText) : null
+          } catch {
+            verifyData = null
+          }
 
-          if (!verifyRes.ok || !verifyData.success) {
-            throw new Error(verifyData.error || 'Payment verification failed.')
+          if (!verifyRes.ok || !verifyData?.success) {
+            throw new Error(verifyData?.error || 'Payment verification failed.')
           }
 
           if (onSuccess) onSuccess(verifyData)
@@ -159,6 +214,11 @@ export async function initiateSubscriptionPayment({
     rzp.open()
   } catch (err) {
     console.error('Initiate payment error:', err)
-    if (onError) onError(err.message || 'Could not initiate payment.')
+    if (onError) {
+      onError(err.message || 'Could not initiate payment.', {
+        isConfigIssue: Boolean(err.isConfigIssue),
+        fallbackUrl: err.fallbackUrl || getRazorpayMeUrl(),
+      })
+    }
   }
 }
