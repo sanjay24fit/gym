@@ -11,9 +11,9 @@ export default async function handler(req, res) {
     const authHeader = req.headers.authorization || ''
     const token = authHeader.replace(/^Bearer\s+/i, '').trim()
 
-    const { amount = 499, currency = 'INR', plan: requestedPlan = 'monthly' } = req.body || {}
-    const numericAmount = Math.round(Number(amount)) || 499
-    const amountInPaise = numericAmount * 100 // e.g. ₹499 -> 49900 paise, ₹2,499 -> 249900 paise, ₹4,499 -> 449900 paise
+    const { amount = 1, currency = 'INR', plan: requestedPlan = 'monthly' } = req.body || {}
+    const numericAmount = Math.round(Number(amount)) || 1
+    const amountInPaise = numericAmount * 100 // e.g. ₹1 -> 100 paise, ₹499 -> 49900 paise, ₹2,499 -> 249900 paise, ₹4,499 -> 449900 paise
     // Note: razorpay.me handles reject query parameters with "Amount not valid" error.
     // The handle URL must be kept clean without ?amount= query parameters.
     const dynamicFallbackUrl = 'https://razorpay.me/@gymmanagerapk'
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     const plan = planForAmountPaise(amountInPaise)
     if (!plan) {
       return res.status(400).json({
-        error: `Unsupported plan amount ₹${numericAmount}. Supported plans: ₹499 (1 Month), ₹2,499 (6 Months), ₹4,499 (12 Months).`,
+        error: `Unsupported plan amount ₹${numericAmount}. Supported plans: ₹1 / ₹499 (1 Month), ₹2,499 (6 Months), ₹4,499 (12 Months).`,
         fallbackUrl: dynamicFallbackUrl,
       })
     }

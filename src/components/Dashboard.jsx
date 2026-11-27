@@ -152,7 +152,7 @@ export default function Dashboard({
             <span style={{ fontSize: '20px' }}>⚡</span>
             <div>
               <strong style={{ fontSize: '13.5px', color: 'var(--text)' }}>
-                Subscription Required · ₹499 / 30 Days
+                Subscription Required · ₹1 / 30 Days
               </strong>
               <div className="muted small" style={{ fontSize: '12px' }}>
                 Subscribe or renew your plan to activate full gym features and WhatsApp alerts.

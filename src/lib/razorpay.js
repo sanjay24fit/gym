@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 
 export const RAZORPAY_ME_BASE_URL = 'https://razorpay.me/@gymmanagerapk'
-export const DEFAULT_SUBSCRIPTION_AMOUNT = 499
+export const DEFAULT_SUBSCRIPTION_AMOUNT = 1
 
 /**
  * Returns the verified Razorpay.me UPI payment handle URL.
@@ -10,7 +10,7 @@ export const DEFAULT_SUBSCRIPTION_AMOUNT = 499
  * Therefore the handle URL is kept clean, and the amount to enter
  * is displayed to the user in the UI and instructions.
  *
- * @param {number|string} [amount=499] - Plan amount in Rupees (e.g. 499, 2499, 4499)
+ * @param {number|string} [amount=1] - Plan amount in Rupees (e.g. 1, 2499, 4499)
  * @returns {string} e.g. 'https://razorpay.me/@gymmanagerapk'
  */
 export function getRazorpayMeUrl(_amount = DEFAULT_SUBSCRIPTION_AMOUNT) {
@@ -43,12 +43,12 @@ export function loadRazorpayScript() {
 
 /**
  * Initiates Razorpay payment for Gym Subscription
- * Supports 1 Month (₹499), 6 Months (₹2,499), and 12 Months (₹4,499)
+ * Supports 1 Month (₹1), 6 Months (₹2,499), and 12 Months (₹4,499)
  *
  * @param {Object} options
  * @param {Object} options.gym - Gym record object (id, gym_name, phone, email)
  * @param {string} options.userEmail - Logged-in user's email
- * @param {number} [options.amount=499] - Amount in rupees
+ * @param {number} [options.amount=1] - Amount in rupees
  * @param {number} [options.planDays=30] - Plan duration in days (30, 180, 365)
  * @param {string} [options.planId='monthly'] - Plan ID identifier
  * @param {string} [options.planTitle='Monthly Plan'] - Readable title for Razorpay modal

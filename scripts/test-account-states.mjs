@@ -146,7 +146,7 @@ check('plan derived for 6-month and 12-month renewal offers', () => {
 })
 
 check('forged/unsupported amounts rejected (no plan derived)', () => {
-  assert.equal(planForAmountPaise(100), null) // ₹1 order cannot buy 30 days
+  assert.equal(planForAmountPaise(50), null) // unsupported amount cannot buy 30 days
   assert.equal(planForAmountPaise(499), null) // rupees≠paise confusion
   assert.equal(planForAmountPaise(999999), null)
   assert.equal(planForAmountPaise('abc'), null)

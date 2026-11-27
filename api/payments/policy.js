@@ -16,11 +16,13 @@
 import crypto from 'node:crypto'
 
 // Published catalog plans:
+//   - Monthly (Live Test): ₹1.00 (100 paise) for 30 days
 //   - Monthly: ₹499.00 (49900 paise) for 30 days
 //   - Half-Yearly: ₹2,499.00 (249900 paise) for 180 days (Most Popular - Save ₹495)
 //   - Yearly: ₹4,499.00 (449900 paise) for 365 days (Best Value - Save ₹1,489)
 // Amounts are keyed in paise, matching Razorpay's order.amount units.
 export const PLAN_CATALOG_PAISE = {
+  100: { planDays: 30, planId: 'monthly' },
   49900: { planDays: 30, planId: 'monthly' },
   249900: { planDays: 180, planId: 'half_yearly' },
   449900: { planDays: 365, planId: 'yearly' },
