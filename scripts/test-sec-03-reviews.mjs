@@ -69,6 +69,10 @@ assert.ok(
   migrationSql.includes('m.user_id = auth.uid()'),
   'FAIL: Insert policy must verify caller is enrolled in the target gym'
 )
+assert.ok(
+  !migrationSql.includes('g.user_id'),
+  'FAIL: gyms table does not have user_id column; owner check must use gym_id = auth.uid()'
+)
 console.log('✓ 3. RLS prevents competitor sabotage; only verified members can insert.')
 
 // 5. Verify submit_gym_review RPC Validation & Search Path

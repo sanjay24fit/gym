@@ -105,7 +105,7 @@ CREATE POLICY "gym_reviews_delete_own_or_admin" ON public.gym_reviews
   FOR DELETE TO authenticated
   USING (
     user_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM public.gyms g WHERE g.id = gym_reviews.gym_id AND g.user_id = auth.uid())
+    OR gym_id = auth.uid()
     OR EXISTS (SELECT 1 FROM public.admins a WHERE a.user_id = auth.uid())
   );
 
