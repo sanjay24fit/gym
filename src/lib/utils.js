@@ -50,6 +50,7 @@ export function getTrainerName(m) {
 }
 
 export function toISO(d) {
+  if (!d || !(d instanceof Date) || isNaN(d.getTime())) return ''
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
@@ -57,7 +58,10 @@ export function toISO(d) {
 }
 
 export function parseISO(s) {
-  const [y, m, d] = s.split('-').map(Number)
+  if (!s || typeof s !== 'string') return new Date(NaN)
+  const parts = s.split('-').map(Number)
+  if (parts.length < 3 || parts.some(isNaN)) return new Date(NaN)
+  const [y, m, d] = parts
   return new Date(y, m - 1, d)
 }
 
@@ -66,17 +70,19 @@ export function today() {
 }
 
 export function addDays(iso, days) {
-  const d = parseISO(iso)
-  d.setDate(d.getDate() + days)
+  const d = parseISO(iso || today())
+  if (isNaN(d.getTime())) return today()
+  d.setDate(d.getDate() + (Number(days) || 0))
   return toISO(d)
 }
 
 // End date of a plan that starts on `startIso` and lasts `months` months
 export function planEndDate(startIso, months) {
-  const d = parseISO(startIso)
+  const d = parseISO(startIso || today())
+  if (isNaN(d.getTime())) return today()
   const day = d.getDate()
   d.setDate(1)
-  d.setMonth(d.getMonth() + months)
+  d.setMonth(d.getMonth() + (Number(months) || 1))
   const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
   d.setDate(Math.min(day, lastDay))
   d.setDate(d.getDate() - 1)
@@ -84,7 +90,11 @@ export function planEndDate(startIso, months) {
 }
 
 export function daysLeft(endIso) {
-  const ms = parseISO(endIso) - parseISO(today())
+  if (!endIso) return -1
+  const end = parseISO(endIso)
+  const curr = parseISO(today())
+  if (isNaN(end.getTime()) || isNaN(curr.getTime())) return -1
+  const ms = end - curr
   return Math.round(ms / 86400000)
 }
 
@@ -146,6 +156,7 @@ export function collectionRate(members) {
 }
 
 export function membershipStatus(m) {
+  if (!m || !m.end_date) return 'expired'
   const left = daysLeft(m.end_date)
   if (left < 0) return 'expired'
   if (left <= EXPIRING_DAYS) return 'expiring'
@@ -154,7 +165,9 @@ export function membershipStatus(m) {
 
 export function formatDate(iso) {
   if (!iso) return '-'
-  return parseISO(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  const d = parseISO(iso)
+  if (isNaN(d.getTime())) return '-'
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 export function formatMoney(n) {
@@ -162,6 +175,7 @@ export function formatMoney(n) {
 }
 
 export function expiryText(endIso) {
+  if (!endIso) return 'No expiry date'
   const left = daysLeft(endIso)
   if (left < 0) return `Expired ${-left} day${left === -1 ? '' : 's'} ago`
   if (left === 0) return 'Expires today'
