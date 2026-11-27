@@ -86,7 +86,7 @@ export default function Members({
         getTrainerName(m).toLowerCase().includes(q) ||
         (m.plan && m.plan.toLowerCase().includes(q))
     )
-    .sort((a, b) => a.end_date.localeCompare(b.end_date))
+    .sort((a, b) => (a.end_date || '').localeCompare(b.end_date || ''))
 
   const allCount = members.length
   const activeCount = members.filter((m) => membershipStatus(m) !== 'expired').length

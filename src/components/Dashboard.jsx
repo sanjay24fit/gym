@@ -49,7 +49,7 @@ export default function Dashboard({
   const active = members.filter((m) => membershipStatus(m) !== 'expired')
   const expiring = members
     .filter((m) => membershipStatus(m) === 'expiring')
-    .sort((a, b) => a.end_date.localeCompare(b.end_date))
+    .sort((a, b) => (a.end_date || '').localeCompare(b.end_date || ''))
   const expired = members.filter((m) => membershipStatus(m) === 'expired')
   const expiringToday = members.filter((m) => daysLeft(m.end_date) === 0)
   const expiringIn2Days = members.filter((m) => daysLeft(m.end_date) === 2)

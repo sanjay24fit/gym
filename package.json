@@ -15,7 +15,8 @@
     "test:sec-02": "node scripts/test-sec-02-fast2sms-key.mjs",
     "test:pay-02": "node scripts/test-pay-02-subscription.mjs",
     "test:sec-03": "node scripts/test-sec-03-reviews.mjs",
-    "test": "node scripts/test-account-states.mjs && node scripts/test-ocr-parser.mjs && node scripts/test-ranking-engine.mjs && node scripts/test-member-email-auth.mjs && node scripts/test-sec-02-fast2sms-key.mjs && node scripts/test-pay-02-subscription.mjs && node scripts/test-sec-03-reviews.mjs",
+    "test:run-04": "node scripts/test-run-04-null-sort.mjs",
+    "test": "node scripts/test-account-states.mjs && node scripts/test-ocr-parser.mjs && node scripts/test-ranking-engine.mjs && node scripts/test-member-email-auth.mjs && node scripts/test-sec-02-fast2sms-key.mjs && node scripts/test-pay-02-subscription.mjs && node scripts/test-sec-03-reviews.mjs && node scripts/test-run-04-null-sort.mjs",
     "test:rls": "node scripts/rls-test.mjs"
   },
   "dependencies": {
