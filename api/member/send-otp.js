@@ -55,10 +55,7 @@ export default async function handler(req, res) {
       })
     }
 
-    const apiKey =
-      process.env.FAST2SMS_API_KEY ||
-      process.env.VITE_FAST2SMS_API_KEY ||
-      'tHzSYs4RHChQmjElGk6h46AaRClQTKFiYmi38HPzQ6zofPWbSzSQJ13Ibn5gkJIubibkt7hTXMDP412I'
+    const apiKey = process.env.FAST2SMS_API_KEY
 
     if (!apiKey) {
       return res.status(500).json({

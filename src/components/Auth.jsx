@@ -7,7 +7,6 @@ import LanguageToggle from './LanguageToggle'
 import { GYM_IMAGES } from '../lib/assets'
 import { lookupMemberPortal, normalizePhone } from '../lib/memberPortal'
 import { validateEmailAddress } from '../lib/emailValidation'
-import { sendMobileOtp } from '../lib/smsService'
 import { getDeviceInfo } from '../lib/deviceDetect'
 import { useLanguage } from '../lib/language'
 import {

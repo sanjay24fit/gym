@@ -12,7 +12,9 @@
     "test:access": "node scripts/test-account-states.mjs",
     "test:ranking": "node scripts/test-ranking-engine.mjs",
     "test:member-auth": "node scripts/test-member-email-auth.mjs",
-    "test": "node scripts/test-account-states.mjs && node scripts/test-ocr-parser.mjs && node scripts/test-ranking-engine.mjs && node scripts/test-member-email-auth.mjs",
+    "test:sec-02": "node scripts/test-sec-02-fast2sms-key.mjs",
+    "test:pay-02": "node scripts/test-pay-02-subscription.mjs",
+    "test": "node scripts/test-account-states.mjs && node scripts/test-ocr-parser.mjs && node scripts/test-ranking-engine.mjs && node scripts/test-member-email-auth.mjs && node scripts/test-sec-02-fast2sms-key.mjs && node scripts/test-pay-02-subscription.mjs",
     "test:rls": "node scripts/rls-test.mjs"
   },
   "dependencies": {
