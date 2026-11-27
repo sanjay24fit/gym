@@ -51,7 +51,7 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh, onC
     await initiateSubscriptionPayment({
       gym,
       userEmail: userEmail || gym?.email,
-      amount: 1,
+      amount: 499,
       onSuccess: (data) => {
         setLoadingPay(false)
         setPaySuccess(data.message || 'Payment successful! Reactivating your account…')
@@ -141,7 +141,7 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh, onC
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
               <span style={{ fontWeight: 700, fontSize: '15px' }}>Monthly Gym Plan</span>
-              <span className="badge blue" style={{ fontSize: '12px', fontWeight: 700 }}>₹1 / 30 Days</span>
+              <span className="badge blue" style={{ fontSize: '12px', fontWeight: 700 }}>₹499 / 30 Days</span>
             </div>
             <ul style={{ margin: '0 0 12px 18px', padding: 0, fontSize: '12.5px', color: 'var(--muted)' }}>
               <li>Unlimited members & billing</li>
@@ -175,13 +175,13 @@ export default function AccessBlocked({ gym, userEmail, onLogout, onRefresh, onC
                   <rect x="2" y="5" width="20" height="14" rx="2" />
                   <line x1="2" y1="10" x2="22" y2="10" />
                 </svg>
-                <span>Subscribe / Renew Plan (From ₹1)</span>
+                <span>Subscribe / Renew Plan (From ₹499)</span>
               </span>
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '10px' }}>
               <a
-                href={getRazorpayMeUrl(1)}
+                href={getRazorpayMeUrl(499)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="muted small"

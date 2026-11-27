@@ -127,12 +127,12 @@ export default async function handler(req, res) {
       })
     }
 
-    // 4. Derive the plan from the actual order amount (catalog: 1 / 499 / 2499 / 4499)
+    // 4. Derive the plan from the actual order amount (catalog: 499 / 2499 / 4499)
     const plan = planForAmountPaise(order.amount)
     if (!plan) {
       return res.status(400).json({
         success: false,
-        error: `Unsupported payment amount (got ${order.amount} paise). Supported plans: ₹1 / ₹499 (1 Mo), ₹2,499 (6 Mo), ₹4,499 (12 Mo).`,
+        error: `Unsupported payment amount (got ${order.amount} paise). Supported plans: ₹499 (1 Mo), ₹2,499 (6 Mo), ₹4,499 (12 Mo).`,
       })
     }
 
@@ -149,12 +149,11 @@ export default async function handler(req, res) {
     })
 
     // 6. Atomic apply: row-locked, single transaction (see header comment).
-    // Note: If DB allowlist requires 49900 for monthly plan, pass 49900 so DB extends valid_until without rejecting live test
     const { data: result, error: rpcErr } = await dbClient.rpc('apply_subscription_payment', {
       p_gym_id: user.id,
       p_payment_id: razorpay_payment_id,
       p_order_id: razorpay_order_id,
-      p_amount_paise: plan.amountPaise === 100 ? 49900 : plan.amountPaise,
+      p_amount_paise: plan.amountPaise,
       p_plan_days: plan.planDays,
       p_plan_id: plan.planId,
     })
