@@ -194,18 +194,22 @@ export default function App() {
     if (!isSupabaseConfigured) return
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
-      if (!data.session) {
+      // RUN-02: Do NOT wipe cache on initial load when offline
+      if (!data.session && (typeof navigator === 'undefined' || navigator.onLine)) {
         try {
           localStorage.removeItem('gym_cached_account')
         } catch {}
         setAccount(null)
       }
+    }).catch(() => {
+      // Offline / network failure: retain cached account
     })
     const { data } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
       if (event === 'SIGNED_OUT') {
         try {
           localStorage.removeItem('gym_cached_account')
+          localStorage.removeItem('gym_cached_members')
         } catch {}
         setAccount(null)
       }
@@ -216,19 +220,22 @@ export default function App() {
     return () => data?.subscription?.unsubscribe()
   }, [])
 
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const userId =
     session?.user?.id && isValidUUID(session.user.id)
       ? session.user.id
-      : (session === undefined && isValidUUID(loadedAccount?.userId) ? loadedAccount.userId : null)
+      : ((session === undefined || isOffline) && isValidUUID(loadedAccount?.userId) ? loadedAccount.userId : null)
   const account = (loadedAccount && (!userId || loadedAccount.userId === userId)) ? loadedAccount : null
 
   useEffect(() => {
     if (!userId) {
-      setAccount(null)
-      setAuthMemberData(null)
-      try {
-        localStorage.removeItem('gym_cached_account')
-      } catch {}
+      if (!isOffline) {
+        setAccount(null)
+        setAuthMemberData(null)
+        try {
+          localStorage.removeItem('gym_cached_account')
+        } catch {}
+      }
       return
     }
     let cancelled = false
@@ -357,6 +364,7 @@ export default function App() {
   const loadMembers = useCallback(async () => {
     const PAGE = 1000
     const all = []
+    let hasError = false
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await supabase
         .from('members')
@@ -366,15 +374,19 @@ export default function App() {
         .range(from, from + PAGE - 1)
       if (error) {
         console.warn('Could not load members:', error.message)
+        hasError = true
         break
       }
       all.push(...data)
       if (data.length < PAGE) break
     }
-    setMembers(all)
-    try {
-      localStorage.setItem('gym_cached_members', JSON.stringify(all.slice(0, 500)))
-    } catch {}
+    // RUN-02: If offline / network error occurs, preserve existing cached members in state
+    if (!hasError || all.length > 0) {
+      setMembers(all)
+      try {
+        localStorage.setItem('gym_cached_members', JSON.stringify(all.slice(0, 500)))
+      } catch {}
+    }
   }, [])
 
   useEffect(() => {
@@ -394,9 +406,6 @@ export default function App() {
 
   const refresh = async () => {
     setLoadError('')
-    try {
-      localStorage.removeItem('gym_cached_account')
-    } catch {}
     if (userId && isValidUUID(userId)) {
       try {
         const { data: freshGym, error: gymErr } = await supabase
@@ -406,6 +415,12 @@ export default function App() {
           .maybeSingle()
         if (freshGym) {
           setAccount((prev) => (prev ? { ...prev, gym: freshGym } : prev))
+          try {
+            localStorage.setItem(
+              'gym_cached_account',
+              JSON.stringify({ userId, gym: freshGym, isAdmin: loadedAccount?.isAdmin, role: loadedAccount?.role })
+            )
+          } catch {}
           return
         }
         if (gymErr) {
@@ -416,7 +431,13 @@ export default function App() {
         // Fallback
       }
     }
-    setAccount(null)
+    // Only reset account if online and confirmed missing
+    if (typeof navigator === 'undefined' || navigator.onLine) {
+      setAccount(null)
+      try {
+        localStorage.removeItem('gym_cached_account')
+      } catch {}
+    }
     setRefreshKey((k) => k + 1)
   }
 
