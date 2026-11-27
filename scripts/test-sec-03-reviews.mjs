@@ -29,7 +29,12 @@ assert.ok(
   migrationSql.includes('ADD COLUMN IF NOT EXISTS total_reviews'),
   'FAIL: Must ensure rating and total_reviews columns on public.gyms'
 )
-console.log('✓ 1. Migration defines gym_reviews table and gyms rating columns.')
+assert.ok(
+  migrationSql.includes('ALTER TABLE public.members') &&
+  migrationSql.includes('ADD COLUMN IF NOT EXISTS user_id'),
+  'FAIL: Must ensure user_id on public.members for verified auth linking'
+)
+console.log('✓ 1. Migration defines gym_reviews table, gyms rating columns, and members user_id.')
 
 // 3. Verify DB-01 Index & Anti-Spam Constraints
 assert.ok(

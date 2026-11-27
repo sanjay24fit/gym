@@ -19,7 +19,16 @@ ALTER TABLE public.gyms
   ADD COLUMN IF NOT EXISTS avg_trainer numeric(3, 1) DEFAULT 5.0;
 
 -- ----------------------------------------------------------------------------
--- 2. Ensure public.gym_reviews table exists with correct schema
+-- 2. Ensure user_id & email link exist on public.members for verified auth
+-- ----------------------------------------------------------------------------
+ALTER TABLE public.members 
+  ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS email text DEFAULT '';
+
+CREATE INDEX IF NOT EXISTS members_user_id_idx ON public.members (user_id);
+
+-- ----------------------------------------------------------------------------
+-- 3. Ensure public.gym_reviews table exists with correct schema
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.gym_reviews (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
