@@ -26,19 +26,26 @@ export default function Admin({ adminId }) {
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
-    const [{ data, error: gymErr }, countRes] = await Promise.all([
-      supabase.from('gyms').select('*').neq('id', adminId).order('created_at', { ascending: false }),
-      supabase.rpc('admin_gym_member_counts'),
-    ])
-    if (gymErr) setError(gymErr.message)
-    setGyms(data || [])
-    // AD4: on RPC failure show '—' for counts instead of fabricated zeros
-    if (countRes.error) {
+    try {
+      const [{ data, error: gymErr }, countRes] = await Promise.all([
+        supabase.from('gyms').select('*').neq('id', adminId).order('created_at', { ascending: false }),
+        supabase.rpc('admin_gym_member_counts'),
+      ])
+      if (gymErr) setError(gymErr.message)
+      setGyms(data || [])
+      // AD4: on RPC failure show '—' for counts instead of fabricated zeros
+      if (countRes.error) {
+        setCounts(null)
+      } else {
+        setCounts(Object.fromEntries((countRes.data || []).map((r) => [r.gym_id, r.member_count])))
+      }
+    } catch (err) {
+      setError(err?.message || 'Network error loading admin data')
+      setGyms([])
       setCounts(null)
-    } else {
-      setCounts(Object.fromEntries((countRes.data || []).map((r) => [r.gym_id, r.member_count])))
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [adminId])
 
   useEffect(() => {

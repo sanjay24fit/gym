@@ -311,6 +311,10 @@ export default function App() {
         if (!prevTab || prevTab === 'auth') return isAdmin ? 'admin' : 'dashboard'
         return prevTab
       })
+    }).catch((err) => {
+      if (cancelled) return
+      console.warn('Failed to resolve account (network/offline):', err)
+      // RUN-03: Gracefully handle network errors without unhandled promise rejection
     })
     return () => {
       cancelled = true

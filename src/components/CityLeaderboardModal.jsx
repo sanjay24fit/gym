@@ -30,6 +30,11 @@ export default function CityLeaderboardModal({
         setReviewsData(revRes)
         setLoading(false)
       }
+    }).catch((err) => {
+      if (!cancelled) {
+        console.warn('Leaderboard fetch error:', err)
+        setLoading(false)
+      }
     })
 
     return () => {
