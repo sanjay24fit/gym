@@ -119,16 +119,22 @@ export default function Members({
       return
     }
 
+    const payload =
+      type === 'add' && gym?.id
+        ? { ...values, gym_id: gym.id }
+        : values
+
     let res =
       type === 'add'
-        ? await supabase.from('members').insert(values)
+        ? await supabase.from('members').insert(payload)
         : await supabase.from('members').update(values).eq('id', member.id)
 
     if (res.error && isSchemaDriftError(res.error)) {
+      const fallbackPayload = buildFallbackMemberValues(payload)
       res =
         type === 'add'
-          ? await supabase.from('members').insert(buildFallbackMemberValues(values))
-          : await supabase.from('members').update(buildFallbackMemberValues(values)).eq('id', member.id)
+          ? await supabase.from('members').insert(fallbackPayload)
+          : await supabase.from('members').update(fallbackPayload).eq('id', member.id)
     }
 
     if (res.error) return res.error.message
